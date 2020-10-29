@@ -1,20 +1,27 @@
-from utilities import findFiles, rearrangeChannels
 from ImageAlignment import ImageAlignment
+from rosa.find_rosa_dc import find_laser_spot_main_call
+from matplotlib import pyplot as plt
 from skimage import io
 import os
 import numpy as np
 import cv2
+import sqlite3 as lite
+import time
 
 
 class ZiliaImages:
     def __init__(self):
-        pass
+        self.retRef = None
+        self.rosaRef = None
+        self.rosaRefPos = None
+        self.rosaRefRadius = None
+        self.shapeRef = None
         #self.dictImages = self.SortImages(os.path.normpath("C:\\zilia"))
         #self.directories = self.dictImages.keys()
 
     def sortRetinasAndRosas(self, imagePaths: list):
         # 0 for Blue, 1 for Green, 2 for Red :
-        channel = 1
+        channel = 2
         means = []
 
         for imagePath in imagePaths:
@@ -22,21 +29,29 @@ class ZiliaImages:
             means.append(np.mean(image[:, :, channel]))
 
         meanOfMeans = np.mean(means)
-        prevMean = meanOfMeans
         retinas = []
         rosas = []
+        prevImg = None
 
         for mean, imagePath in zip(means, imagePaths):
             if mean > meanOfMeans:
                 retinas.append(imagePath)
-                #if prevMean > meanOfMeans:
-                #    rosas.append(rosas[len(rosas) - 1])
-            elif mean < meanOfMeans and prevMean < meanOfMeans:
+                if prevImg == 'ret':
+                    try:
+                        rosas.append(rosas[len(rosas) - 1])
+                    except:
+                        rosas.append('None')
+                prevImg = 'ret'
+            elif mean < meanOfMeans:
                 rosas.append(imagePath)
-                retinas.append("None")
+                if prevImg == 'rosa':
+                    retinas.append("None")
+                prevImg = 'rosa'
             else:
-                rosas.append(imagePath)
-            prevMean = mean
+                print("Image {} could not be sorted...".format(imagePath))
+                f = open('errors.txt', 'a')
+                f.write('Error for {} at {}\n'.format(imagePath, time.time()))
+                f.close()
 
         return retinas, rosas
         '''
@@ -88,6 +103,67 @@ class ZiliaImages:
 
         return pts, retinas#, ptsCSV, retinasCSV
         '''
+
+    def setReferences(self, rows: lite.Row):
+        # For now, the reference doesn't really need to be any specific image.
+        # I skip the first couple of images and ignore the first couple of remaining images.
+        i = np.random.randint(len(rows) // 5, (len(rows) // 5) * 4)
+        print(rows[i]['retinas'], rows[i]['rosas'])
+        self.retRef = cv2.imread(rows[i]['retinas'], cv2.COLOR_BGR2GRAY)
+        self.rosaRef = cv2.imread(rows[i]['rosas'], cv2.COLOR_BGR2GRAY)
+        self.shapeRef = self.retRef.shape
+        self.rosaRefPos, self.rosaRefRadius = self.getRosaReferencePosition()
+
+    def getRosaReferencePosition(self):
+        blob = find_laser_spot_main_call(self.rosaRef)
+        center = (int(blob['center']['x'] * self.shapeRef[1]), int(blob['center']['y'] * self.shapeRef[0]))
+        radius = int(blob['radius'] * self.shapeRef[0])
+        return center, radius
+
+    def alignImages(self, rows: lite.Row):
+        self.setReferences(rows)
+
+        ia = ImageAlignment(self.retRef)
+        ia.initiateSRReference()
+
+        xs = []
+        ys = []
+        rs = []
+        an = []
+
+        with open('Test.csv', 'w') as file:
+            for row in rows:
+                ia.readImage(row['retinas'])
+                ia.setRegistration()
+
+                ia.readImage(row['rosas'])
+                newImg = ia.transform()
+                cv2.imwrite('/testStack/{}'.format(os.path.basename(row['rosas'])), newImg)
+
+                blob = find_laser_spot_main_call(newImg)
+                center = (int(blob['center']['x'] * self.shapeRef[1]), int(blob['center']['y'] * self.shapeRef[0]))
+                radius = int(blob['radius'] * self.shapeRef[0])
+
+                xDiff = self.rosaRefPos[0] - center[0]
+                yDiff = self.rosaRefPos[1] - center[1]
+
+                xs.append(center[0])
+                ys.append(center[1])
+                rs.append(radius)
+                an.append(os.path.basename(row['rosas'])[:-4])
+
+                positionStr = "Ref Pos : {}, Center : {}, Delta : ({}, {})".format(self.rosaRefPos, center, xDiff, yDiff)
+                radiusStr = "Ref Radius : {}, Radius : {}, Delta : {}".format(self.rosaRefRadius, radius, self.rosaRefRadius - radius)
+
+                file.write("{}, {}\n".format(positionStr, radiusStr))
+
+        plt.imshow(self.retRef[:, :, ::-1])
+        plt.scatter(x=xs, y=ys, s=radius, linestyle='-', facecolors='none', edgecolors='w')
+        for n, note in enumerate(an):
+            plt.annotate(note, (xs[n], ys[n]), fontsize=8, color='w')
+        plt.savefig('test.jpg')
+        plt.show()
+
 
     '''
     def allignImages(self):

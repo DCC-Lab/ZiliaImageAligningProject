@@ -88,14 +88,14 @@ class ZiliaDatabase(Database):
                 zi = ZiliaImages()
                 retinas, rosas = zi.sortRetinasAndRosas(jpgs)
                 n = 0
+                print("Inserting serie {}".format(row['name']))
                 for rosa in rosas:
                     try:
-                        print("Insertion....")
                         statement = 'INSERT OR REPLACE INTO "images" ({}) VALUES ("{}", "{}", "{}", "{}")'\
                             .format('"serie", "monkey", "retinas", "rosas"', row["name"], row["monkey"], retinas[n], rosa)
                         self.execute(statement)
                     except:
-                        print("Failed!")
+                        print("An insertion failed for the serie {}!".format(row['name']))
                     n += 1
 
     @staticmethod
