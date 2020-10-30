@@ -21,7 +21,7 @@ class ZiliaDatabase(Database):
         super().__init__(path)
 
     def defaultPath(self):
-        return 'C:\\zilia\\zilia.db'
+        return 'zilia.db'
 
     def getJpgs(self, root: str, files: list) -> list:
         jpgs = []
@@ -101,7 +101,7 @@ class ZiliaDatabase(Database):
     @staticmethod
     def createZiliaDB():
         # Path to the Zilia DB is :
-        ziliaDBPath = 'C:\\zilia\\zilia.db'
+        ziliaDBPath = 'zilia.db'
 
         # Proceeding to creating the database...
         with ZiliaDatabase(ziliaDBPath) as db:
@@ -131,7 +131,7 @@ class ZiliaDatabase(Database):
     @staticmethod
     def createImagesTable():
         # Path to the Zilia DB is :
-        ziliaDBPath = 'C:\\zilia\\zilia.db'
+        ziliaDBPath = 'zilia.db'
 
         with ZiliaDatabase(ziliaDBPath) as db:
             print('Changing to rwc mode...')
