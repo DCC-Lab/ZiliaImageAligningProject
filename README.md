@@ -12,5 +12,11 @@ This package manages images for Zilia's project:
 
 5. Correcting ROSA position on retina
 
-   
+## Getting started
+
+You must install pystackreg with
+```shell
+pip install pystackreg
+```
+
 
