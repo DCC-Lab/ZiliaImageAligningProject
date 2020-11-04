@@ -8,7 +8,7 @@ import fnmatch
 import re
 from database import Database
 from utilities import findFiles
-from ziliaImages import ZiliaImages
+from imageAnalysis import ImageAnalysis
 
 
 class ZiliaDatabase(Database):
@@ -85,7 +85,7 @@ class ZiliaDatabase(Database):
 
             for row in rows:
                 jpgs = findFiles(row['path'], '*.jpg')
-                zi = ZiliaImages()
+                zi = ImageAnalysis()
                 retinas, rosas = zi.sortRetinasAndRosas(jpgs)
                 n = 0
                 print("Inserting serie {}".format(row['name']))
