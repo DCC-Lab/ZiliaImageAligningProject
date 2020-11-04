@@ -1,4 +1,4 @@
-from affinetransform import AffineTransform
+from ziliaImage.affinetransform import AffineTransform
 import cv2
 import numpy as np
 

@@ -10,16 +10,16 @@ def normalizedCrossCorrelate(ref, src):
 
 
 if __name__ == '__main__':
-    ref = cv2.imread("../TestImages/001.jpg")
+    ref = cv2.imread("../tests/TestImages/001.jpg")
     ref = cv2.cvtColor(ref, cv2.COLOR_BGR2GRAY)
 
-    src1 = cv2.imread("../TestImages/LoGFilter/homography.jpg")
-    src2 = cv2.imread("../TestImages/LoGFilter/homography2.jpg")
+    src1 = cv2.imread("../tests/TestImages/LoGFilter/homography.jpg")
+    src2 = cv2.imread("../tests/TestImages/LoGFilter/homography2.jpg")
     src1 = cv2.cvtColor(src1, cv2.COLOR_BGR2GRAY)
     src2 = cv2.cvtColor(src2, cv2.COLOR_BGR2GRAY)
 
     corr1 = normalizedCrossCorrelate(ref[1250:1750, 1250:1750], src1[1250:1750, 1250:1750])
     corr2 = normalizedCrossCorrelate(ref[1250:1750, 1250:1750], src2[1250:1750, 1250:1750])
 
-    cv2.imwrite("../TestImages/correlation/Corr1.jpg", corr1, )
-    cv2.imwrite("../TestImages/correlation/Corr2.jpg", corr2)
+    cv2.imwrite("../tests/TestImages/correlation/Corr1.jpg", corr1, )
+    cv2.imwrite("../tests/TestImages/correlation/Corr2.jpg", corr2)

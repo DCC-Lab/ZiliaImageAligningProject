@@ -1,14 +1,10 @@
-from zipfile import ZipFile
-from datetime import date
 import sqlite3 as lite
-import urllib.parse as parse
-import pathlib
 import os
 import fnmatch
 import re
-from database import Database
+from database.database import Database
 from utilities import findFiles
-from imageAnalysis import ImageAnalysis
+from ziliaImage.imageAnalysis import ImageAnalysis
 
 
 class ZiliaDatabase(Database):

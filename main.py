@@ -1,9 +1,5 @@
-import cv2
-import os
-from imageAnalysis import ImageAnalysis
-from ziliaDB import ZiliaDatabase
-import numpy as np
-
+from ziliaImage.imageAnalysis import ImageAnalysis
+from database.ziliaDB import ZiliaDatabase
 
 if __name__ == '__main__':
     db = ZiliaDatabase()

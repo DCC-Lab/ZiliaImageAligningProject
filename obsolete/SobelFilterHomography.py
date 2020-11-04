@@ -2,8 +2,8 @@ import numpy as np
 import cv2
 
 
-img1 = cv2.imread("../TestImages/001.jpg")
-img2 = cv2.imread("../TestImages/003.jpg")
+img1 = cv2.imread("../tests/TestImages/001.jpg")
+img2 = cv2.imread("../tests/TestImages/003.jpg")
 print(img1.shape, img2.shape)
 
 blur1 = cv2.GaussianBlur(img1, (9, 9), 0)
@@ -13,8 +13,8 @@ blur2 = cv2.GaussianBlur(img2, (9, 9), 0)
 sob1 = cv2.Sobel(blur1, cv2.CV_32F, 1, 0, ksize=3, scale=1, delta=0, borderType=cv2.BORDER_DEFAULT)
 sob2 = cv2.Sobel(blur2, cv2.CV_32F, 1, 0, ksize=3, scale=1, delta=0, borderType=cv2.BORDER_DEFAULT)
 
-cv2.imwrite("../TestImages/SobelXFilter/sob1X.jpg", sob1)
-cv2.imwrite("../TestImages/SobelXFilter/sob2X.jpg", sob2)
+cv2.imwrite("../tests/TestImages/SobelXFilter/sob1X.jpg", sob1)
+cv2.imwrite("../tests/TestImages/SobelXFilter/sob2X.jpg", sob2)
 
 # We process the Homography.
 # First we create an ORB object for detection.
@@ -29,8 +29,8 @@ print(len(kp1), len(kp2))
 # This is to visualize keypoints.
 kpImg1 = cv2.drawKeypoints(img1, kp1, None, flags=None)
 kpImg2 = cv2.drawKeypoints(img2, kp2, None, flags=None)
-cv2.imwrite('../TestImages/SobelXFilter/kpImg1.jpg', kpImg1)
-cv2.imwrite('../TestImages/SobelXFilter/kpImg2.jpg', kpImg2)
+cv2.imwrite('../tests/TestImages/SobelXFilter/kpImg1.jpg', kpImg1)
+cv2.imwrite('../tests/TestImages/SobelXFilter/kpImg2.jpg', kpImg2)
 
 # Matching keypoints using Brute Force and sorting.
 matcher = cv2.DescriptorMatcher_create(cv2.DESCRIPTOR_MATCHER_BRUTEFORCE_HAMMING)
@@ -39,7 +39,7 @@ matches = sorted(matches, key=lambda x: x.distance)
 
 # Visualize matches.
 matchImg = cv2.drawMatches(img1, kp1, img2, kp2, matches, None)
-cv2.imwrite('../TestImages/SobelXFilter/matchImg.jpg', matchImg)
+cv2.imwrite('../tests/TestImages/SobelXFilter/matchImg.jpg', matchImg)
 
 # Getting rid of bad keypoints.
 points1 = np.zeros((len(matches), 2), dtype=np.float32)

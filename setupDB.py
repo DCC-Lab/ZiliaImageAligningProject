@@ -1,4 +1,4 @@
-from ziliaDB import ZiliaDatabase
+from database.ziliaDB import ZiliaDatabase
 
 
 if __name__ == '__main__':

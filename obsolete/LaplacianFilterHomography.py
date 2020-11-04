@@ -6,8 +6,8 @@ import numpy as np
 # This is to do edge detection on our images. Then, using homography, we can brute force match the images.
 
 # First step : Read the images and import into Grayscale
-img1 = cv2.imread("../TestImages/001.jpg")
-img2 = cv2.imread("../TestImages/003.jpg")
+img1 = cv2.imread("../tests/TestImages/001.jpg")
+img2 = cv2.imread("../tests/TestImages/003.jpg")
 print(img1.shape, img2.shape)
 
 # We apply the Laplacian filter next :
@@ -21,8 +21,8 @@ lap2 = cv2.Laplacian(img2, cv2.CV_8U, ksize=15)
 print(lap1.max(), lap1.min())
 
 # Images are saved, again, for analysis purpose.
-cv2.imwrite("../TestImages/LaplacianFilter/LapFilter1.jpg", lap1)
-cv2.imwrite("../TestImages/LaplacianFilter/LapFilter2.jpg", lap2)
+cv2.imwrite("../tests/TestImages/LaplacianFilter/LapFilter1.jpg", lap1)
+cv2.imwrite("../tests/TestImages/LaplacianFilter/LapFilter2.jpg", lap2)
 
 # We process the Homography.
 # First we create an ORB object for detection.
@@ -37,8 +37,8 @@ print(len(kp1), len(kp2))
 # This is to visualize keypoints.
 kpImg1 = cv2.drawKeypoints(img1, kp1, None, flags=None)
 kpImg2 = cv2.drawKeypoints(img2, kp2, None, flags=None)
-cv2.imwrite('../TestImages/LaplacianFilter/kpImg1.jpg', kpImg1)
-cv2.imwrite('../TestImages/LaplacianFilter/kpImg2.jpg', kpImg2)
+cv2.imwrite('../tests/TestImages/LaplacianFilter/kpImg1.jpg', kpImg1)
+cv2.imwrite('../tests/TestImages/LaplacianFilter/kpImg2.jpg', kpImg2)
 
 # Matching keypoints using Brute Force and sorting.
 matcher = cv2.DescriptorMatcher_create(cv2.DESCRIPTOR_MATCHER_BRUTEFORCE_HAMMING)
@@ -47,7 +47,7 @@ matches = sorted(matches, key=lambda x: x.distance)
 
 # Visualize matches.
 matchImg = cv2.drawMatches(img1, kp1, img2, kp2, matches, None)
-cv2.imwrite('../TestImages/LaplacianFilter/matchImg.jpg', matchImg)
+cv2.imwrite('../tests/TestImages/LaplacianFilter/matchImg.jpg', matchImg)
 
 # Getting rid of bad keypoints.
 points1 = np.zeros((len(matches), 2), dtype=np.float32)
@@ -71,4 +71,4 @@ except ValueError:
 img2Reg = cv2.warpPerspective(img2, h, (width, height))
 
 # Results
-cv2.imwrite('../TestImages/LaplacianFilter/homography.jpg', img2Reg)
+cv2.imwrite('../tests/TestImages/LaplacianFilter/homography.jpg', img2Reg)

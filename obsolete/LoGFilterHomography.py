@@ -33,9 +33,9 @@ findHomography : We get a lot of points. How many is too little and how many is 
 '''
 
 # First step : Read the images and import into Grayscale
-img1 = cv2.imread("../TestImages/001.jpg")
-img2 = cv2.imread("../TestImages/003.jpg")
-img3 = cv2.imread("../TestImages/005.jpg")
+img1 = cv2.imread("../tests/TestImages/001.jpg")
+img2 = cv2.imread("../tests/TestImages/003.jpg")
+img3 = cv2.imread("../tests/TestImages/005.jpg")
 
 copyImg1 = np.copy(img1)
 copyImg2 = np.copy(img2)
@@ -55,9 +55,9 @@ lap2 = LoGFilter(copyImg2[:, 200:2200, :], sigmaX, kernelSize)
 lap3 = LoGFilter(copyImg3[:, 200:2200, :], sigmaX, kernelSize)
 
 # Images are saved, again, for analysis purpose.
-cv2.imwrite("../TestImages/LoGFilter/LapFilter1.jpg", lap1)
-cv2.imwrite("../TestImages/LoGFilter/LapFilter2.jpg", lap2)
-cv2.imwrite("../TestImages/LoGFilter/LapFilter3.jpg", lap3)
+cv2.imwrite("../tests/TestImages/LoGFilter/LapFilter1.jpg", lap1)
+cv2.imwrite("../tests/TestImages/LoGFilter/LapFilter2.jpg", lap2)
+cv2.imwrite("../tests/TestImages/LoGFilter/LapFilter3.jpg", lap3)
 
 # We process the Homography.
 # First we create an ORB object for detection.
@@ -73,9 +73,9 @@ print(len(kp1), len(kp2), len(kp3))
 kpImg1 = cv2.drawKeypoints(img1, kp1, None, flags=None)
 kpImg2 = cv2.drawKeypoints(img2, kp2, None, flags=None)
 kpImg3 = cv2.drawKeypoints(img3, kp3, None, flags=None)
-cv2.imwrite('../TestImages/LoGFilter/kpImg1.jpg', kpImg1)
-cv2.imwrite('../TestImages/LoGFilter/kpImg2.jpg', kpImg2)
-cv2.imwrite('../TestImages/LoGFilter/kpImg3.jpg', kpImg3)
+cv2.imwrite('../tests/TestImages/LoGFilter/kpImg1.jpg', kpImg1)
+cv2.imwrite('../tests/TestImages/LoGFilter/kpImg2.jpg', kpImg2)
+cv2.imwrite('../tests/TestImages/LoGFilter/kpImg3.jpg', kpImg3)
 
 # Matching keypoints using Brute Force and sorting. # FIXME IMG2
 matcher = cv2.DescriptorMatcher_create(cv2.DESCRIPTOR_MATCHER_BRUTEFORCE_HAMMING)
@@ -83,14 +83,14 @@ matches = matcher.match(des1, des2, None)
 matches = sorted(matches, key=lambda x: x.distance)
 # Visualize matches.
 matchImg = cv2.drawMatches(img1, kp1, img2, kp2, matches, None)
-cv2.imwrite('../TestImages/LoGFilter/matchImg.jpg', matchImg)
+cv2.imwrite('../tests/TestImages/LoGFilter/matchImg.jpg', matchImg)
 
 # Matching keypoints using Brute Force and sorting. # FIXME IMG3
 matches2 = matcher.match(des1, des3, None)
 matches2 = sorted(matches2, key=lambda x: x.distance)
 # Visualize matches.
 matchImg2 = cv2.drawMatches(img1, kp1, img2, kp2, matches2, None)
-cv2.imwrite('../TestImages/LoGFilter/matchImg2.jpg', matchImg2)
+cv2.imwrite('../tests/TestImages/LoGFilter/matchImg2.jpg', matchImg2)
 
 # Getting rid of bad keypoints. # FIXME IMG2
 source = np.zeros((len(matches), 2), dtype=np.float32)
@@ -125,5 +125,5 @@ img2Reg = cv2.warpPerspective(img2, h, (width, height))
 img3Reg = cv2.warpPerspective(img3, h2, (width, height))
 
 # Results
-cv2.imwrite('../TestImages/LoGFilter/homography.jpg', img2Reg)
-cv2.imwrite('../TestImages/LoGFilter/homography2.jpg', img3Reg)
+cv2.imwrite('../tests/TestImages/LoGFilter/homography.jpg', img2Reg)
+cv2.imwrite('../tests/TestImages/LoGFilter/homography2.jpg', img3Reg)

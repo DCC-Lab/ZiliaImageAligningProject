@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from utilities import findFiles, rearrangeChannels
-from ImageAlignment import ImageAlignment
+from ziliaImage.ImageAlignment import ImageAlignment
 from skimage import io
 
 

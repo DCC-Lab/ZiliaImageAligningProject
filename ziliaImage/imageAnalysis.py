@@ -1,10 +1,9 @@
-from ImageAlignment import ImageAlignment
+from ziliaImage.ImageAlignment import ImageAlignment
 #from rosa.find_rosa_dc import find_laser_spot_main_call
-from rosa.find_rosa_dc_v2 import find_laser_spot_main_call
-import rosa.find_rosa_dc_v2
-import rosa.find_rosa_dc
+from ziliaImage.rosa.find_rosa_dc_v2 import find_laser_spot_main_call
+import ziliaImage.rosa.find_rosa_dc_v2
+import ziliaImage.rosa.find_rosa_dc
 from matplotlib import pyplot as plt
-from skimage import io
 import os
 import numpy as np
 import cv2
@@ -125,7 +124,7 @@ class ImageAnalysis:
         return center, radius
 
     def findLaserSpot(self, img: np.ndarray):
-        blob = rosa.find_rosa_dc.find_laser_spot_main_call(img)
+        blob = ziliaImage.rosa.find_rosa_dc.find_laser_spot_main_call(img)
         if self.shapeRef:
             center = (int(blob['center']['x'] * self.shapeRef[1]), int(blob['center']['y'] * self.shapeRef[0]))
             radius = int(blob['radius'] * self.shapeRef[0])
@@ -136,7 +135,7 @@ class ImageAnalysis:
         return center, radius
 
     def findLaserSpotV2(self, img: np.ndarray):
-        blob, recTime, found = rosa.find_rosa_dc_v2.find_laser_spot_main_call(img)
+        blob, recTime, found = ziliaImage.rosa.find_rosa_dc_v2.find_laser_spot_main_call(img)
         if self.shapeRef:
             center = (int(blob['center']['x'] * self.shapeRef[1]), int(blob['center']['y'] * self.shapeRef[0]))
             radius = int(blob['radius'] * self.shapeRef[0])
@@ -232,7 +231,7 @@ class ImageAnalysis:
         rs = []
         an = []
 
-        with open('Test.csv', 'w') as file:
+        with open('../tests/Test.csv', 'w') as file:
             for row in rows:
                 ia.readImage(row['retinas'])
                 ia.setRegistration()
