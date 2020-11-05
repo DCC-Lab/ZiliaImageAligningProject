@@ -1,7 +1,9 @@
 from database.ziliaDB import ZiliaDatabase
+import os
 
 
 if __name__ == '__main__':
-    db = ZiliaDatabase
-    db.createZiliaDB()
-    db.createImagesTable()
+    defaultPath = os.path.normpath('C:\\zilia\\zilia.db')
+    db = ZiliaDatabase(defaultPath)
+    db.createZiliaDB(defaultPath)
+    db.createImagesTable(defaultPath)

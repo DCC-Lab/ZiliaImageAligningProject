@@ -2,9 +2,11 @@ import sqlite3 as lite
 import os
 import fnmatch
 import re
+import cv2
 from database.database import Database
 from utilities import findFiles
-from ziliaImage.imageAnalysis import ImageAnalysis
+import numpy as np
+import time
 
 
 class ZiliaDatabase(Database):
@@ -17,7 +19,7 @@ class ZiliaDatabase(Database):
         super().__init__(path)
 
     def defaultPath(self):
-        return 'C:\\zilia\\zilia.db'
+        return 'zilia.db'
 
     def getJpgs(self, root: str, files: list) -> list:
         jpgs = []
@@ -58,6 +60,91 @@ class ZiliaDatabase(Database):
                          "path": seriesPath}
                 yield serie
 
+    def sortRetinasAndRosas(self, imagePaths: list):
+        # 0 for Blue, 1 for Green, 2 for Red :
+        channel = 2
+        means = []
+
+        for imagePath in imagePaths:
+            image = cv2.imread(imagePath, cv2.COLOR_BGR2GRAY)
+            means.append(np.mean(image[:, :, channel]))
+
+        meanOfMeans = np.mean(means)
+        retinas = []
+        rosas = []
+        prevImg = None
+
+        for mean, imagePath in zip(means, imagePaths):
+            if mean > meanOfMeans:
+                retinas.append(imagePath)
+                if prevImg == 'ret':
+                    try:
+                        rosas.append(rosas[len(rosas) - 1])
+                    except:
+                        rosas.append('None')
+                prevImg = 'ret'
+            elif mean < meanOfMeans:
+                rosas.append(imagePath)
+                if prevImg == 'rosa':
+                    retinas.append("None")
+                prevImg = 'rosa'
+            else:
+                print("Image {} could not be sorted...".format(imagePath))
+                f = open('errors.txt', 'a')
+                f.write('Error for {} at {}\n'.format(imagePath, time.time()))
+                f.close()
+
+        '''
+        # Get all the images mean values and read them.
+        means = []
+        images = []
+
+        for imagePath in imagePaths:
+            image = cv2.imread(imagePath, cv2.COLOR_BGR2GRAY)
+            means.append(np.mean(image[:, :, 1]))
+            images.append(cv2.resize(image, (image.shape[1] // 2, image.shape[0] // 2)))
+
+        # Sort retinas and points using green channel
+        mean = np.mean(means)
+        previousMean = 999
+        pts = []
+        retinas = []
+
+        ptsCSV = []
+        retinasCSV = []
+        n = 0
+        for image in images:
+            imgMean = np.mean(image[:, :, 2])
+            if imgMean > mean:
+                retinas.append(np.copy(image))
+                retinasCSV.append(imagePaths[n])
+            elif imgMean < mean and previousMean < mean:
+                pts[len(pts) - 1] = np.copy(image)
+                ptsCSV[len(ptsCSV) - 1] = imagePaths[n]
+            else:
+                ptsCSV.append(imagePaths[n])
+                pts.append(image)
+            previousMean = imgMean
+            n += 1
+
+        # Get rid of bad retina images and associated points using red channel
+        # FIXME Needs to be tuned to get rid of really bad pictures.
+        mean = 0
+        for retina in retinas:
+            mean += np.mean(retina[:, :, 2])
+        mean = mean / len(retinas)
+
+        n = 0
+        for retina in retinas:
+            if abs(np.mean(retina[:, :, 2]) - mean) / mean > 0.15:
+                retinas.pop(n)
+                pts.pop(n)
+            n += 1
+
+        return pts, retinas#, ptsCSV, retinasCSV
+        '''
+        return retinas, rosas
+
     def setupMainSeriesTable(self, data: list):
         if self.isConnected:
             statement = 'CREATE TABLE IF NOT EXISTS "series" (name TEXT, monkey TEXT, images INT, spectra TEXT, ' \
@@ -81,8 +168,7 @@ class ZiliaDatabase(Database):
 
             for row in rows:
                 jpgs = findFiles(row['path'], '*.jpg')
-                zi = ImageAnalysis()
-                retinas, rosas = zi.sortRetinasAndRosas(jpgs)
+                retinas, rosas = self.sortRetinasAndRosas(jpgs)
                 n = 0
                 print("Inserting serie {}".format(row['name']))
                 for rosa in rosas:
@@ -95,12 +181,9 @@ class ZiliaDatabase(Database):
                     n += 1
 
     @staticmethod
-    def createZiliaDB():
-        # Path to the Zilia DB is :
-        ziliaDBPath = 'C:\\zilia\\zilia.db'
-
+    def createZiliaDB(path: str):
         # Proceeding to creating the database...
-        with ZiliaDatabase(ziliaDBPath) as db:
+        with ZiliaDatabase(path) as db:
             print('Changing to rwc mode...')
             db.changeConnectionMode('rwc')
 
@@ -125,11 +208,8 @@ class ZiliaDatabase(Database):
             print("Done...")
 
     @staticmethod
-    def createImagesTable():
-        # Path to the Zilia DB is :
-        ziliaDBPath = 'C:\\zilia\\zilia.db'
-
-        with ZiliaDatabase(ziliaDBPath) as db:
+    def createImagesTable(path: str):
+        with ZiliaDatabase(path) as db:
             print('Changing to rwc mode...')
             db.changeConnectionMode('rwc')
 
