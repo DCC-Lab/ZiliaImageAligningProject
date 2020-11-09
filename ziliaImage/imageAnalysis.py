@@ -96,21 +96,21 @@ class ImageAnalysis:
         plt.subplot(311)
         plt.plot(axes, x1s, 'r', label='X V1')
         plt.plot(axes, x2s, 'b', label='X V2')
-        plt.plot(axes, dxs, 'g--', label='Delta X')
+        #plt.plot(axes, dxs, 'g--', label='Delta X')
         plt.ylabel('Position [px]')
         plt.legend()
 
         plt.subplot(312)
         plt.plot(axes, y1s, 'r', label='Y V1')
         plt.plot(axes, y2s, 'b', label='Y V2')
-        plt.plot(axes, dys, 'g--', label='Delta Y')
+        #plt.plot(axes, dys, 'g--', label='Delta Y')
         plt.ylabel('Position [px]')
         plt.legend()
 
         plt.subplot(313)
         plt.plot(axes, r1s, 'r', label='R V1')
         plt.plot(axes, r2s, 'b', label='R V2')
-        plt.plot(axes, drs, 'g--', label='Delta R')
+        #plt.plot(axes, drs, 'g--', label='Delta R')
         plt.ylabel('Rayon [px]')
         plt.xlabel("Num. de l'image")
         plt.legend()
@@ -167,12 +167,14 @@ class ImageAnalysis:
         plt.legend()
         plt.show()
 
+    '''
+    # FIXME This is generally a bad idea.
     def compareVersion3DPlot(self, rows: lite.Row):
         r1s, r2s = [], []
 
         xMesh, yMesh = np.meshgrid(np.arange(0, self.shapeRef[1], self.shapeRef[1]), np.arange(0, self.shapeRef[0], self.shapeRef[0]))
-        z1s = np.zeros((self.shapeRef[0], self.shapeRef[1], 1))
-        z2s = np.zeros((self.shapeRef[0], self.shapeRef[1], 1))
+        z1s = np.zeros((self.shapeRef[0], self.shapeRef[1]))
+        z2s = np.zeros((self.shapeRef[0], self.shapeRef[1]))
 
         for row in rows:
             img = cv2.imread(row['rosas'], cv2.COLOR_BGR2GRAY)
@@ -180,14 +182,17 @@ class ImageAnalysis:
             c1, r1, found = self.findLaserSpot(img, 1)
             c2, r2, found = self.findLaserSpot(img, 2)
 
-            z1s[c1[1], c1[0], 0] += 1
-            z2s[c2[1], c2[0], 0] += 1
+            z1s[c1[1], c1[0]] += 1
+            z2s[c2[1], c2[0]] += 1
             #r1s.append(np.sqrt(c1[0] ** 2 + c1[1] ** 2))
             #r2s.append(np.sqrt(c2[0] ** 2 + c2[1] ** 2))
 
-        plt.figure()
-        plt.gca(projection='3d')
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        surf = ax.plot_surface(X=xMesh, Y=yMesh, Z=z1s)
+        fig.colorbar(surf)
         plt.show()
+    '''
 
     def alignImages(self, rows: lite.Row):
         self.setReferences(rows)

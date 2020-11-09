@@ -9,9 +9,9 @@ if __name__ == '__main__':
 
     rows = db.select('images', condition='"monkey" IS "singe22" AND "serie" is "20200303_081806_200-200-200-30"')
     zi.setReferences(rows)
-    #zi.compareVersionsMultipleImages(rows)
-    #zi.compareVersionsHistogram2D(rows, True)
-    zi.compareVersion3DPlot(rows)
+    zi.compareVersionsMultipleImages(rows)
+    zi.compareVersionsHistogram(rows)
+    zi.compareVersionsHistogram2D(rows, True)
 
     rows = db.select('images', condition='"monkey" IS "singe11" AND "serie" is "20200229_142737_150-200-150-30"')
     zi.setReferences(rows)
