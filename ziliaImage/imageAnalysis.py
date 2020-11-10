@@ -7,6 +7,9 @@ import os
 import numpy as np
 import cv2
 import sqlite3 as lite
+# For clustering
+import scipy.cluster.hierarchy as sch
+from sklearn.cluster import AgglomerativeClustering
 
 
 class ImageAnalysis:
@@ -194,7 +197,41 @@ class ImageAnalysis:
         plt.show()
     '''
 
-    def alignImages(self, rows: lite.Row):
+    def alignImagesV2(self, rows: lite.Row):
+        self.setReferences(rows)
+
+        ia = ImageAlignment(self.retRef)
+        ia.initiateSRReference()
+
+        points = np.zeros((len(rows), 2))
+
+        for n, row in enumerate(rows):
+            ia.readImage(row['retinas'])
+            ia.setRegistration()
+            ia.readImage(row['rosas'])
+            img = ia.transform()
+            center, radius, found = self.findLaserSpot(img, 2)
+            if found:
+                points[n, :] = [center[0], center[1]]
+
+        yhc = self.agglomerativeClustering(points)
+        print(yhc)
+
+        plt.figure()
+        plt.scatter(points[yhc == 0, 0], points[yhc == 0, 1], s=100, c='red')
+        plt.scatter(points[yhc == 1, 0], points[yhc == 1, 1], s=100, c='black')
+        plt.scatter(points[yhc == 2, 0], points[yhc == 2, 1], s=100, c='blue')
+        plt.scatter(points[yhc == 3, 0], points[yhc == 3, 1], s=100, c='cyan')
+        plt.show()
+
+    def agglomerativeClustering(self, points: np.ndarray):
+        # create clusters
+        hc = AgglomerativeClustering(affinity='euclidean', linkage='ward')
+        # save clusters for chart
+        yhc = hc.fit_predict(points)
+        return yhc
+
+    def alignImagesV1(self, rows: lite.Row):
         self.setReferences(rows)
 
         ia = ImageAlignment(self.retRef)
@@ -211,8 +248,6 @@ class ImageAnalysis:
                 ia.setRegistration()
                 ia.readImage(row['rosas'])
                 img = ia.transform()
-
-                #cv2.imwrite('/testStack/{}'.format(os.path.basename(row['rosas'])), newImg)
                 center, radius, found = self.findLaserSpot(img, 2)
 
                 xDiff = self.rosaRefPos[0] - center[0]
