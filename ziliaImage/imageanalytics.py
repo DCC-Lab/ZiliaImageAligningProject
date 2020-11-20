@@ -1,4 +1,5 @@
-from ziliaImage.ImageAlignment import ImageAlignment
+from .imageanalysis import ImageAnalysis
+from ziliaImage.imagealignment import ImageAlignment
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import ziliaImage.rosa.find_rosa_dc_v2 as ziv2
@@ -7,32 +8,19 @@ import os
 import numpy as np
 import cv2
 import sqlite3 as lite
-# For clustering
+import logging
 import scipy.cluster.hierarchy as sch
 from sklearn.cluster import AgglomerativeClustering
+from multiprocessing import Pool
 
 
-class ImageAnalysis:
-    def __init__(self):
-        self.retRef = None
-        self.rosaRef = None
-        self.rosaRefPos = None
-        self.rosaRefRadius = None
-        self.shapeRef = None
-        #self.dictImages = self.SortImages(os.path.normpath("C:\\zilia"))
-        #self.directories = self.dictImages.keys()
+class ImageAnalytics(ImageAnalysis):
+    # This is a version of ImageAnalysis that is meant for testing and graphs.
+    # For the purpose of aligning images and getting the laser spots, ImageAnalysis is much better suited.
+    def __init__(self, rows: lite.Row):
+        super().__init__(rows)
 
-    def setReferences(self, rows: lite.Row):
-        # For now, the reference doesn't really need to be any specific image.
-        # I skip the first couple of images and ignore the first couple of remaining images.
-        i = np.random.randint((len(rows) // 10) * 5, (len(rows) // 10) * 6)
-        print(rows[i]['retinas'], rows[i]['rosas'])
-        self.retRef = cv2.imread(rows[i]['retinas'], cv2.COLOR_BGR2GRAY)
-        self.rosaRef = cv2.imread(rows[i]['rosas'], cv2.COLOR_BGR2GRAY)
-        self.shapeRef = self.retRef.shape
-        self.rosaRefPos, self.rosaRefRadiusm, found = self.findLaserSpot(self.rosaRef, 2)
-
-    def findLaserSpot(self, img: np.ndarray, version: int):
+    def laserSpot(self, img: np.ndarray, version: int = 2):
         # FIXME Versions should be removed after testing is done!
         if version == 1:
             blob = ziv1.find_laser_spot_main_call(img)
@@ -42,7 +30,7 @@ class ImageAnalysis:
             raise ValueError('Version value should be 1 or 2, got {} instead!'.format(version))
 
         if self.shapeRef:
-            center = (int(blob['center']['x'] * self.shapeRef[1]), int(blob['center']['y'] * self.shapeRef[0]))
+            center = [int(blob['center']['x'] * self.shapeRef[1]), int(blob['center']['y'] * self.shapeRef[0])]
             radius = int(blob['radius'] * self.shapeRef[0])
         else:
             shape = img.shape
@@ -51,12 +39,31 @@ class ImageAnalysis:
 
         return center, radius, center != (0, 0)
 
+    # FIXME I don't think this is useful...
+    def laserSpots(self, rows: lite.Row):
+        cs, rs, fs = [], [], []
+
+        for row in rows:
+            img = cv2.imread(row['rosas'], cv2.COLOR_BGR2GRAY)
+
+            center, radius, found = self.laserSpot(img)
+            cs.append(center)
+            rs.append(radius)
+            fs.append(found)
+
+        return cs, rs, fs
+
+    def prepareForPickling(self, rows: lite.Row):
+        # We're not talking about actual pickles!
+        for row in rows:
+            yield [row['retinas'], row['rosas']]
+
     def compareVersionsOneImage(self, img: np.ndarray, iter=100):
         x1s, y1s, r1s, x2s, y2s, r2s = [], [], [], [], [], []
 
         for i in range(iter):
-            c1, r1, found = self.findLaserSpot(img, 1)
-            c2, r2, found = self.findLaserSpot(img, 2)
+            c1, r1, found = self.laserSpot(img, 1)
+            c2, r2, found = self.laserSpot(img, 2)
 
             x1s.append(c1[0])
             y1s.append(c1[1])
@@ -78,8 +85,8 @@ class ImageAnalysis:
         for n, row in enumerate(rows):
             img = cv2.imread(row['rosas'], cv2.COLOR_BGR2GRAY)
 
-            c1, r1, found = self.findLaserSpot(img, 1)
-            c2, r2, found = self.findLaserSpot(img, 2)
+            c1, r1, found = self.laserSpot(img, 1)
+            c2, r2, found = self.laserSpot(img, 2)
 
             x1s.append(c1[0])
             x2s.append(c2[0])
@@ -119,14 +126,15 @@ class ImageAnalysis:
         plt.legend()
         plt.show()
 
+    # This is not suited for our purpose at all.
     def compareVersionsHistogram2D(self, rows: lite.Row, noZeroes=False):
         x1s, y1s, x2s, y2s, = [], [], [], []
 
         for n, row in enumerate(rows):
             img = cv2.imread(row['rosas'], cv2.COLOR_BGR2GRAY)
 
-            c1, r1, found = self.findLaserSpot(img, 1)
-            c2, r2, found = self.findLaserSpot(img, 2)
+            c1, r1, found = self.laserSpot(img, 1)
+            c2, r2, found = self.laserSpot(img, 2)
             if noZeroes:
                 if c1[0] != 0 and c1[1] != 0:
                     x1s.append(c1[0])
@@ -148,30 +156,8 @@ class ImageAnalysis:
         axes[1].set_xlabel('V2')
         plt.show()
 
-    def compareVersionsHistogram(self, rows: lite.Row):
-        r1s, r2s = [], []
-        axes = []
-
-        for n, row in enumerate(rows):
-            img = cv2.imread(row['rosas'], cv2.COLOR_BGR2GRAY)
-
-            c1, r1, found = self.findLaserSpot(img, 1)
-            c2, r2, found = self.findLaserSpot(img, 2)
-
-            r1s.append(np.sqrt(c1[0] ** 2 + c1[1] ** 2))
-            r2s.append(np.sqrt(c2[0] ** 2 + c2[1] ** 2))
-            axes.append(n)
-
-        plt.figure()
-        plt.hist(r1s, 50, label='R V1')
-        plt.hist(r2s, 50, label='R V2')
-        plt.ylabel('Count')
-        plt.xlabel('Rayon [px]')
-        plt.legend()
-        plt.show()
-
     '''
-    # FIXME This is generally a bad idea.
+    # FIXME This was generally a bad idea. It also doesn't work.
     def compareVersion3DPlot(self, rows: lite.Row):
         r1s, r2s = [], []
 
@@ -182,8 +168,8 @@ class ImageAnalysis:
         for row in rows:
             img = cv2.imread(row['rosas'], cv2.COLOR_BGR2GRAY)
 
-            c1, r1, found = self.findLaserSpot(img, 1)
-            c2, r2, found = self.findLaserSpot(img, 2)
+            c1, r1, found = self.laserSpot(img, 1)
+            c2, r2, found = self.laserSpot(img, 2)
 
             z1s[c1[1], c1[0]] += 1
             z2s[c2[1], c2[0]] += 1
@@ -197,36 +183,146 @@ class ImageAnalysis:
         plt.show()
     '''
 
-    def alignImagesV2(self, rows: lite.Row):
+    def compareVersionsHistogram(self, rows: lite.Row):
+        r1s, r2s = [], []
+        axes = []
+
+        for n, row in enumerate(rows):
+            img = cv2.imread(row['rosas'], cv2.COLOR_BGR2GRAY)
+
+            c1, r1, found = self.laserSpot(img, 1)
+            c2, r2, found = self.laserSpot(img, 2)
+
+            r1s.append(np.sqrt(c1[0] ** 2 + c1[1] ** 2))
+            r2s.append(np.sqrt(c2[0] ** 2 + c2[1] ** 2))
+            axes.append(n)
+
+        plt.figure()
+        plt.hist(r1s, 50, label='R V1')
+        plt.hist(r2s, 50, label='R V2')
+        plt.ylabel('Count')
+        plt.xlabel('Rayon [px]')
+        plt.legend()
+        plt.show()
+
+    def testBadDetectionV2(self, rows: lite.Row = None):
+        if rows is not None:
+            self.setReferences(rows)
+
+        xs, ys, rs = [], [], []
+        txs, tys, trs = [], [], []
+        wxs, wys, wrs = [], [], []
+
+        '''
+        images = self.prepareForPickling(rows)
+
+        with Pool() as p:
+            # Multiprocess read
+            retina, rosa = p.map(self.ia.readImagePair, images)
+            p.map(self.ia.imgToRegister, retina)
+            p.mao(self.ia.imgToTransform, rosa)
+
+            # Multiprocess laser spots on unaltered image.
+            center, radius, found = p.map(self.laserSpot, self.ia.rosa)
+            p.map(xs.append, center[0])
+            p.map(ys.append, center[1])
+            p.map(rs.append, radius)
+
+            # Multiprocess transform on rosas.
+            trosa = p.apply_async(self.ia.registerAndTransform)
+
+            # Multiprocess laser spots on transformed images.
+            tcenter, tradius, tfound = p.map(self.laserSpot, trosa)
+            p.map(txs.append, tcenter[0])
+            p.map(tys.append, tcenter[1])
+            p.map(trs.append, tradius)
+
+            if abs(center[0] - tcenter[0]) > 150 or abs(center[1] - tcenter[1]) > 150:
+                p.map(wxs.append, tcenter[0])
+                p.map(wys.append, tcenter[1])
+                p.map(wrs.append, tradius)
+
+        '''
+        newRows = self.prepareForPickling(self.rows)
+
+        for row in newRows:
+            self.ia.imgToRegister(row[0])
+            self.ia.setRegistration()
+            self.ia.imgToTransform(row[1])
+            img = self.ia.traImg
+            newImg = self.ia.transform()
+            print(img, newImg)
+
+            with Pool() as p:
+                center, radius, found = p.map(self.laserSpot, [img, newImg])
+
+            print(center, radius, found)
+
+            center, radius, found = self.laserSpot(self.ia.traImg, 2)
+            xs.append(center[0])
+            ys.append(center[1])
+            rs.append(radius)
+
+            tcenter, tradius, tfound = self.laserSpot(newImg, 2)
+            txs.append(tcenter[0] + self.shapeRef[1])
+            tys.append(tcenter[1])
+            trs.append(tradius)
+
+            if self.checkDisplacement(center, tcenter):
+                wxs.append(tcenter[0] + self.shapeRef[1])
+                wys.append(tcenter[1])
+                wrs.append(tradius)
+
+        # FIXME This should be removed
+        txs = txs + self.shapeRef[1]
+        wxs = wxs + self.shapeRef[1]
+
+        image = np.zeros((self.shapeRef[0], self.shapeRef[1] * 2, self.shapeRef[2]), dtype=np.int32)
+        image[:, 0:2448, :] = self.retRef[:, :, ::-1]
+        image[:, 2448:4896, :] = self.retRef[:, :, ::-1]
+
+        plt.figure()
+        plt.imshow(image)
+        plt.scatter(xs, ys, s=rs, facecolors='none', edgecolors='white')
+        plt.scatter(txs, tys, s=trs, facecolors='none', edgecolors='white')
+        plt.scatter(wxs, wys, s=wrs, c='r', marker='+')
+        plt.show()
+
+    def testClusteringV2(self, rows: lite.Row):
         self.setReferences(rows)
 
         ia = ImageAlignment(self.retRef)
         ia.initiateSRReference()
 
         points = np.zeros((len(rows), 2))
+        sizes = []
 
         for n, row in enumerate(rows):
-            ia.readImage(row['retinas'])
-            ia.setRegistration()
-            ia.readImage(row['rosas'])
-            img = ia.transform()
-            center, radius, found = self.findLaserSpot(img, 2)
+            #ia.imgToTransform(row['retinas'])
+            #ia.setRegistration()
+            ia.imgToTransform(row['rosas'])
+            #img = ia.transform()
+            img = ia.traImg
+            center, radius, found = self.laserSpot(img, 2)
             if found:
                 points[n, :] = [center[0], center[1]]
+                sizes.append(radius)
 
         yhc = self.agglomerativeClustering(points)
-        print(yhc)
 
         plt.figure()
-        plt.scatter(points[yhc == 0, 0], points[yhc == 0, 1], s=100, c='red')
-        plt.scatter(points[yhc == 1, 0], points[yhc == 1, 1], s=100, c='black')
-        plt.scatter(points[yhc == 2, 0], points[yhc == 2, 1], s=100, c='blue')
-        plt.scatter(points[yhc == 3, 0], points[yhc == 3, 1], s=100, c='cyan')
+        plt.imshow(self.retRef[:, :, ::-1])
+        colors = ['#000000', '#555555', '#999999', '#bbbbbb', '#ffffff', '#550000', '#990000', '#bb0000', '#ff0000',
+                  '#005500', '#009900', '#00bb00', '#00ff00', '#000055', '#000099', '#0000bb', '#0000ff', '#555500',
+                  '#999900', '#bbbb00', '#ffff00', '#005555', '#009999', '#00bbbb', '#00ffff', '#550055', '#990099',
+                  '#bb00bb', '#ff00ff']
+        for i in range(len(colors)):
+            plt.scatter(points[yhc == i, 0], points[yhc == i, 1], s=sizes, facecolors='none', edgecolors=colors[i])
         plt.show()
 
     def agglomerativeClustering(self, points: np.ndarray):
         # create clusters
-        hc = AgglomerativeClustering(affinity='euclidean', linkage='ward')
+        hc = AgglomerativeClustering(n_clusters=None, affinity='euclidean', linkage='single', distance_threshold=100)
         # save clusters for chart
         yhc = hc.fit_predict(points)
         return yhc
@@ -237,18 +333,15 @@ class ImageAnalysis:
         ia = ImageAlignment(self.retRef)
         ia.initiateSRReference()
 
-        xs = []
-        ys = []
-        rs = []
-        an = []
+        xs, ys, rs, an = [], [], [], []
 
         with open('../tests/Test.csv', 'w') as file:
             for row in rows:
-                ia.readImage(row['retinas'])
+                ia.imgToTransform(row['retinas'])
                 ia.setRegistration()
-                ia.readImage(row['rosas'])
+                ia.imgToTransform(row['rosas'])
                 img = ia.transform()
-                center, radius, found = self.findLaserSpot(img, 2)
+                center, radius, found = self.laserSpot(img, 2)
 
                 xDiff = self.rosaRefPos[0] - center[0]
                 yDiff = self.rosaRefPos[1] - center[1]

@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from utilities import findFiles, rearrangeChannels
-from ziliaImage.ImageAlignment import ImageAlignment
+from ziliaImage.imagealignment import ImageAlignment
 from skimage import io
 
 
@@ -27,11 +27,11 @@ if __name__ == '__main__':
 
     # We iterate through the images.
     for i in range(0, 19):
-        alignment.readImage(images[(2 * i) + 1][1])
+        alignment.imgToTransform(images[(2 * i) + 1][1])
         alignment.setRegistration()
         alignment.transform()
 
-        zStack[i + 1, :, :, :] = rearrangeChannels(alignment.img)
+        zStack[i + 1, :, :, :] = rearrangeChannels(alignment.traImg)
 
     # We save the zstack.
     stackPath = os.path.join(root, '_stack.tiff')

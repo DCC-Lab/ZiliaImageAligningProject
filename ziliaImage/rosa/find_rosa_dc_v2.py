@@ -36,7 +36,7 @@ R_TH_200um = 80/2048
 R_300_um = 100/2048
 
 R_TH = R_TH_200um
-ALGO_TIMEOUT_IN_SECONDS = 0.05
+ALGO_TIMEOUT_IN_SECONDS = 0.1
 
 
 def extract_gray_map_from_red_channel(image):
