@@ -1,11 +1,12 @@
+from database.database import Database
+from utilities import findFiles
+from ziliaImage.rosa.find_rosa_dc_v2 import find_laser_spot_main_call
 import sqlite3 as lite
+import numpy as np
 import os
 import fnmatch
 import re
 import cv2
-from database.database import Database
-from utilities import findFiles
-import numpy as np
 import time
 
 
@@ -24,8 +25,8 @@ class ZiliaDatabase(Database):
     def getJpgs(self, root: str, files: list) -> list:
         jpgs = []
         for file in files:
-                if fnmatch.fnmatch(file, "*.jpg"):
-                    jpgs.append(os.path.join(root, file))
+            if fnmatch.fnmatch(file, "*.jpg"):
+                jpgs.append(os.path.join(root, file))
         return jpgs
 
     def getCSV(self, root: str, files: list) -> str:
@@ -37,11 +38,19 @@ class ZiliaDatabase(Database):
 
     def getMonkey(self, root: str) -> str:
         try:
-            associatedMonkey = re.findall('sing*e[0-9][0-9]|sing*e[0-9]', root)[0]
+            associatedMonkey = str(re.findall('sing*e[0-9][0-9]|sing*e[0-9]', root, re.IGNORECASE)[0]).lower()
         except:
             associatedMonkey = "None"
 
         return associatedMonkey
+
+    def getSeriesType(self, root: str) -> str:
+        try:
+            seriesType = str(re.findall('darkref', root, re.IGNORECASE)[0]).lower()
+        except:
+            seriesType = "normal"
+
+        return seriesType
 
     def getSeries(self, root):
         for rt, directories, files in os.walk(os.path.normpath(root)):
@@ -55,100 +64,148 @@ class ZiliaDatabase(Database):
                 associatedMonkey = self.getMonkey(rt)
                 seriesName = os.path.basename(rt)
                 seriesPath = os.path.normpath(rt)
+                seriesType = self.getSeriesType(rt)
 
                 serie = {"name": seriesName, "monkey": associatedMonkey, "images": totImages, "spectra": spectrasPath,
-                         "path": seriesPath}
+                         "path": seriesPath, "type": seriesType, "problems": 'None'}
                 yield serie
 
+    def readSpectra(self, csvPath: str):
+        #FIXME Header is sometime 2 lines, sometime 3 lines. Great.
+        # Wavelength is a list, Lines is a list of lists containing the intensities.
+        with open(csvPath, 'r') as f:
+            spectra = f.readlines()
+            spectra.pop(0)
+
+            # Separate the wavelengths from the values.
+            wavelengths = spectra.pop(0).replace('\n', '').split(',')
+            try:
+                float(wavelengths[0])
+            except:
+                wavelengths = spectra.pop(0).replace('\n', '').split(',')
+
+        for n, spectrum in enumerate(spectra):
+            spectra[n] = spectrum.replace('\n', '').split(',')
+
+        return wavelengths, spectra
+
+    def ignoreFolder(self, path):
+        boo = False
+        #if re.findall('jour 1', path, re.IGNORECASE) or re.findall('darkref', path, re.IGNORECASE):
+        if re.findall('darkref', path, re.IGNORECASE):
+            boo = True
+        return boo
+
     def sortRetinasAndRosas(self, imagePaths: list):
-        # 0 for Blue, 1 for Green, 2 for Red :
-        channel = 2
-        means = []
+        images, imMeans, imMins = [], [], []
 
-        for imagePath in imagePaths:
-            image = cv2.imread(imagePath, cv2.COLOR_BGR2GRAY)
-            means.append(np.mean(image[:, :, channel]))
+        for path in imagePaths:
+            image = cv2.imread(path, cv2.COLOR_BGR2GRAY)
 
-        meanOfMeans = np.mean(means)
+            # 0 for Blue, 1 for Green, 2 for Red :
+            imMean = np.mean(image[600:1800, 500:1500, 2])
+            imMin = np.min(image[800:1600, 660:1320, 2])
+
+            imMeans.append(imMean)
+            imMins.append(imMin)
+            imType = ''
+
+            images.append([path, [imMean, imMin], imType])
+
+        imMeans = np.mean(imMeans)
+        imMins = np.mean(imMins)
+
+        for n, image in enumerate(images):
+            path, [imMean, imMin], imType = image[0], image[1], image[2]
+            if imMean > imMeans and imMin > imMins:
+                imType = 'retina'
+            elif imMean < imMeans and imMin < imMins:
+                imType = 'rosa'
+            else:
+                imType = 'error'
+            images[n][2] = imType
+
+        # Now we validate the sorting. If the sorting is not validated, we need to correct it as best we can.
+        retinas, rosas, validated = self.validateSorting(images)
+        return retinas, rosas, validated
+
+    def validateSorting(self, images: list):
         retinas = []
         rosas = []
-        prevImg = None
+        validated = True
 
-        for mean, imagePath in zip(means, imagePaths):
-            if mean > meanOfMeans:
-                retinas.append(imagePath)
-                if prevImg == 'ret':
-                    try:
-                        rosas.append(rosas[len(rosas) - 1])
-                    except:
-                        rosas.append('None')
-                prevImg = 'ret'
-            elif mean < meanOfMeans:
-                rosas.append(imagePath)
-                if prevImg == 'rosa':
-                    retinas.append("None")
-                prevImg = 'rosa'
-            else:
-                print("Image {} could not be sorted...".format(imagePath))
-                f = open('errors.txt', 'a')
-                f.write('Error for {} at {}\n'.format(imagePath, time.time()))
-                f.close()
+        for n, image in enumerate(images):
+            # Validating for a Retina...
+            if image[2] == 'retina':
+                if 0 < n < (len(images) - 1):
+                    # if the retina is flanked by rosa, it's most likely a retina.
+                    if images[n - 1][2] == 'rosa' and images[n + 1][2] == 'rosa':
+                        retinas.append(image[0])
+                    # If the retina is flanked by retinas, it's probably a wrong retina flag and must be a rosa.
+                    elif images[n - 1][2] == 'retina' and images[n - 1][2] == 'retina':
+                        images[n][2] = 'rosa'
+                        rosas.append(image[0])
+                    # If the retina is flanked by a retina and a rosa, we need to check if the previous rosa and the
+                    # next rosa are similar.
+                    # In such a case, we can copy one of them as the rosa for the current retina.
+                    elif images[n - 1][2] == 'retina' and images[n + 1][2] == 'rosa':
+                        if images[n - 2][2] == 'rosa':
+                            prevRosa = cv2.imread(images[n - 2][0], cv2.COLOR_BGR2GRAY)
+                            nextRosa = cv2.imread(images[n + 1][0], cv2.COLOR_BGR2GRAY)
 
-        '''
-        # Get all the images mean values and read them.
-        means = []
-        images = []
+                            pCenter, pRadius, found = find_laser_spot_main_call(prevRosa)
+                            nCenter, nRadius, found = find_laser_spot_main_call(nextRosa)
+                            # If the difference between the two rosas is within 1%, we can copy it.
+                            if ((pCenter[0] - nCenter[0]) / nCenter[0]) * 100 < 1 and ((pCenter[1] - nCenter[1]) /
+                                                                                       nCenter[1]) * 100 < 1:
+                                retinas.append(image[0])
+                                rosas.append(images[n - 2][0])
+                            else:
+                                retinas.append(image[0])
+                                rosas.append('None')
+                    else:
+                        retinas.append(image[0])
+                else:
+                    retinas.append(image[0])
+            # Validating for a ROSA...
+            elif image[2] == 'rosa':
+                if 0 < n < (len(images) - 1):
+                    # if the retina is flanked by rosa, it's most likely a retina.
+                    if images[n - 1][2] == 'rosa' and images[n + 1][2] == 'rosa':
+                        images[n][2] = 'retina'
+                        retinas.append(image[0])
+                    # If the retina is flanked by retinas, it's probably a wrong retina flag and must be a rosa.
+                    elif images[n - 1][2] == 'retina' and images[n - 1][2] == 'retina':
+                        rosas.append(image[0])
 
-        for imagePath in imagePaths:
-            image = cv2.imread(imagePath, cv2.COLOR_BGR2GRAY)
-            means.append(np.mean(image[:, :, 1]))
-            images.append(cv2.resize(image, (image.shape[1] // 2, image.shape[0] // 2)))
-
-        # Sort retinas and points using green channel
-        mean = np.mean(means)
-        previousMean = 999
-        pts = []
-        retinas = []
-
-        ptsCSV = []
-        retinasCSV = []
-        n = 0
-        for image in images:
-            imgMean = np.mean(image[:, :, 2])
-            if imgMean > mean:
-                retinas.append(np.copy(image))
-                retinasCSV.append(imagePaths[n])
-            elif imgMean < mean and previousMean < mean:
-                pts[len(pts) - 1] = np.copy(image)
-                ptsCSV[len(ptsCSV) - 1] = imagePaths[n]
-            else:
-                ptsCSV.append(imagePaths[n])
-                pts.append(image)
-            previousMean = imgMean
-            n += 1
-
-        # Get rid of bad retina images and associated points using red channel
-        # FIXME Needs to be tuned to get rid of really bad pictures.
-        mean = 0
-        for retina in retinas:
-            mean += np.mean(retina[:, :, 2])
-        mean = mean / len(retinas)
-
-        n = 0
-        for retina in retinas:
-            if abs(np.mean(retina[:, :, 2]) - mean) / mean > 0.15:
-                retinas.pop(n)
-                pts.pop(n)
-            n += 1
-
-        return pts, retinas#, ptsCSV, retinasCSV
-        '''
-        return retinas, rosas
+                    # If the retina is flanked by a rosa and a retina, we are missing a retina and can't really do
+                    # anything about it.
+                    elif images[n - 1][2] == 'rosa' and images[n + 1][2] == 'retina':
+                        retinas.append('None')
+                        rosas.append(image[0])
+                    else:
+                        rosas.append(image[0])
+                else:
+                    rosas.append(image[0])
+            # Validating images that couldn't be sorted.
+            elif image[2] == 'error':
+                if 0 < n < (len(images) - 1):
+                    # If the image is flanked by rosas, it should be a retina.
+                    if images[n - 1][2] == 'rosa' and images[n + 1][2] == 'rosa':
+                        images[n][2] = 'retina'
+                        retinas.append(image[0])
+                    # If the image is flanked by retinas, it should be a rosa.
+                    elif images[n - 1][2] == 'retina' and images[n - 1][2] == 'retina':
+                        images[n][2] = 'rosa'
+                        rosas.append(image[0])
+                # What to do if it's a retina first then a rosa after?
+                # What to do if it's a rosa first then a retina after?
+        return retinas, rosas, validated
 
     def setupMainSeriesTable(self, data: list):
         if self.isConnected:
             statement = 'CREATE TABLE IF NOT EXISTS "series" (name TEXT, monkey TEXT, images INT, spectra TEXT, ' \
-                        'path TEXT)'
+                        'path TEXT, type TEXT, problems TEXT)'
             self.execute(statement)
 
             for entry in data:
@@ -163,27 +220,50 @@ class ZiliaDatabase(Database):
     def setupImageTable(self, rows: lite.Row):
         if self.isConnected:
             # Create the table for the serie :
-            statement = 'CREATE TABLE IF NOT EXISTS "images" (serie TEXT, monkey TEXT, retinas TEXT PRIMARY KEY, rosas TEXT)'
+            statement = 'CREATE TABLE IF NOT EXISTS "images" (serie TEXT, monkey TEXT, retinas TEXT PRIMARY KEY, ' \
+                        'rosas TEXT, position TEXT, spectra TEXT)'
             self.execute(statement)
 
             for row in rows:
-                jpgs = findFiles(row['path'], '*.jpg')
-                retinas, rosas = self.sortRetinasAndRosas(jpgs)
-                n = 0
-                print("Inserting serie {}".format(row['name']))
-                for rosa in rosas:
-                    try:
-                        statement = 'INSERT OR REPLACE INTO "images" ({}) VALUES ("{}", "{}", "{}", "{}")'\
-                            .format('"serie", "monkey", "retinas", "rosas"', row["name"], row["monkey"], retinas[n], rosa)
-                        self.execute(statement)
-                    except:
-                        print("An insertion failed for the serie {}!".format(row['name']))
-                    n += 1
+                print('Computing serie {}...'. format(row['name']))
+
+                if self.ignoreFolder(row['path']) is False:
+                    # Get the spectra for the associated series :
+                    if row['spectra'] != 'None':
+                        wavelengths, spectra = self.readSpectra(row['spectra'])
+                        print('Serie has {} spectra.'.format(len(spectra)))
+
+                        # Rearranging the wavelengths and spectra together
+                        spec = []
+                        for spectrum in spectra:
+                            spec.append([wavelengths, spectrum])
+                    else:
+                        print('Serie has no spectra!')
+
+                    # Sorting the retinas and ROSAs...
+                    print('Sorting the images...')
+                    jpgs = findFiles(row['path'], '*.jpg')
+                    retinas, rosas, validated = self.sortRetinasAndRosas(jpgs)
+                    print('Serie has {} retinas and {} ROSAs.'.format(len(retinas), len(rosas)))
+
+                    print("Insertion...")
+                    for n, rosa in enumerate(rosas):
+                        try:
+                            statement = 'INSERT OR REPLACE INTO "images" ({}) VALUES ("{}", "{}", "{}", "{}")'\
+                                .format('"serie", "monkey", "retinas", "rosas"', row["name"], row["monkey"], retinas[n],
+                                        rosa)
+                            self.execute(statement)
+                        except IndexError:
+                            print("An insertion failed for the serie {}! Index out of range {}".format(row['name'], n))
+                else:
+                    print('{} is not a valid data serie. It will be ignored.'.format(row['name']))
+
+                # We want to check if the images were validated. If they were not validated, we want to flag the series as problematic.
 
     @staticmethod
-    def createZiliaDB(path: str):
+    def createZiliaDB(dbPath: str, imgPath: str):
         # Proceeding to creating the database...
-        with ZiliaDatabase(path) as db:
+        with ZiliaDatabase(dbPath) as db:
             print('Changing to rwc mode...')
             db.changeConnectionMode('rwc')
 
@@ -196,20 +276,21 @@ class ZiliaDatabase(Database):
             else:
                 print('There are no tables, proceeding...')
 
-            print('Putting Database in asynchronous mode... Only one person should proceed at once...')
+            print('Putting Database in asynchronous mode. Only one person should proceed at once.')
             db.asynchronous()
 
             # Setting up the main table containing all of the series and some general information.
             print("Setting up the main series Table.")
-            series = db.getSeries("C:\\zilia")
+            series = db.getSeries(imgPath)
             db.beginTransaction()
             db.setupMainSeriesTable(series)
             db.endTransaction()
-            print("Done...")
+            print("Done!")
+        print("...Exit.")
 
     @staticmethod
-    def createImagesTable(path: str):
-        with ZiliaDatabase(path) as db:
+    def createImagesTable(dbPath: str):
+        with ZiliaDatabase(dbPath) as db:
             print('Changing to rwc mode...')
             db.changeConnectionMode('rwc')
 
@@ -221,9 +302,60 @@ class ZiliaDatabase(Database):
 
             # Now, we can grab all of the series and their path :
             print("Querrying all series...")
-            rows = db.select('series', 'name, monkey, path')
+            rows = db.select('series')
 
             print("Setting up images table...")
             db.setupImageTable(rows)
 
-            print('Done...')
+            print('Done!')
+        print("...Exit.")
+
+'''
+# Get all the images mean values and read them.
+means = []
+images = []
+
+for imagePath in imagePaths:
+    image = cv2.imread(imagePath, cv2.COLOR_BGR2GRAY)
+    means.append(np.mean(image[:, :, 1]))
+    images.append(cv2.resize(image, (image.shape[1] // 2, image.shape[0] // 2)))
+
+# Sort retinas and points using green channel
+mean = np.mean(means)
+previousMean = 999
+pts = []
+retinas = []
+
+ptsCSV = []
+retinasCSV = []
+n = 0
+for image in images:
+    imgMean = np.mean(image[:, :, 2])
+    if imgMean > mean:
+        retinas.append(np.copy(image))
+        retinasCSV.append(imagePaths[n])
+    elif imgMean < mean and previousMean < mean:
+        pts[len(pts) - 1] = np.copy(image)
+        ptsCSV[len(ptsCSV) - 1] = imagePaths[n]
+    else:
+        ptsCSV.append(imagePaths[n])
+        pts.append(image)
+    previousMean = imgMean
+    n += 1
+
+# Get rid of bad retina images and associated points using red channel
+# FIXME Needs to be tuned to get rid of really bad pictures.
+mean = 0
+for retina in retinas:
+    mean += np.mean(retina[:, :, 2])
+mean = mean / len(retinas)
+
+n = 0
+for retina in retinas:
+    if abs(np.mean(retina[:, :, 2]) - mean) / mean > 0.15:
+        retinas.pop(n)
+        pts.pop(n)
+    n += 1
+
+return pts, retinas#, ptsCSV, retinasCSV
+'''
