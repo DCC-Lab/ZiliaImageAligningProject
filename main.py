@@ -4,7 +4,9 @@ from database.ziliaDB import ZiliaDatabase
 import os
 
 if __name__ == '__main__':
-    db = ZiliaDatabase('\\experiment1\\zilia.db')
+    cwd = os.getcwd()
+    dbPath = os.path.join(os.path.dirname(cwd), 'experiment1', 'zilia.db')
+    db = ZiliaDatabase(dbPath)
     rows = db.select('series', condition='"type" IS NOT "darkref"')
     for row in rows:
         images = db.select('images', condition='"serie" is {}'.format(row['name']))
