@@ -396,7 +396,7 @@ class ZiliaDatabase(Database):
             for serie in series:
                 images = db.select('images', condition='"serie" IS "{}"'.format(serie['name']))
                 for image in images:
-                    print(image['path'])
+                    print(image['images'])
 
             # We need to querry all the series. Then, serie by serie, we get the images. Then, image by image, we create the triplets.
 
