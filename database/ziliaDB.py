@@ -96,39 +96,6 @@ class ZiliaDatabase(Database):
             boo = True
         return boo
 
-    def sortRetinasAndRosas(self, imagePaths: list):
-        images, imMeans, imMins = [], [], []
-
-        for path in imagePaths:
-            image = cv2.imread(path, cv2.COLOR_BGR2GRAY)
-
-            # 0 for Blue, 1 for Green, 2 for Red :
-            imMean = np.mean(image[600:1800, 500:1500, 2])
-            imMin = np.min(image[800:1600, 660:1320, 2])
-
-            imMeans.append(imMean)
-            imMins.append(imMin)
-            imType = ''
-
-            images.append([path, [imMean, imMin], imType])
-
-        imMeans = np.mean(imMeans)
-        imMins = np.mean(imMins)
-
-        for n, image in enumerate(images):
-            path, [imMean, imMin], imType = image[0], image[1], image[2]
-            if imMean > imMeans and imMin > imMins:
-                imType = 'retina'
-            elif imMean < imMeans and imMin < imMins:
-                imType = 'rosa'
-            else:
-                imType = 'error'
-            images[n][2] = imType
-
-        # Now we validate the sorting. If the sorting is not validated, we need to correct it as best we can.
-        retinas, rosas, validated = self.validateSorting(images)
-        return retinas, rosas, validated
-
     def validateSorting(self, images: list):
         retinas = []
         rosas = []
@@ -325,11 +292,82 @@ class ZiliaDatabase(Database):
     def setupTripletsTable(self, rows: lite.Row):
         if self.isConnected:
             statement = 'CREATE TABLE IF NOT EXISTS "triplets" (serie TEXT, monkey TEXT, retinas TEXT PRIMARY KEY, ' \
-                        'rosas TEXT, x INT, y INT, deltax INT, deltay INT, spectra TEXT)'
+                        'rosas TEXT, x INT, y INT, deltax INT, deltay INT, radius INT, spectra TEXT)'
             self.execute(statement)
 
-            for row in rows:
-                print(row)
+            retinas = []
+            rosas = []
+            erroneous = []
+
+            for n, row in enumerate(rows):
+                imType = row['imagetype']
+                if imType == 'retina':
+                    if 0 < n < (len(rows) - 1):
+                        # if the retina is flanked by rosa, it's most likely a retina.
+                        if rows[n - 1]['imagetype'] == 'rosa' and rows[n + 1]['imagetype'] == 'rosa':
+                            retinas.append(row)
+                        # If the retina is flanked by retinas, it's probably a wrong retina flag and must be a rosa.
+                        elif rows[n - 1]['imagetype'] == 'retina' and rows[n - 1]['imagetype'] == 'retina':
+                            erroneous.append(row)
+                            rows[n]['imagetype'] = 'rosa'
+                            rosas.append(row)
+                        # If the retina is flanked by a retina and a rosa, we need to check if the previous rosa and the
+                        # next rosa are similar.
+                        # In such a case, we can copy one of them as the rosa for the current retina.
+                        elif rows[n - 1]['imagetype'] == 'retina' and rows[n + 1]['imagetype'] == 'rosa':
+                            if rows[n - 2]['imagetype'] == 'rosa':
+                                prevRosa = cv2.imread(rows[n - 2]['images'], cv2.COLOR_BGR2GRAY)
+                                nextRosa = cv2.imread(rows[n + 1]['images'], cv2.COLOR_BGR2GRAY)
+
+                                pCenter, pRadius, found = find_laser_spot_main_call(prevRosa)
+                                nCenter, nRadius, found = find_laser_spot_main_call(nextRosa)
+                                # If the difference between the two rosas is within 1%, we can copy it.
+                                if ((pCenter[0] - nCenter[0]) / nCenter[0]) * 100 < 1 and ((pCenter[1] - nCenter[1]) /
+                                                                                           nCenter[1]) * 100 < 1:
+                                    retinas.append(row)
+                                    rosas.append(rows[n - 2])
+                                else:
+                                    retinas.append(row)
+                                    rosas.append('None')
+                        else:
+                            retinas.append(row)
+
+                elif imType == 'rosa':
+                    if 0 < n < (len(rows) - 1):
+                        # if the retina is flanked by rosa, it's most likely a retina.
+                        if rows[n - 1]['imagetype'] == 'rosa' and rows[n + 1]['imagetype'] == 'rosa':
+                            erroneous.append(row)
+                            rows[n]['imagetype'] = 'retina'
+                            retinas.append(row)
+                        # If the retina is flanked by retinas, it's probably a wrong retina flag and must be a rosa.
+                        elif rows[n - 1]['imagetype'] == 'retina' and rows[n - 1]['imagetype'] == 'retina':
+                            rosas.append(row)
+
+                        # If the retina is flanked by a rosa and a retina, we are missing a retina and can't really do
+                        # anything about it.
+                        elif rows[n - 1]['imagetype'] == 'rosa' and rows[n + 1]['imagetype'] == 'retina':
+                            retinas.append('None')
+                            rosas.append(row)
+                        else:
+                            rosas.append(row)
+                    else:
+                        rosas.append(row)
+
+                elif imType == 'error':
+                    if 0 < n < (len(rows) - 1):
+                        # If the image is flanked by rosas, it should be a retina.
+                        if rows[n - 1]['imagetype'] == 'rosa':
+                            rows[n]['imagetype'] = 'retina'
+                            retinas.append(row)
+                        # If the image is flanked by retinas, it should be a rosa.
+                        elif rows[n - 1]['imagetype'] == 'retina':
+                            rows[n]['imagetype'] = 'rosa'
+                            rosas.append(row)
+
+                else:
+                    raise TypeError('Image is not a recognized type. Type is : {}'.format(imType))
+
+            print('Retinas = {}, ROSAs = {}, Erroneous = {}'.format(len(retinas), len(rosas), len(erroneous)))
 
     @staticmethod
     def createZiliaDB(dbPath: str, imgPath: str):
@@ -395,8 +433,7 @@ class ZiliaDatabase(Database):
             series = db.select('series')
             for serie in series:
                 images = db.select('images', condition='"serie" IS "{}" ORDER BY "images" ASC'.format(serie['name']))
-                for image in images:
-                    print(image['images'])
+                db.setupTripletsTable(images)
 
             # We need to querry all the series. Then, serie by serie, we get the images. Then, image by image, we create the triplets.
 
