@@ -394,7 +394,7 @@ class ZiliaDatabase(Database):
             print("Querrying all series...")
             series = db.select('series')
             for serie in series:
-                images = db.select('images', condition='WHERE "serie" IS "{}"'.format(serie['name']))
+                images = db.select('images', condition='WHERE serie IS "{}"'.format(serie['name']))
                 for image in images:
                     print(image['path'])
 
