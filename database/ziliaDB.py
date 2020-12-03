@@ -233,8 +233,7 @@ class ZiliaDatabase(Database):
                 print('Insertion...')
                 for image in images:
                     path, blueMean, blueMin, greenMean, greenMin, redMean, redMin, imType = image
-                    values = '"{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}"'.format(path, blueMean, blueMin, greenMean,
-                                                                                     greenMin, redMean, redMin, imType)
+                    values = '"{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}"'.format(row['name'], row['monkey'], path, blueMean, blueMin, greenMean, greenMin, redMean, redMin, imType)
                     statement = 'INSERT OR REPLACE INTO "images" ("serie", "monkey", "images", "bluemean", ' \
                                 '"bluemin", "greenmean", "greenmin", "redmean", "redmin", "imagetype") ' \
                                 'VALUES ({})'.format(values)
