@@ -160,9 +160,11 @@ class ZiliaDatabase(Database):
 
         for n, image in enumerate(images):
             path, redMean, redMin, imType = image[0], image[5], image[6], image[7]
-            if redMean > redMeans and redMin > redMins:
+            #if redMean > redMeans and redMin > redMins:
+            if redMean > redMeans:
                 imType = 'retina'
-            elif redMean < redMeans and redMin < redMins:
+            elif redMean < redMeans:
+            #elif redMean < redMeans and redMin < redMins:
                 imType = 'rosa'
             else:
                 imType = 'error'
