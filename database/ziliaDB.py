@@ -217,6 +217,66 @@ class ZiliaDatabase(Database):
                 statement = 'INSERT OR REPLACE INTO "series" ({}) VALUES ({})'.format(', '.join(fields), ', '.join(items))
                 self.execute(statement)
 
+    def setupImagesTable(self, rows: lite.Row):
+        if self.isConnected:
+            # Create the table for the serie :
+            statement = 'CREATE TABLE IF NOT EXISTS "images" (serie TEXT, monkey TEXT, images TEXT PRIMARY KEY, ' \
+                        'bluemean INT, bluemin INT, greenmean INT, greenmin INT, redmean INT, redmin INT, ' \
+                        'imagetype TEXT)'
+            self.execute(statement)
+
+            for row in rows:
+                print('Computing serie {}...'. format(row['name']))
+                jpgs = findFiles(row['path'], '*.jpg')
+                print('{} images found for the serie. Assigning types to the images...'.format(len(jpgs)))
+                images = self.imageTypes(jpgs)
+                print('Insertion...')
+                for image in images:
+                    path, blueMean, blueMin, greenMean, greenMin, redMean, redMin, imType = image
+                    values = '"{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}"'.format(path, blueMean, blueMin, greenMean,
+                                                                                     greenMin, redMean, redMin, imType)
+                    statement = 'INSERT OR REPLACE INTO "images" ("serie", "monkey", "images", "bluemean", ' \
+                                '"bluemin", "greenmean", "greenmin", "redmean", "redmin", "imagetype") ' \
+                                'VALUES ({})'.format(values)
+                    self.beginTransaction()
+                    self.execute(statement)
+                    self.endTransaction()
+
+    def imageTypes(self, imagePaths):
+        images, redMeans, redMins = [], [], []
+
+        for path in imagePaths:
+            image = cv2.imread(path, cv2.COLOR_BGR2GRAY)
+
+            # 0 for Blue, 1 for Green, 2 for Red :
+            blueMean = np.mean(image[600:1800, 500:1500, 0])
+            blueMin = np.min(image[600:1800, 500:1500, 0])
+            greenMean = np.mean(image[600:1800, 500:1500, 1])
+            greenMin = np.min(image[600:1800, 500:1500, 1])
+            redMean = np.mean(image[600:1800, 500:1500, 2])
+            redMin = np.min(image[800:1600, 660:1320, 2])
+
+            redMeans.append(redMean)
+            redMins.append(redMin)
+            imType = ''
+
+            images.append([path, blueMean, blueMin, greenMean, greenMin, redMean, redMin, imType])
+
+        redMeans = np.mean(redMeans)
+        redMins = np.mean(redMins)
+
+        for n, image in enumerate(images):
+            path, redMean, redMin, imType = image[0], image[5], image[6], image[7]
+            if redMean > redMeans and redMin > redMins:
+                imType = 'retina'
+            elif redMean < redMeans and redMin < redMins:
+                imType = 'rosa'
+            else:
+                imType = 'error'
+            images[n][7] = imType
+
+        return images
+
     def setupImageTable(self, rows: lite.Row):
         if self.isConnected:
             # Create the table for the serie :
@@ -260,6 +320,15 @@ class ZiliaDatabase(Database):
 
                 # We want to check if the images were validated. If they were not validated, we want to flag the series as problematic.
 
+    def setupTripletsTable(self, rows: lite.Row):
+        if self.isConnected:
+            statement = 'CREATE TABLE IF NOT EXISTS "triplets" (serie TEXT, monkey TEXT, retinas TEXT PRIMARY KEY, ' \
+                        'rosas TEXT, position TEXT, spectra TEXT)'
+            self.execute(statement)
+
+            for row in rows:
+                print(row)
+
     @staticmethod
     def createZiliaDB(dbPath: str, imgPath: str):
         # Proceeding to creating the database...
@@ -282,9 +351,7 @@ class ZiliaDatabase(Database):
             # Setting up the main table containing all of the series and some general information.
             print("Setting up the main series Table.")
             series = db.getSeries(imgPath)
-            db.beginTransaction()
             db.setupMainSeriesTable(series)
-            db.endTransaction()
             print("Done!")
         print("...Exit.")
 
@@ -305,7 +372,7 @@ class ZiliaDatabase(Database):
             rows = db.select('series')
 
             print("Setting up images table...")
-            db.setupImageTable(rows)
+            db.setupImagesTable(rows)
 
             print('Done!')
         print("...Exit.")
