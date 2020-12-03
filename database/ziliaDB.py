@@ -302,7 +302,7 @@ class ZiliaDatabase(Database):
             else:
                 raise TypeError('Image is not a recognized type. Type is : {}'.format(imType))
 
-        print('Retinas = {}, ROSAs = {}, Erroneous = {}'.format(len(retinas), len(rosas), len(erroneous)))
+        print('Images = {}, Retinas = {}, ROSAs = {}, Erroneous = {}'.format(len(rows), len(retinas), len(rosas), len(erroneous)))
         return retinas, rosas, erroneous
 
     @staticmethod
