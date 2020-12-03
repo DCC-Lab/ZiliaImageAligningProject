@@ -8,5 +8,6 @@ if __name__ == '__main__':
     defaultPath = os.path.normpath(dbPath)
     imagesPath = os.path.dirname(dbPath)
     db = ZiliaDatabase(defaultPath)
-    db.createZiliaDB(defaultPath, imagesPath)
-    db.createImagesTable(defaultPath)
+    #db.createZiliaDB(defaultPath, imagesPath)
+    #db.createImagesTable(defaultPath)
+    db.createTripletsTable(dbPath)

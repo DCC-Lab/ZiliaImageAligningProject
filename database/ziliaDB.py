@@ -276,6 +276,8 @@ class ZiliaDatabase(Database):
 
         return images
 
+    # FIXME To be removed.
+    '''
     def setupImageTable(self, rows: lite.Row):
         if self.isConnected:
             # Create the table for the serie :
@@ -318,11 +320,12 @@ class ZiliaDatabase(Database):
                     print('{} is not a valid data serie. It will be ignored.'.format(row['name']))
 
                 # We want to check if the images were validated. If they were not validated, we want to flag the series as problematic.
+    '''
 
     def setupTripletsTable(self, rows: lite.Row):
         if self.isConnected:
             statement = 'CREATE TABLE IF NOT EXISTS "triplets" (serie TEXT, monkey TEXT, retinas TEXT PRIMARY KEY, ' \
-                        'rosas TEXT, position TEXT, spectra TEXT)'
+                        'rosas TEXT, x INT, y INT, deltax INT, deltay INT, spectra TEXT)'
             self.execute(statement)
 
             for row in rows:
@@ -376,6 +379,28 @@ class ZiliaDatabase(Database):
             print('Done!')
         print("...Exit.")
 
+    @staticmethod
+    def createTripletsTable(dbPath: str):
+        with ZiliaDatabase(dbPath) as db:
+            print('Changing to rwc mode...')
+            db.changeConnectionMode('rwc')
+
+            print('Putting Database in asynchronous mode... Only one person should proceed at once...')
+            db.asynchronous()
+
+            print("Dropping the triplets table...")
+            db.dropTable("triplets")
+
+            print("Querrying all series...")
+            series = db.select('series')
+            for serie in series:
+                images = db.select('images', condition='WHERE "serie" IS {}'.format(serie['name']))
+                for image in images:
+                    print(image['path'])
+
+            # We need to querry all the series. Then, serie by serie, we get the images. Then, image by image, we create the triplets.
+
+# FIXME To be removed.
 '''
 # Get all the images mean values and read them.
 means = []
