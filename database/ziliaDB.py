@@ -96,79 +96,6 @@ class ZiliaDatabase(Database):
             boo = True
         return boo
 
-    def validateSorting(self, images: list):
-        retinas = []
-        rosas = []
-        validated = True
-
-        for n, image in enumerate(images):
-            # Validating for a Retina...
-            if image[2] == 'retina':
-                if 0 < n < (len(images) - 1):
-                    # if the retina is flanked by rosa, it's most likely a retina.
-                    if images[n - 1][2] == 'rosa' and images[n + 1][2] == 'rosa':
-                        retinas.append(image[0])
-                    # If the retina is flanked by retinas, it's probably a wrong retina flag and must be a rosa.
-                    elif images[n - 1][2] == 'retina' and images[n - 1][2] == 'retina':
-                        images[n][2] = 'rosa'
-                        rosas.append(image[0])
-                    # If the retina is flanked by a retina and a rosa, we need to check if the previous rosa and the
-                    # next rosa are similar.
-                    # In such a case, we can copy one of them as the rosa for the current retina.
-                    elif images[n - 1][2] == 'retina' and images[n + 1][2] == 'rosa':
-                        if images[n - 2][2] == 'rosa':
-                            prevRosa = cv2.imread(images[n - 2][0], cv2.COLOR_BGR2GRAY)
-                            nextRosa = cv2.imread(images[n + 1][0], cv2.COLOR_BGR2GRAY)
-
-                            pCenter, pRadius, found = find_laser_spot_main_call(prevRosa)
-                            nCenter, nRadius, found = find_laser_spot_main_call(nextRosa)
-                            # If the difference between the two rosas is within 1%, we can copy it.
-                            if ((pCenter[0] - nCenter[0]) / nCenter[0]) * 100 < 1 and ((pCenter[1] - nCenter[1]) /
-                                                                                       nCenter[1]) * 100 < 1:
-                                retinas.append(image[0])
-                                rosas.append(images[n - 2][0])
-                            else:
-                                retinas.append(image[0])
-                                rosas.append('None')
-                    else:
-                        retinas.append(image[0])
-                else:
-                    retinas.append(image[0])
-            # Validating for a ROSA...
-            elif image[2] == 'rosa':
-                if 0 < n < (len(images) - 1):
-                    # if the retina is flanked by rosa, it's most likely a retina.
-                    if images[n - 1][2] == 'rosa' and images[n + 1][2] == 'rosa':
-                        images[n][2] = 'retina'
-                        retinas.append(image[0])
-                    # If the retina is flanked by retinas, it's probably a wrong retina flag and must be a rosa.
-                    elif images[n - 1][2] == 'retina' and images[n - 1][2] == 'retina':
-                        rosas.append(image[0])
-
-                    # If the retina is flanked by a rosa and a retina, we are missing a retina and can't really do
-                    # anything about it.
-                    elif images[n - 1][2] == 'rosa' and images[n + 1][2] == 'retina':
-                        retinas.append('None')
-                        rosas.append(image[0])
-                    else:
-                        rosas.append(image[0])
-                else:
-                    rosas.append(image[0])
-            # Validating images that couldn't be sorted.
-            elif image[2] == 'error':
-                if 0 < n < (len(images) - 1):
-                    # If the image is flanked by rosas, it should be a retina.
-                    if images[n - 1][2] == 'rosa' and images[n + 1][2] == 'rosa':
-                        images[n][2] = 'retina'
-                        retinas.append(image[0])
-                    # If the image is flanked by retinas, it should be a rosa.
-                    elif images[n - 1][2] == 'retina' and images[n - 1][2] == 'retina':
-                        images[n][2] = 'rosa'
-                        rosas.append(image[0])
-                # What to do if it's a retina first then a rosa after?
-                # What to do if it's a rosa first then a retina after?
-        return retinas, rosas, validated
-
     def setupMainSeriesTable(self, data: list):
         if self.isConnected:
             statement = 'CREATE TABLE IF NOT EXISTS "series" (name TEXT, monkey TEXT, images INT, spectra TEXT, ' \
@@ -295,83 +222,88 @@ class ZiliaDatabase(Database):
                         'rosas TEXT, x INT, y INT, deltax INT, deltay INT, radius INT, spectra TEXT)'
             self.execute(statement)
 
-            imagesTypes = []
-            for row in rows:
-                imagesTypes.append(row['imagetype'])
+            retinas, rosas, erroneous = self.sortImagesByType(rows)
+            pass
 
-            retinas = []
-            rosas = []
-            erroneous = []
+    def sortImagesByType(self, rows: lite.Row):
+        imagesTypes = []
+        for row in rows:
+            imagesTypes.append(row['imagetype'])
 
-            for n, row in enumerate(rows):
-                imType = row['imagetype']
-                if imType == 'retina':
-                    if 0 < n < (len(rows) - 1):
-                        # if the retina is flanked by rosa, it's most likely a retina.
-                        if imagesTypes[n - 1] == 'rosa' and imagesTypes[n + 1] == 'rosa':
-                            retinas.append(row)
-                        # If the retina is flanked by retinas, it's probably a wrong retina flag and must be a rosa.
-                        elif imagesTypes[n - 1] == 'retina' and imagesTypes[n - 1] == 'retina':
-                            erroneous.append(row)
-                            imagesTypes[n] = 'rosa'
-                            rosas.append(row)
-                        # If the retina is flanked by a retina and a rosa, we need to check if the previous rosa and the
-                        # next rosa are similar.
-                        # In such a case, we can copy one of them as the rosa for the current retina.
-                        elif imagesTypes[n - 1] == 'retina' and imagesTypes[n + 1]== 'rosa':
-                            if imagesTypes[n - 2] == 'rosa':
-                                prevRosa = cv2.imread(rows[n - 2]['images'], cv2.COLOR_BGR2GRAY)
-                                nextRosa = cv2.imread(rows[n + 1]['images'], cv2.COLOR_BGR2GRAY)
+        retinas = []
+        rosas = []
+        erroneous = []
 
-                                pCenter, pRadius, found = find_laser_spot_main_call(prevRosa)
-                                nCenter, nRadius, found = find_laser_spot_main_call(nextRosa)
-                                # If the difference between the two rosas is within 1%, we can copy it.
-                                if ((pCenter[0] - nCenter[0]) / nCenter[0]) * 100 < 1 and ((pCenter[1] - nCenter[1]) /
-                                                                                           nCenter[1]) * 100 < 1:
-                                    retinas.append(row)
-                                    rosas.append(rows[n - 2])
-                                else:
-                                    retinas.append(row)
-                                    rosas.append('None')
-                        else:
-                            retinas.append(row)
+        for n, row in enumerate(rows):
+            imType = row['imagetype']
+            if imType == 'retina':
+                if 0 < n < (len(rows) - 1):
+                    # if the retina is flanked by rosa, it's most likely a retina.
+                    if imagesTypes[n - 1] == 'rosa' and imagesTypes[n + 1] == 'rosa':
+                        retinas.append(row)
+                    # If the retina is flanked by retinas, it's probably a wrong retina flag and must be a rosa.
+                    elif imagesTypes[n - 1] == 'retina' and imagesTypes[n - 1] == 'retina':
+                        erroneous.append(row)
+                        imagesTypes[n] = 'rosa'
+                        rosas.append(row)
+                    # If the retina is flanked by a retina and a rosa, we need to check if the previous rosa and the
+                    # next rosa are similar.
+                    # In such a case, we can copy one of them as the rosa for the current retina.
+                    elif imagesTypes[n - 1] == 'retina' and imagesTypes[n + 1] == 'rosa':
+                        if imagesTypes[n - 2] == 'rosa':
+                            prevRosa = cv2.imread(rows[n - 2]['images'], cv2.COLOR_BGR2GRAY)
+                            nextRosa = cv2.imread(rows[n + 1]['images'], cv2.COLOR_BGR2GRAY)
 
-                elif imType == 'rosa':
-                    if 0 < n < (len(rows) - 1):
-                        # if the retina is flanked by rosa, it's most likely a retina.
-                        if imagesTypes[n - 1] == 'rosa' and imagesTypes[n + 1] == 'rosa':
-                            erroneous.append(row)
-                            imagesTypes[n] = 'retina'
-                            retinas.append(row)
-                        # If the retina is flanked by retinas, it's probably a wrong retina flag and must be a rosa.
-                        elif imagesTypes[n - 1] == 'retina' and imagesTypes[n - 1]== 'retina':
-                            rosas.append(row)
-
-                        # If the retina is flanked by a rosa and a retina, we are missing a retina and can't really do
-                        # anything about it.
-                        elif imagesTypes[n - 1] == 'rosa' and imagesTypes[n + 1] == 'retina':
-                            retinas.append('None')
-                            rosas.append(row)
-                        else:
-                            rosas.append(row)
+                            pCenter, pRadius, found = find_laser_spot_main_call(prevRosa)
+                            nCenter, nRadius, found = find_laser_spot_main_call(nextRosa)
+                            # If the difference between the two rosas is within 1%, we can copy it.
+                            if ((pCenter[0] - nCenter[0]) / nCenter[0]) * 100 < 1 and ((pCenter[1] - nCenter[1]) /
+                                                                                       nCenter[1]) * 100 < 1:
+                                retinas.append(row)
+                                rosas.append(rows[n - 2])
+                            else:
+                                retinas.append(row)
+                                rosas.append('None')
                     else:
+                        retinas.append(row)
+
+            elif imType == 'rosa':
+                if 0 < n < (len(rows) - 1):
+                    # if the retina is flanked by rosa, it's most likely a retina.
+                    if imagesTypes[n - 1] == 'rosa' and imagesTypes[n + 1] == 'rosa':
+                        erroneous.append(row)
+                        imagesTypes[n] = 'retina'
+                        retinas.append(row)
+                    # If the retina is flanked by retinas, it's probably a wrong retina flag and must be a rosa.
+                    elif imagesTypes[n - 1] == 'retina' and imagesTypes[n - 1] == 'retina':
                         rosas.append(row)
 
-                elif imType == 'error':
-                    if 0 < n < (len(rows) - 1):
-                        # If the image is flanked by rosas, it should be a retina.
-                        if imagesTypes[n - 1] == 'rosa':
-                            imagesTypes[n] = 'retina'
-                            retinas.append(row)
-                        # If the image is flanked by retinas, it should be a rosa.
-                        elif imagesTypes[n - 1] == 'retina':
-                            imagesTypes[n] = 'rosa'
-                            rosas.append(row)
-
+                    # If the retina is flanked by a rosa and a retina, we are missing a retina and can't really do
+                    # anything about it.
+                    elif imagesTypes[n - 1] == 'rosa' and imagesTypes[n + 1] == 'retina':
+                        retinas.append('None')
+                        rosas.append(row)
+                    else:
+                        rosas.append(row)
                 else:
-                    raise TypeError('Image is not a recognized type. Type is : {}'.format(imType))
+                    rosas.append(row)
 
-            print('Retinas = {}, ROSAs = {}, Erroneous = {}'.format(len(retinas), len(rosas), len(erroneous)))
+            elif imType == 'error':
+                if 0 < n < (len(rows) - 1):
+                    # If the image is flanked by rosas, it should be a retina.
+                    if imagesTypes[n - 1] == 'rosa':
+                        imagesTypes[n] = 'retina'
+                        retinas.append(row)
+                    # If the image is flanked by retinas, it should be a rosa.
+                    elif imagesTypes[n - 1] == 'retina':
+                        imagesTypes[n] = 'rosa'
+                        rosas.append(row)
+
+            else:
+                raise TypeError('Image is not a recognized type. Type is : {}'.format(imType))
+
+        print('Retinas = {}, ROSAs = {}, Erroneous = {}'.format(len(retinas), len(rosas), len(erroneous)))
+        return retinas, rosas, erroneous
 
     @staticmethod
     def createZiliaDB(dbPath: str, imgPath: str):
