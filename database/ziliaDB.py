@@ -295,6 +295,10 @@ class ZiliaDatabase(Database):
                         'rosas TEXT, x INT, y INT, deltax INT, deltay INT, radius INT, spectra TEXT)'
             self.execute(statement)
 
+            imagesTypes = []
+            for row in rows:
+                imagesTypes.append(row['imagetype'])
+
             retinas = []
             rosas = []
             erroneous = []
@@ -304,18 +308,18 @@ class ZiliaDatabase(Database):
                 if imType == 'retina':
                     if 0 < n < (len(rows) - 1):
                         # if the retina is flanked by rosa, it's most likely a retina.
-                        if rows[n - 1]['imagetype'] == 'rosa' and rows[n + 1]['imagetype'] == 'rosa':
+                        if imagesTypes[n - 1] == 'rosa' and imagesTypes[n + 1] == 'rosa':
                             retinas.append(row)
                         # If the retina is flanked by retinas, it's probably a wrong retina flag and must be a rosa.
-                        elif rows[n - 1]['imagetype'] == 'retina' and rows[n - 1]['imagetype'] == 'retina':
+                        elif imagesTypes[n - 1] == 'retina' and imagesTypes[n - 1] == 'retina':
                             erroneous.append(row)
-                            rows[n]['imagetype'] = 'rosa'
+                            imagesTypes[n] = 'rosa'
                             rosas.append(row)
                         # If the retina is flanked by a retina and a rosa, we need to check if the previous rosa and the
                         # next rosa are similar.
                         # In such a case, we can copy one of them as the rosa for the current retina.
-                        elif rows[n - 1]['imagetype'] == 'retina' and rows[n + 1]['imagetype'] == 'rosa':
-                            if rows[n - 2]['imagetype'] == 'rosa':
+                        elif imagesTypes[n - 1] == 'retina' and imagesTypes[n + 1]== 'rosa':
+                            if imagesTypes[n - 2] == 'rosa':
                                 prevRosa = cv2.imread(rows[n - 2]['images'], cv2.COLOR_BGR2GRAY)
                                 nextRosa = cv2.imread(rows[n + 1]['images'], cv2.COLOR_BGR2GRAY)
 
@@ -335,17 +339,17 @@ class ZiliaDatabase(Database):
                 elif imType == 'rosa':
                     if 0 < n < (len(rows) - 1):
                         # if the retina is flanked by rosa, it's most likely a retina.
-                        if rows[n - 1]['imagetype'] == 'rosa' and rows[n + 1]['imagetype'] == 'rosa':
+                        if imagesTypes[n - 1] == 'rosa' and imagesTypes[n + 1] == 'rosa':
                             erroneous.append(row)
-                            rows[n]['imagetype'] = 'retina'
+                            imagesTypes[n] = 'retina'
                             retinas.append(row)
                         # If the retina is flanked by retinas, it's probably a wrong retina flag and must be a rosa.
-                        elif rows[n - 1]['imagetype'] == 'retina' and rows[n - 1]['imagetype'] == 'retina':
+                        elif imagesTypes[n - 1] == 'retina' and imagesTypes[n - 1]== 'retina':
                             rosas.append(row)
 
                         # If the retina is flanked by a rosa and a retina, we are missing a retina and can't really do
                         # anything about it.
-                        elif rows[n - 1]['imagetype'] == 'rosa' and rows[n + 1]['imagetype'] == 'retina':
+                        elif imagesTypes[n - 1] == 'rosa' and imagesTypes[n + 1] == 'retina':
                             retinas.append('None')
                             rosas.append(row)
                         else:
@@ -356,12 +360,12 @@ class ZiliaDatabase(Database):
                 elif imType == 'error':
                     if 0 < n < (len(rows) - 1):
                         # If the image is flanked by rosas, it should be a retina.
-                        if rows[n - 1]['imagetype'] == 'rosa':
-                            rows[n]['imagetype'] = 'retina'
+                        if imagesTypes[n - 1] == 'rosa':
+                            imagesTypes[n] = 'retina'
                             retinas.append(row)
                         # If the image is flanked by retinas, it should be a rosa.
-                        elif rows[n - 1]['imagetype'] == 'retina':
-                            rows[n]['imagetype'] = 'rosa'
+                        elif imagesTypes[n - 1] == 'retina':
+                            imagesTypes[n] = 'rosa'
                             rosas.append(row)
 
                 else:
