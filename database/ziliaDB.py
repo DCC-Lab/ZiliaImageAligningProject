@@ -1,13 +1,13 @@
 from database.database import Database
 from utilities import findFiles
 from ziliaImage.rosa.find_rosa_dc_v2 import find_laser_spot_main_call
+from xlsx.ziliaxlsx import ZiliaXLSX
 import sqlite3 as lite
 import numpy as np
 import os
 import fnmatch
 import re
 import cv2
-import time
 
 
 class ZiliaDatabase(Database):
@@ -38,7 +38,10 @@ class ZiliaDatabase(Database):
 
     def getMonkey(self, root: str) -> str:
         try:
-            associatedMonkey = str(re.findall('sing*e[0-9][0-9]|sing*e[0-9]', root, re.IGNORECASE)[0]).lower()
+            # RE is made following these rules : Sometimes we have singge##,
+            # sometimes we have sing##,
+            # sometimes we have singe##,
+            associatedMonkey = str(re.findall('sing+e?([0-9]+)', root, re.IGNORECASE)[0])
         except:
             associatedMonkey = "None"
 
@@ -46,11 +49,20 @@ class ZiliaDatabase(Database):
 
     def getSeriesType(self, root: str) -> str:
         try:
-            seriesType = str(re.findall('darkref', root, re.IGNORECASE)[0]).lower()
+            seriesType = str(re.findall('darkref|pureonh', root, re.IGNORECASE)[0]).lower()
         except:
             seriesType = "normal"
 
         return seriesType
+
+    # FIXME For later, once we know what the variables are.
+    def getAcquisitionVariables(self, root: str) -> list:
+        try:
+            variables = str(re.findall('[0-9]*-[0-9]*-[0-9]*-[0-9]*', root, re.IGNORECASE)[0]).split('-')
+        except:
+            variables = ['0', '0', '0', '0']
+
+        return variables
 
     def getSeries(self, root):
         for rt, directories, files in os.walk(os.path.normpath(root)):
@@ -71,35 +83,32 @@ class ZiliaDatabase(Database):
                 yield serie
 
     def readSpectra(self, csvPath: str):
-        #FIXME Header is sometime 2 lines, sometime 3 lines. Great.
-        # Wavelength is a list, Lines is a list of lists containing the intensities.
         with open(csvPath, 'r') as f:
             spectra = f.readlines()
-            spectra.pop(0)
 
-            # Separate the wavelengths from the values.
-            wavelengths = spectra.pop(0).replace('\n', '').split(',')
-            try:
-                float(wavelengths[0])
-            except:
-                wavelengths = spectra.pop(0).replace('\n', '').split(',')
+            # We do this to remove the header and get the wavelengths. Since the header can be 2 lines at times and 3 at
+            # others, we can't assume which line is which. We only assume that the first line of floats would be
+            # wavelengths.
+            for spectrum in spectra:
+                try:
+                    wavelengths = spectrum.replace('\n', '').split(',')
+                    float(wavelengths[0])
+                    break
+                except:
+                    spectra.pop(0)
+                    pass
 
+        intensities = []
         for n, spectrum in enumerate(spectra):
-            spectra[n] = spectrum.replace('\n', '').split(',')
+            intensities.append(spectrum.replace('\n', '').split(','))
 
-        return wavelengths, spectra
-
-    def ignoreFolder(self, path):
-        boo = False
-        #if re.findall('jour 1', path, re.IGNORECASE) or re.findall('darkref', path, re.IGNORECASE):
-        if re.findall('darkref', path, re.IGNORECASE):
-            boo = True
-        return boo
+        return wavelengths, intensities
 
     def setupMainSeriesTable(self, data: list):
         if self.isConnected:
-            statement = 'CREATE TABLE IF NOT EXISTS "series" (name TEXT, monkey TEXT, images INT, spectra TEXT, ' \
-                        'path TEXT, type TEXT, problems TEXT)'
+            statement = 'CREATE TABLE IF NOT EXISTS "series" (serie_id INTEGER PRIMARY KEY AUTOINCREMENT, ' \
+                        'name TEXT SECONDARY KEY, monkey TEXT, images INT, spectra TEXT, path TEXT, type TEXT, ' \
+                        'problems TEXT)'
             self.execute(statement)
 
             for entry in data:
@@ -108,69 +117,139 @@ class ZiliaDatabase(Database):
                 for field, item in entry.items():
                     fields.append('"{}"'.format(str(field)))
                     items.append('"{}"'.format(str(item)))
-                statement = 'INSERT OR REPLACE INTO "series" ({}) VALUES ({})'.format(', '.join(fields), ', '.join(items))
+                statement = 'INSERT OR REPLACE INTO "series" ({}) VALUES ({})'.format(', '.join(fields),
+                                                                                      ', '.join(items))
                 self.execute(statement)
+
+    def setupMonkeysTable(self, keys: dict):
+        if self.isConnected:
+            fields = []
+            for col in keys:
+                fields.append('{} {}'.format(col, keys[col]))
+
+            statement = 'CREATE TABLE IF NOT EXISTS "monkeys" ({})'.format(', '.join(fields))
+            self.execute(statement)
 
     def setupImagesTable(self, rows: lite.Row):
         if self.isConnected:
             # Create the table for the serie :
-            statement = 'CREATE TABLE IF NOT EXISTS "images" (serie TEXT, monkey TEXT, images TEXT PRIMARY KEY, ' \
-                        'bluemean INT, bluemin INT, greenmean INT, greenmin INT, redmean INT, redmin INT, ' \
-                        'imagetype TEXT)'
+            statement = 'CREATE TABLE IF NOT EXISTS "images" (image_id INTEGER PRIMARY KEY AUTOINCREMENT, ' \
+                        'serie TEXT, monkey TEXT, images TEXT SECONDARY KEY, bluemean INT, greenmean INT, ' \
+                        'redmean INT, imagetype TEXT)'
             self.execute(statement)
 
             for row in rows:
                 print('Computing serie {}...'. format(row['name']))
-                jpgs = findFiles(row['path'], '*.jpg')
-                print('{} images found for the serie. Assigning types to the images...'.format(len(jpgs)))
-                images = self.imageTypes(jpgs)
-                print('Insertion...')
-                for image in images:
-                    path, blueMean, blueMin, greenMean, greenMin, redMean, redMin, imType = image
-                    values = '"{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}"'.format(row['name'], row['monkey'], path, blueMean, blueMin, greenMean, greenMin, redMean, redMin, imType)
-                    statement = 'INSERT OR REPLACE INTO "images" ("serie", "monkey", "images", "bluemean", ' \
-                                '"bluemin", "greenmean", "greenmin", "redmean", "redmin", "imagetype") ' \
-                                'VALUES ({})'.format(values)
+                if row['type'] == 'darkref':
+                    print('Serie is a Dark Reference serie, passing...')
+                elif row['type'] == 'pureonh':
+                    print('Serie is a PUREONH serie, passing...')
+                else:
+                    jpgs = findFiles(row['path'], '*.jpg')
+                    print('{} images found for the serie. Assigning types to the images...'.format(len(jpgs)))
+                    images = self.sortImages(jpgs)
+                    print('Insertion...')
                     self.beginTransaction()
-                    self.execute(statement)
+                    for image in images:
+                        path, blueMean, greenMean, redMean, imType = image
+                        values = '"{}", "{}", "{}", "{}", "{}", "{}", "{}"'.format(row['name'], row['monkey'], path,
+                                                                                   blueMean, greenMean, redMean, imType)
+                        statement = 'INSERT OR REPLACE INTO "images" ("serie", "monkey", "images", "bluemean",' \
+                                    ' "greenmean", "redmean", "imagetype") ' \
+                                    'VALUES ({})'.format(values)
+                        self.execute(statement)
                     self.endTransaction()
 
-    def imageTypes(self, imagePaths):
-        images, redMeans, redMins = [], [], []
+    def sortImages(self, imagePaths):
+        imagePaths.sort(key=lambda imPath: int(re.sub('\D', '', imPath[-8:])))
+        images, redMeans = [], []
 
         for path in imagePaths:
             image = cv2.imread(path, cv2.COLOR_BGR2GRAY)
 
             # 0 for Blue, 1 for Green, 2 for Red :
             blueMean = np.mean(image[600:1800, 500:1500, 0])
-            blueMin = np.min(image[600:1800, 500:1500, 0])
             greenMean = np.mean(image[600:1800, 500:1500, 1])
-            greenMin = np.min(image[600:1800, 500:1500, 1])
             redMean = np.mean(image[600:1800, 500:1500, 2])
-            redMin = np.min(image[800:1600, 660:1320, 2])
 
             redMeans.append(redMean)
-            redMins.append(redMin)
             imType = ''
 
-            images.append([path, blueMean, blueMin, greenMean, greenMin, redMean, redMin, imType])
+            images.append([path, blueMean, greenMean, redMean, imType])
 
         redMeans = np.mean(redMeans)
-        redMins = np.mean(redMins)
 
         for n, image in enumerate(images):
-            path, redMean, redMin, imType = image[0], image[5], image[6], image[7]
-            #if redMean > redMeans and redMin > redMins:
+            path, redMean, imType = image[0], image[3], image[4]
             if redMean > redMeans:
                 imType = 'retina'
             elif redMean < redMeans:
-            #elif redMean < redMeans and redMin < redMins:
                 imType = 'rosa'
             else:
                 imType = 'error'
-            images[n][7] = imType
+            images[n][4] = imType
 
-        return images
+        sortedImages = self.validateSorting(images)
+
+        return sortedImages
+
+    def validateSorting(self, images: list) -> list:
+        sortedImages = []
+
+        for n, image in enumerate(images):
+            imType = image[4]
+            if 0 < n < (len(images) - 1):
+                if imType == 'retina':
+                    if images[n + 1][4] == 'rosa':
+                        sortedImages.append(image)
+                    elif images[n + 1][4] == 'retina':
+                        if images[n - 1][4] == 'retina':
+                            image[4] = 'rosa'
+                            sortedImages.append(image)
+                        elif images[n - 1][4] == 'rosa':
+                            try:
+                                if images[n + 2][4] == 'rosa':
+                                    prevRosa = cv2.imread(images[n - 1][0], cv2.COLOR_BGR2GRAY)
+                                    nextRosa = cv2.imread(images[n + 2][0], cv2.COLOR_BGR2GRAY)
+
+                                    pCenter, pRadius, found = find_laser_spot_main_call(prevRosa)
+                                    nCenter, nRadius, found = find_laser_spot_main_call(nextRosa)
+                                    # If the difference between the two rosas is within 1%, we can copy it.
+                                    if ((pCenter[0] - nCenter[0]) / nCenter[0]) * 100 < 1 and ((pCenter[1] - nCenter[1]) /
+                                                                                               nCenter[1]) * 100 < 1:
+                                        sortedImages.append(images[n - 2])
+                                        sortedImages.append(image)
+                                    else:
+                                        # FIXME This might be problematic.
+                                        sortedImages.append(['None', 0, 0, 0, 'rosa'])
+                                        sortedImages.append(image)
+                                else:
+                                    image[4] = 'error'
+                                    sortedImages.append(image)
+                            except:
+                                image[4] = 'error'
+                                sortedImages.append(image)
+                elif imType == 'rosa':
+                    if images[n - 1][4] == 'retina':
+                        sortedImages.append(image)
+                    elif images[n - 1][4] == 'rosa':
+                        if images[n + 1][4] == 'retina':
+                            sortedImages.append(['None', 0, 0, 0, 'retina'])
+                            sortedImages.append(image)
+                        elif images[n + 1][4] == 'rosa':
+                            image[4] = 'retina'
+                            sortedImages.append(image)
+                        else:
+                            image[4] = 'error'
+                            sortedImages.append(image)
+                    else:
+                        sortedImages.append(image)
+                else:
+                    sortedImages.append(image)
+            else:
+                sortedImages.append(image)
+
+        return sortedImages
 
     # FIXME To be removed.
     '''
@@ -224,88 +303,8 @@ class ZiliaDatabase(Database):
                         'rosas TEXT, x INT, y INT, deltax INT, deltay INT, radius INT, spectra TEXT)'
             self.execute(statement)
 
-            retinas, rosas, erroneous = self.sortImagesByType(rows)
+            retinas, rosas, erroneous = self.validateSorting(rows)
             pass
-
-    def sortImagesByType(self, rows: lite.Row):
-        imagesTypes = []
-        for row in rows:
-            imagesTypes.append(row['imagetype'])
-
-        retinas = []
-        rosas = []
-        erroneous = []
-
-        for n, row in enumerate(rows):
-            imType = row['imagetype']
-            if imType == 'retina':
-                if 0 < n < (len(rows) - 1):
-                    # if the retina is flanked by rosa, it's most likely a retina.
-                    if imagesTypes[n - 1] == 'rosa' and imagesTypes[n + 1] == 'rosa':
-                        retinas.append(row)
-                    # If the retina is flanked by retinas, it's probably a wrong retina flag and must be a rosa.
-                    elif imagesTypes[n - 1] == 'retina' and imagesTypes[n - 1] == 'retina':
-                        erroneous.append(row)
-                        imagesTypes[n] = 'rosa'
-                        rosas.append(row)
-                    # If the retina is flanked by a retina and a rosa, we need to check if the previous rosa and the
-                    # next rosa are similar.
-                    # In such a case, we can copy one of them as the rosa for the current retina.
-                    elif imagesTypes[n - 1] == 'retina' and imagesTypes[n + 1] == 'rosa':
-                        if imagesTypes[n - 2] == 'rosa':
-                            prevRosa = cv2.imread(rows[n - 2]['images'], cv2.COLOR_BGR2GRAY)
-                            nextRosa = cv2.imread(rows[n + 1]['images'], cv2.COLOR_BGR2GRAY)
-
-                            pCenter, pRadius, found = find_laser_spot_main_call(prevRosa)
-                            nCenter, nRadius, found = find_laser_spot_main_call(nextRosa)
-                            # If the difference between the two rosas is within 1%, we can copy it.
-                            if ((pCenter[0] - nCenter[0]) / nCenter[0]) * 100 < 1 and ((pCenter[1] - nCenter[1]) /
-                                                                                       nCenter[1]) * 100 < 1:
-                                retinas.append(row)
-                                rosas.append(rows[n - 2])
-                            else:
-                                retinas.append(row)
-                                rosas.append('None')
-                    else:
-                        retinas.append(row)
-
-            elif imType == 'rosa':
-                if 0 < n < (len(rows) - 1):
-                    # if the retina is flanked by rosa, it's most likely a retina.
-                    if imagesTypes[n - 1] == 'rosa' and imagesTypes[n + 1] == 'rosa':
-                        erroneous.append(row)
-                        imagesTypes[n] = 'retina'
-                        retinas.append(row)
-                    # If the retina is flanked by retinas, it's probably a wrong retina flag and must be a rosa.
-                    elif imagesTypes[n - 1] == 'retina' and imagesTypes[n - 1] == 'retina':
-                        rosas.append(row)
-
-                    # If the retina is flanked by a rosa and a retina, we are missing a retina and can't really do
-                    # anything about it.
-                    elif imagesTypes[n - 1] == 'rosa' and imagesTypes[n + 1] == 'retina':
-                        retinas.append('None')
-                        rosas.append(row)
-                    else:
-                        rosas.append(row)
-                else:
-                    rosas.append(row)
-
-            elif imType == 'error':
-                if 0 < n < (len(rows) - 1):
-                    # If the image is flanked by rosas, it should be a retina.
-                    if imagesTypes[n - 1] == 'rosa':
-                        imagesTypes[n] = 'retina'
-                        retinas.append(row)
-                    # If the image is flanked by retinas, it should be a rosa.
-                    elif imagesTypes[n - 1] == 'retina':
-                        imagesTypes[n] = 'rosa'
-                        rosas.append(row)
-
-            else:
-                raise TypeError('Image is not a recognized type. Type is : {}'.format(imType))
-
-        print('Images = {}, Retinas = {}, ROSAs = {}, Erroneous = {}, Serie = {}'.format(len(rows), len(retinas), len(rosas), len(erroneous), rows[0]['serie']))
-        return retinas, rosas, erroneous
 
     @staticmethod
     def createZiliaDB(dbPath: str, imgPath: str):
@@ -332,6 +331,26 @@ class ZiliaDatabase(Database):
             db.setupMainSeriesTable(series)
             print("Done!")
         print("...Exit.")
+
+    @staticmethod
+    def createMonkeysTable(dbPath: str, xlsxPath: str):
+        with ZiliaDatabase(dbPath) as db:
+            print('Changing to rwc mode...')
+            db.changeConnectionMode('rwc')
+
+            print('Putting Database in asynchronous mode... Only one person should proceed at once...')
+            db.asynchronous()
+
+            print("Dropping the monkeys table...")
+            db.dropTable("monkeys")
+
+            print('Reading the .xlsx file...')
+            zixl = ZiliaXLSX(xlsxPath)
+            keys = zixl.monkeyKeys()
+
+            print('Setting up monkeys table...')
+            db.setupMonkeysTable(keys)
+        pass
 
     @staticmethod
     def createImagesTable(dbPath: str):
@@ -367,13 +386,13 @@ class ZiliaDatabase(Database):
             print("Dropping the triplets table...")
             db.dropTable("triplets")
 
+            '''
             print("Querrying all series...")
             series = db.select('series')
             for serie in series:
                 images = db.select('images', condition='"serie" IS "{}" ORDER BY "images" ASC'.format(serie['name']))
                 db.setupTripletsTable(images)
-
-            # We need to querry all the series. Then, serie by serie, we get the images. Then, image by image, we create the triplets.
+            '''
 
 # FIXME To be removed.
 '''

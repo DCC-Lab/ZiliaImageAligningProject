@@ -77,19 +77,15 @@ class ImageAnalysis:
         else:
             return True
 
-    def alignImages(self, rows: lite.Row = None, makeGraph=False, makeStack=False):
+    def alignImages(self, rows: lite.Row = None, makeGraph=False):
         if rows is not None:
             self.setReferences(rows)
 
+        xs, ys, rs = [], [], []
         txs, tys, trs = [], [], []
 
         centers = np.zeros((len(self.rows), 3))
         tcenters = np.copy(centers)
-
-        '''
-        if makeStack:
-            stack = np.zeros((len(self.rows), self.shapeRef[0], self.shapeRef[1], self.shapeRef[2]))
-        '''
 
         for n, row in enumerate(self.rows):
             self.ia.imgToRegister(row['retinas'])
@@ -102,6 +98,10 @@ class ImageAnalysis:
             center, radius, found = self.laserSpot(img)
             centers[n, :] = [center[0], center[1], radius]
 
+            xs.append(center[0])
+            ys.append(center[1])
+            rs.append(radius)
+
             tcenter, tradius, tfound = self.laserSpot(newImg)
             tcenters[n, :] = [tcenter[0], tcenter[1], tradius]
 
@@ -109,32 +109,24 @@ class ImageAnalysis:
             tys.append(tcenter[1])
             trs.append(tradius)
 
-            '''
-            if makeStack:
-                stack[n, :, :, :] = newImg[:, :, ::-1]
-            '''
-
         wrongPoints = self.stdDisplacement(centers, tcenters)
         image = np.zeros(self.shapeRef, dtype=np.int32)
         image[:, :, :] = self.retRef[:, :, ::-1]
 
-        plt.figure()
-        plt.imshow(image)
-        plt.scatter(txs, tys, s=trs, facecolors='none', edgecolors='white')
-        plt.scatter(wrongPoints[:, 0], wrongPoints[:, 1], s=wrongPoints[:, 2], c='r', marker='+')
-        plt.imsave(os.path.join(os.path.dirname(self.retRef), 'test.jpg'))
-        plt.show()
-
-        '''
         if makeGraph:
             image = np.zeros(self.shapeRef, dtype=np.int32)
             image[:, :, :] = self.retRef[:, :, ::-1]
 
             plt.figure()
             plt.imshow(image)
-            plt.scatter(txs, tys, s=trs, facecolors='none', edgecolors='white')
+            plt.scatter(xs[:10], ys[:10], s=rs[:10], facecolors='none', edgecolors='orange')
+            plt.scatter(xs[10:], ys[10:], s=rs[10:], facecolors='none', edgecolors='white')
+            plt.show()
+
+            plt.figure()
+            plt.imshow(image)
+            plt.scatter(txs, tys, s=trs, facecolors='none', edgecolors='orange')
             plt.scatter(wrongPoints[:, 0], wrongPoints[:, 1], s=wrongPoints[:, 2], c='r', marker='+')
-            plt.imsave(os.path.basename(rows['retinas']))
             plt.show()
 
             plt.figure()
@@ -150,9 +142,5 @@ class ImageAnalysis:
             plt.xlabel('Displacement [px]')
             plt.legend()
             plt.show()
-
-        if makeStack:
-            tiff.imwrite(os.path.join(os.getcwd(), 'tempfiles', 'stack.tiff'), stack)
-        '''
 
         return txs, tys, trs

@@ -37,10 +37,12 @@ class ImageAlignment:
 
     def initiateSRReference(self):
         # Dimensions of the image are modified to ignore some artefacts on the sides.
+        # Default is 180:2250, 160:1860, 2
         self.srReference = AffineTransform(self.ref[180:2250, 160:1860, 2])
 
     def setRegistration(self):
         # Dimensions of the image are modified to ignore some artefacts on the sides.
+        # Default is 180:2250, 160:1860, 2
         self.srReference.register(self.regImg[180:2250, 160:1860, 2])
 
     def transform(self, chan=None):

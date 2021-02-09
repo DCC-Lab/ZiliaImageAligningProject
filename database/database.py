@@ -189,8 +189,11 @@ class Database:
 
     def dropTable(self, table: str):
         if self.isConnected:
-            statement = 'DROP TABLE IF EXISTS "{}"'.format(table)
-            self.execute(statement)
+            if table != 'sqlite_sequence':
+                statement = 'DROP TABLE IF EXISTS "{}"'.format(table)
+                self.execute(statement)
+            else:
+                print('sqlite_sequence table cannot be dropped.')
 
     def insert(self, table: str, entry: dict):
         if self.isConnected:
