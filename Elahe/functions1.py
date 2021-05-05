@@ -286,7 +286,6 @@ def binarize_laser_image(input_image, thresh, max_value):
 def mainRosa(image_path):
     import matplotlib.pyplot as plt
     image = cv2.imread(image_path)
-    print("type image rosa = ", type(image))
     image_size = image.shape
 
     blob, rec_time, found = find_laser_spot_main_call(image)
