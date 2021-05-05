@@ -96,17 +96,13 @@ def seperateImages(grayImageCollection,collectionDir):
     for i in range(0, grayImageCollection.shape[0]): # Emile changed first ind to 0 instead of 1
         print(f"Hello {i}")
         if (np.mean(grayImageCollection[i-1,:,:]) > Thresh and np.mean(grayImageCollection[i,:,:]) < Thresh):
-            print(f"Hello first if worked, {i}")
+            print(i)
             if (i<10):
-                print(f"Hello < 10, {i}")
                 loadLaserImage=collectionDir+'/00'+str(i)+'.jpg'
-            if (i>=9 and i<100):
-                print(f"Hello >= 10, {i}")
+            if (i>=10 and i<100):
                 loadLaserImage=collectionDir+'/0'+str(i)+'.jpg'
             if (i>=100):
-                print(f"Hello >= 100, {i}")
                 loadLaserImage=collectionDir+"/"+str(i)+'.jpg'
-            print(loadLaserImage)
             blob = mainRosa(loadLaserImage)
             if (blob['found'] == True):
                 print(f"Hello found true, {i}")
