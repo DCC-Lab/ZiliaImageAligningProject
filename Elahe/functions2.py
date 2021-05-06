@@ -3,8 +3,8 @@ This module has the following functions:
 - loadImages(collectionDir)
 - intensityCheck(Image,laser,xLaser,yLaser,rLaser,imageNumber)
 - seperateImages(grayImageCollection,collectionDir)
-- cross_image(im1, im2)
-- ImageShift(Image)
+- crossImage(im1, im2)
+- imageShift(Image)
 - applyShift(xLaser,yLaser,shift)
 - defineGrid(Image)
 - placeRosa(xCenterGrid,yCenterGrid,length,xRosa,yRosa)
@@ -120,7 +120,15 @@ def seperateImages(grayImageCollection,collectionDir):
 
 
 
-def cross_image(im1, im2):
+def seperateNewImages():
+    """
+    Seperate images from the new data.
+    """
+    pass
+
+
+
+def crossImage(im1, im2):
     """
     Calculate the cross correlation between two images
     Get rid of the averages, otherwise the results are not good
@@ -131,7 +139,7 @@ def cross_image(im1, im2):
     im2 -= np.mean(im2)
     return scipy.signal.fftconvolve(im1, im2[::-1,::-1], mode='same')
 
-def ImageShift(Image):
+def imageShift(Image):
     """
     Calculated the shift in x and y direction in two consecutive images
     Input: 3D numpy array (series of retina images)
@@ -159,7 +167,7 @@ def ImageShift(Image):
         a[j,:,:]=ndimage.binary_closing(skeletonImage[j,:,:], structure=np.ones((20,20))).astype(np.int)
 
         if (j>0):
-            out1=cross_image(a[j-1,:,:],a[j,:,:])
+            out1=crossImage(a[j-1,:,:],a[j,:,:])
             ind= np.unravel_index(np.argmax(out1, axis=None), out1.shape)
             indexShift=np.vstack((indexShift,np.array(ind)-np.array([a.shape[1]/2,a.shape[2]/2])))
             totalShift=np.vstack((totalShift,np.sum(indexShift,axis=0)))
@@ -169,7 +177,6 @@ def applyShift(xLaser,yLaser,shift):
     """
     apply the shift value on the x and y of the rosa
     """
-    
     return (xLaser-shift[:,1]),(yLaser-shift[:,0])
 
 def defineGrid(Image):
