@@ -34,7 +34,7 @@ for j in range(Image.shape[0]):
     # Using cv2.circle() method
     # Draw a circle with blue line borders of thickness of 2 px
     image = cv2.circle(Image[0,:,:], center_coordinates, radius, color, thickness)
-    pyplot.imsave(str(3*j)+'.jpg', image)
+    #pyplot.imsave(str(3*j)+'.jpg', image)
     
     
     window_name = 'Image'
@@ -47,9 +47,9 @@ for j in range(Image.shape[0]):
     # Using cv2.circle() method
     # Draw a circle with blue line borders of thickness of 2 px
     image = cv2.circle(Image[j,:,:], center_coordinates, radius, color, thickness)
-    pyplot.imsave(str(3*j+1)+'.jpg',image)
+    #pyplot.imsave(str(3*j+1)+'.jpg',image)
     
     image = cv2.circle(laser[j,:,:], center_coordinates, radius, color, thickness)
-    plt.imshow(image)
-    plt.show()
-    pyplot.imsave(str(3*j+2)+'.jpg', image)
+    #plt.imshow(image)
+    #plt.show()
+    #pyplot.imsave(str(3*j+2)+'.jpg', image)
