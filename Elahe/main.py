@@ -3,10 +3,6 @@ from functions2 import *
 
 from tkinter.filedialog import askdirectory
 
-# collectionDir = './zilia/singe26/oeilDroit_singe26/20200303_100701_psr/*.jpg'
-# collectionDir = './zilia/singe26/oeilDroit_singe26/20200303_100701_psr/' # this was the right one
-
-
 collectionDir = askdirectory(title="Select the folder containing data")
 
 # Initialize arrays
@@ -18,18 +14,18 @@ yLaser = np.array([])
 rLaser = np.array([])
 
 grayImage = loadImages(collectionDir)
-Image,laser,xLaser,yLaser,rLaser,imageNumber = seperateImages(grayImage,collectionDir)
-Image,laser,xLaser,yLaser,rLaser,imageNumber = intensityCheck(Image,laser,xLaser,yLaser,rLaser,imageNumber)
+Image, laser, xLaser, yLaser, rLaser, imageNumber = seperateImages(grayImage, collectionDir)
+Image, laser, xLaser, yLaser, rLaser, imageNumber = intensityCheck(Image, laser, xLaser, yLaser, rLaser, imageNumber)
 indexShift = ImageShift(Image)
-xRosa,yRosa = applyShift(xLaser,yLaser,indexShift)
-xCenterGrid,yCenterGrid,length = defineGrid(Image)
-Label = placeRosa(xCenterGrid,yCenterGrid,length,xRosa,yRosa)
-plotResult(Image,length,xCenterGrid,yCenterGrid,xRosa,yRosa)
+xRosa, yRosa = applyShift(xLaser,yLaser,indexShift)
+xCenterGrid, yCenterGrid, length = defineGrid(Image)
+Label = placeRosa(xCenterGrid, yCenterGrid, length, xRosa, yRosa)
+plotResult(Image, length, xCenterGrid, yCenterGrid, xRosa, yRosa)
 
 for j in range(Image.shape[0]):
     window_name = 'Image'
-#     center_coordinates = (1000-int(indexShift[j,1]),1000-int(indexShift[j,0]))
-    center_coordinates = (int(xRosa[j]),int(yRosa[j]))
+    # center_coordinates = (1000-int(indexShift[j,1]),1000-int(indexShift[j,0]))
+    center_coordinates = (int(xRosa[j]), int(yRosa[j]))
     radius = 30
     # Blue color in BGR
     color = (0, 255, 0)
@@ -38,7 +34,7 @@ for j in range(Image.shape[0]):
     # Using cv2.circle() method
     # Draw a circle with blue line borders of thickness of 2 px
     image = cv2.circle(Image[0,:,:], center_coordinates, radius, color, thickness)
-    pyplot.imsave(str(3*j)+'.jpg',image)
+    pyplot.imsave(str(3*j)+'.jpg', image)
     
     
     window_name = 'Image'
@@ -56,4 +52,4 @@ for j in range(Image.shape[0]):
     image = cv2.circle(laser[j,:,:], center_coordinates, radius, color, thickness)
     plt.imshow(image)
     plt.show()
-    pyplot.imsave(str(3*j+2)+'.jpg',image)
+    pyplot.imsave(str(3*j+2)+'.jpg', image)

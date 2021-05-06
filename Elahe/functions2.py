@@ -218,12 +218,18 @@ def plotResult (Image,length,xCenterGrid,yCenterGrid,xRosa,yRosa):
         
     up=np.max([yCenterGrid-(length*5),0])
     right=np.min([(5*length),(Image.shape[1]-xCenterGrid)])+xCenterGrid
-    down=right=np.min([(5*length),(Image.shape[2]-yCenterGrid)])+yCenterGrid
-    temp=Image[0,up:down,left:right]
-    xNewCenter=xCenterGrid-left
-    yNewCenter=yCenterGrid-up
-    gridImage=np.zeros([length*10,length*10])
-    gridImage[((5*length)-yNewCenter):((5*length)+(temp.shape[0]-yNewCenter)),((5*length)-xNewCenter):((5*length)+(temp.shape[1]-xNewCenter))]=temp
+    down = right = np.min([(5*length), (Image.shape[2]-yCenterGrid)])+yCenterGrid
+    temp = Image[0,up:down,left:right]
+    xNewCenter = xCenterGrid-left
+    yNewCenter = yCenterGrid-up
+    gridImage = np.zeros([length*10,length*10])
+    # Set slicing limits:
+    LOW_SLICE_Y = ((5*length)-yNewCenter)
+    HIGH_SLICE_Y = ((5*length)+(temp.shape[0]-yNewCenter))
+    LOW_SLICE_X = ((5*length)-xNewCenter)
+    HIGH_SLICE_X = ((5*length)+(temp.shape[1]-xNewCenter))
+    # Slicing:
+    gridImage[LOW_SLICE_Y:HIGH_SLICE_Y, LOW_SLICE_X:HIGH_SLICE_X] = temp
     
     plt.figure()
     img=gridImage.copy()
