@@ -94,7 +94,6 @@ def seperateImages(grayImageCollection,collectionDir):
     imageNumber=np.array([])
     
     for i in range(0, grayImageCollection.shape[0]): # Emile changed first ind to 0 instead of 1
-        print(f"Hello {i}")
         if (np.mean(grayImageCollection[i-1,:,:]) > Thresh and np.mean(grayImageCollection[i,:,:]) < Thresh):
             print(i)
             if (i<10):
@@ -105,7 +104,6 @@ def seperateImages(grayImageCollection,collectionDir):
                 loadLaserImage=collectionDir+"/"+str(i)+'.jpg'
             blob = mainRosa(loadLaserImage)
             if (blob['found'] == True):
-                print(f"Hello found true, {i}")
                 temp[0,:,:]=grayImageCollection[i-1,:,:]
                 Image=np.vstack((Image,temp))
                 temp[0,:,:]=grayImageCollection[i,:,:]
@@ -118,16 +116,16 @@ def seperateImages(grayImageCollection,collectionDir):
 
     Image=np.delete(Image,0,axis=0)
     laserImage=np.delete(laserImage,0,axis=0)
-    return Image,laserImage,xCenter,yCenter,radius,imageNumber
+    return Image, laserImage, xCenter, yCenter, radius, imageNumber
 
 
 
 def cross_image(im1, im2):
     """
-    calculate the cross correlation between two images
-    get rid of the averages, otherwise the results are not good
-    input: two 2D numpy arrays
-    output: cross correlation
+    Calculate the cross correlation between two images
+    Get rid of the averages, otherwise the results are not good
+    Input: two 2D numpy arrays
+    Output: cross correlation
     """
     im1 -= np.mean(im1)
     im2 -= np.mean(im2)
@@ -135,10 +133,10 @@ def cross_image(im1, im2):
 
 def ImageShift(Image):
     """
-    calculated the shift in x and y direction in two consecutive images
-    input: 3D numpy array (series of retina images)
-    the shift in the first image is considered to be zero
-    output: 2D numpy array with the shifts in each image regarding the first image
+    Calculated the shift in x and y direction in two consecutive images
+    Input: 3D numpy array (series of retina images)
+    The shift in the first image is considered to be zero
+    Output: 2D numpy array with the shifts in each image regarding the first image
     """
 
     Margin=250
@@ -159,7 +157,7 @@ def ImageShift(Image):
             skeletonImage[j,peaks+Margin,i+Margin]=1
 
         a[j,:,:]=ndimage.binary_closing(skeletonImage[j,:,:], structure=np.ones((20,20))).astype(np.int)
-        
+
         if (j>0):
             out1=cross_image(a[j-1,:,:],a[j,:,:])
             ind= np.unravel_index(np.argmax(out1, axis=None), out1.shape)

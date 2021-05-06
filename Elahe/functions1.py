@@ -284,7 +284,7 @@ def binarize_laser_image(input_image, thresh, max_value):
 
 # if __name__ == "__main__":
 def mainRosa(image_path):
-    import matplotlib.pyplot as plt
+    #import matplotlib.pyplot as plt
     image = cv2.imread(image_path)
     image_size = image.shape
 
