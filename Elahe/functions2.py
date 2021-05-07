@@ -27,7 +27,7 @@ from scipy import ndimage
 import scipy.signal
 
 
-def loadImages(collectionDir):
+def loadImages(collectionDir: str) -> np.ndarray:
     """
     This function get the directory of a series of images
     blue channel of the image = 0
@@ -43,7 +43,7 @@ def loadImages(collectionDir):
 
 
 
-def intensityCheck(Image,laser,xLaser,yLaser,rLaser,imageNumber):
+def intensityCheck(Image, laser, xLaser, yLaser, rLaser, imageNumber):
     """
     Purpose: remove images with low contrast or blurry
     1- use laplacian filter to remove blury images
@@ -73,7 +73,7 @@ def intensityCheck(Image,laser,xLaser,yLaser,rLaser,imageNumber):
 
 
 
-def seperateImages(grayImageCollection, collectionDir):
+def seperateImages(grayImageCollection, collectionDir: str):
     """
     Purpose: seperate retina images from rosa images
     load retina image - then load the corresponding rosa image 
@@ -85,9 +85,9 @@ def seperateImages(grayImageCollection, collectionDir):
 
     Thresh=np.mean(grayImageCollection)
     counter=0
-    Image=np.empty((1,grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
-    laserImage=np.empty((1,grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
-    temp=np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float) # Emile modified 2nd argument
+    Image=np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
+    laserImage=np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
+    temp=np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
     xCenter=np.array([])
     yCenter=np.array([])
     radius=np.array([])
@@ -120,12 +120,15 @@ def seperateImages(grayImageCollection, collectionDir):
 
 
 
-def seperateNewImages(, collectionDir):
+# not shure yet if we'll need a grayImageCollection or just an imageCollection...
+def seperateNewImages(grayImageCollection, collectionDir: str):
     """
     Seperate images from the new data.
     """
+    collectionDir = collectionDir.lower()
+
     # iterate in collectionDir 
-    pass
+    return 0
 
 
 
@@ -140,7 +143,7 @@ def crossImage(im1, im2):
     im2 -= np.mean(im2)
     return scipy.signal.fftconvolve(im1, im2[::-1,::-1], mode='same')
 
-def imageShift(Image):
+def imageShift(Image: np.ndarray) -> np.ndarray:
     """
     Calculated the shift in x and y direction in two consecutive images
     Input: 3D numpy array (series of retina images)
@@ -150,11 +153,11 @@ def imageShift(Image):
 
     Margin=250
     N=100
-    temp=Image[:,Margin:Image.shape[1]-Margin,Margin:Image.shape[2]-Margin]
+    temp=Image[:,Margin:Image.shape[1] - Margin,Margin:Image.shape[2] - Margin]
     skeletonImage=np.zeros(Image.shape)
     a=np.zeros(Image.shape)
     indexShift=np.array([0,0])
-    totalShift=np.array([0,0])
+    totalShift=np.array([[0,0], [0,0]])
     for j in range(temp.shape[0]):
         for i in range(temp.shape[1]):
             y=np.convolve(temp[j,i,:], np.ones(N)/N, mode='valid')
@@ -174,11 +177,12 @@ def imageShift(Image):
             totalShift=np.vstack((totalShift,np.sum(indexShift,axis=0)))
     return totalShift
 
+
 def applyShift(xLaser,yLaser,shift):
     """
     apply the shift value on the x and y of the rosa
     """
-    return (xLaser-shift[:,1]),(yLaser-shift[:,0])
+    return (xLaser-shift[:,1]), (yLaser-shift[:,0])
 
 def defineGrid(Image):
     temp=np.zeros(Image.shape)
