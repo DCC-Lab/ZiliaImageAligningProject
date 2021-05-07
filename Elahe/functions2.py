@@ -33,12 +33,12 @@ def loadImages(collectionDir):
     blue channel of the image = 0
     output is a series of grayscale images
     """
-    collectionDir=collectionDir+'/*.jpg'
+    collectionDir = collectionDir+'/*.jpg'
     imageCollection = imread_collection(collectionDir)
-    grayImage=np.zeros((len(imageCollection),imageCollection[0].shape[0],imageCollection[0].shape[1]))
+    grayImage = np.zeros((len(imageCollection),imageCollection[0].shape[0],imageCollection[0].shape[1]))
     for i in range(len(imageCollection)):
         imageCollection[i][:,:,2]=0
-        grayImage[i,:,:]=rgb2gray(imageCollection[i])
+        grayImage[i,:,:] = rgb2gray(imageCollection[i])
     return grayImage
 
 
@@ -73,7 +73,7 @@ def intensityCheck(Image,laser,xLaser,yLaser,rLaser,imageNumber):
 
 
 
-def seperateImages(grayImageCollection,collectionDir):
+def seperateImages(grayImageCollection, collectionDir):
     """
     Purpose: seperate retina images from rosa images
     load retina image - then load the corresponding rosa image 
@@ -120,10 +120,11 @@ def seperateImages(grayImageCollection,collectionDir):
 
 
 
-def seperateNewImages():
+def seperateNewImages(, collectionDir):
     """
     Seperate images from the new data.
     """
+    # iterate in collectionDir 
     pass
 
 
