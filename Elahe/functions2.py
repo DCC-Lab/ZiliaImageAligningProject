@@ -76,10 +76,10 @@ def intensityCheck(Image, laser, xLaser, yLaser, rLaser, imageNumber):
 def seperateImages(grayImageCollection, collectionDir: str):
     """
     Purpose: seperate retina images from rosa images
-    load retina image - then load the corresponding rosa image 
-    check to find the rosa, if found, append the image and other info a the numpy array
-    input: grayscale images (output of loadImages function), directory for the images folder
-    output: numpy arrays including: retina images, rosa images,
+    Load retina image - then load the corresponding rosa image 
+    Check to find the rosa, if found, append the image and other info a the numpy array
+    Input: grayscale images (output of loadImages function), directory for the images folder
+    Output: numpy arrays including: retina images, rosa images,
             x,y, and radius of rosa center, number of the images in the directory
     """
 
@@ -125,10 +125,53 @@ def seperateNewImages(grayImageCollection, collectionDir: str):
     """
     Seperate images from the new data.
     """
-    collectionDir = collectionDir.lower()
+    collectionDir_lowercase = collectionDir.lower()
+    Thresh=np.mean(grayImageCollection)
+    counter=0
+    Image=np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
+    laserImage=np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
+    temp=np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
+    xCenter=np.array([])
+    yCenter=np.array([])
+    radius=np.array([])
+    imageNumber=np.array([])
 
-    # iterate in collectionDir 
-    return 0
+
+    for i in range(0, grayImageCollection.shape[0]): # Emile changed first ind to 0 instead of 1
+        if (np.mean(grayImageCollection[i-1,:,:]) > Thresh and np.mean(grayImageCollection[i,:,:]) < Thresh):
+            print(i)
+            if (i<10):
+                loadLaserImage=collectionDir+'/00'+str(i)+'.jpg'
+            if (i>=10 and i<100):
+                loadLaserImage=collectionDir+'/0'+str(i)+'.jpg'
+            if (i>=100):
+                loadLaserImage=collectionDir+"/"+str(i)+'.jpg'
+            blob = mainRosa(loadLaserImage)
+
+            if "eye" in collectionDir_lowercase:
+                if "rosa" in collectionDir_lowercase:
+                    continue
+                else:
+                    blop["found"] = False
+            else:
+                if "rosa" in collectionDir_lowercase:
+                    blop["found"] = True
+
+
+            if (blob['found'] == True):
+                temp[0,:,:]=grayImageCollection[i-1,:,:]
+                Image=np.vstack((Image,temp))
+                temp[0,:,:]=grayImageCollection[i,:,:]
+                laserImage=np.vstack((laserImage,temp))
+
+                xCenter=np.hstack((xCenter,int(blob['center']['x']*Image.shape[2])))
+                yCenter=np.hstack((yCenter,int(blob['center']['y']*Image.shape[1])))
+                radius=np.hstack((radius,int(blob['radius']*Image.shape[1])))
+                imageNumber=np.hstack((imageNumber,int(i-1)))
+
+    Image=np.delete(Image,0,axis=0)
+    laserImage=np.delete(laserImage,0,axis=0)
+    return Image, laserImage, xCenter, yCenter, radius, imageNumber
 
 
 
@@ -180,7 +223,7 @@ def imageShift(Image: np.ndarray) -> np.ndarray:
 
 def applyShift(xLaser,yLaser,shift):
     """
-    apply the shift value on the x and y of the rosa
+    Apply the shift value on the x and y of the rosa
     """
     return (xLaser-shift[:,1]), (yLaser-shift[:,0])
 
