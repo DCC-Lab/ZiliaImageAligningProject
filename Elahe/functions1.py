@@ -198,8 +198,11 @@ def formatImage(in_image: np.ndarray) -> np.ndarray:
 
 def fineTuneRosaDetection(red_channel, c_h, c_w, radius):
     """
-    This is some documentation about a function.
-    Input: 
+    Fine tune the detection of the Rosa in an image.
+    Input: red_channel(red channel of the image).
+           c_h(the height of the circle).
+           c_w(the width of the circle).
+           radius(the radius of the circle).
     Output: 
     """
     h, w = np.shape(red_channel)
@@ -284,8 +287,8 @@ def findLaserSpotRecursive(red_channel, thr, max_value, start_time, rec_time):
               far).
     Output: Found(True or False, says if laser spot was found or not),
             rec_time(number of times the recursive algorithm was ececuted),
-            c_h(0 if found is False, circle height if found is True),
-            c_w(0 if found is False, circle width if found is True),
+            c_h(0 if "found" is False, circle height if found is True),
+            c_w(0 if "found" is False, circle width if found is True),
             radius(0 if found is False, circle radius if found is True).
     """
     rec_time = rec_time + 1
@@ -302,8 +305,6 @@ def findLaserSpotRecursive(red_channel, thr, max_value, start_time, rec_time):
     if thr < 0.4:
         LOGGER.debug(f"Laser spot not found after {rec_time} iteration in {str(current_time)}")
         return False, rec_time, 0, 0, 0
-    # c_h = circle height
-    # c_w = circle width
     found, c_h, c_w, circle_radius = analyzeBinaryImageForRosa(binary_image)
     if found:
         return True, rec_time, c_h, c_w, circle_radius
