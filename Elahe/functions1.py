@@ -139,9 +139,24 @@ def analyzeBinaryImageForRosa(binary_image):
 
 def formatBlob(in_image, laser_spot_parameter):
     """
-    Format ....
-    Input: 
-    Output:     
+    Format parameters of the blop and turn them into an organized dictionary.
+    Input: in_image(image as a numpy array).
+           laser_spot_parameter(an iterable object containing [circle height,
+                            circle width, circle radius, True/False value
+                            that tells if the spot was found or not]).
+    Output: blob(a dictionary that contains all parameters of the blob:
+                {"center":{
+                        "x": horizontal position of the center of the blob.
+                        "y": vertical position of the center of the blob.
+                        "rx": horizontal radius of the blob.
+                        "ry": vertical radius of the blob.
+                        }
+                "radius": radius of the smallest circle that surrounds the
+                          blob.
+                "rradius": rounded radius (is an integer)
+                "found": True/False, tells if a spot was found or not.
+                }
+                )
     """
     captor_ratio = 1.18
     c_h, c_w, radius, found = laser_spot_parameter
@@ -159,11 +174,7 @@ def formatBlob(in_image, laser_spot_parameter):
             "y": c / rectangle_height,
             "rx": r,
             "ry": c},
-        'radius': float(
-            Fraction(
-                Fraction(
-                    Decimal(radius)),
-                h)),
+        'radius': float(Fraction(Fraction(Decimal(radius)), h)),
         'rradius': radius,
         'found': found}
     return blob
@@ -183,6 +194,8 @@ def formatImage(in_image: np.ndarray) -> np.ndarray:
 def fineTuneRosaDetection(red_channel, c_h, c_w, radius):
     """
     This is some documentation about a function.
+    Input: 
+    Output: 
     """
     h, w = np.shape(red_channel)
     c_h, c_w = int(c_h), int(c_w)
@@ -207,7 +220,7 @@ def fineTuneRosaDetection(red_channel, c_h, c_w, radius):
     in_img_size = red_channel.shape
     if int(perc) == 0:
         return c_h, c_w, original_radius
- 
+
     else:
         _, binary_image = threshold(new_img, int(perc), 255, THRESH_BINARY)
 
@@ -319,12 +332,25 @@ def binarizeLaserImage(input_image, thresh, max_value):
 
 # if __name__ == "__main__":
 def mainRosa(image_path):
-    #import matplotlib.pyplot as plt
+    """
+    Import an image as a numpy array and give parameters of the blob.
+    Input: image_path(file path of the image you want to import. Must not
+                include accents [è, é, etc.], or else it will not work).
+    Output: blob(a dictionary containting parameters from the blob in the
+                picure, which is the output of the formatBlob function).
+    """
+    
     image = cv2.imread(image_path)
+    print("le type est : ", type(image))
     image_size = image.shape
 
     blob, rec_time, found = findLaserSpotMainCall(image)
-    
+
+    return blob
+
+
+
+    # import matplotlib.pyplot as plt
 #     center = (int(blob['center']['x']*image_size[1]), int(blob['center']['y']*image_size[0]))
 #     radius = int(blob['radius']*image_size[0])
 #     cv2.circle(image, center, radius, (255,0,0), 2)
@@ -333,4 +359,4 @@ def mainRosa(image_path):
 #     plt.imshow(image_rgb)
 #     plt.show()
 
-    return blob
+
