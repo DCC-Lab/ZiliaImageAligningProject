@@ -98,6 +98,11 @@ class ConnectedComponents:
 
 
 def extractGrayMapFromRedChannel(image):
+    """
+    Extract the red channel from an image.
+    Input: image as a numpy array.
+    Output: red channel of the image as a numpy array.
+    """
     b = image[:,:,0]
     r = image[:,:,2]
     red_channel = r >= b
