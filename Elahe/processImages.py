@@ -9,7 +9,6 @@ This module has the following functions:
 - defineGrid(Image)
 - placeRosa(xCenterGrid,yCenterGrid,length,xRosa,yRosa)
 - plotResult (Image,length,xCenterGrid,yCenterGrid,xRosa,yRosa)
-
 """
 
 from analyseImages import mainRosa
@@ -52,7 +51,6 @@ def intensityCheck(Image, laser, xLaser, yLaser, rLaser, imageNumber):
            image number in the original folder
     output: reduced data
     """
-    
     index=np.array([])
     ii=np.array([])
     for kk in range(Image.shape[0]):
@@ -63,13 +61,13 @@ def intensityCheck(Image, laser, xLaser, yLaser, rLaser, imageNumber):
         ii=np.hstack((ii,score))
     T=np.mean(ii)
     index=np.where(ii>T)
-    Image=np.delete(Image,index,axis=0)
-    laser=np.delete(laser,index,axis=0)
-    xLaser=np.delete(xLaser,index,axis=0)
-    yLaser=np.delete(yLaser,index,axis=0)
-    rLaser=np.delete(rLaser,index,axis=0)
-    imageNumber=np.delete(imageNumber,index,axis=0)
-    return Image,laser,xLaser,yLaser,rLaser,imageNumber
+    Image=np.delete(Image, index,axis=0)
+    laser=np.delete(laser, index,axis=0)
+    xLaser=np.delete(xLaser, index, axis=0)
+    yLaser=np.delete(yLaser, index, axis=0)
+    rLaser=np.delete(rLaser, index, axis=0)
+    imageNumber=np.delete(imageNumber, index, axis=0)
+    return Image, laser, xLaser, yLaser, rLaser, imageNumber
 
 
 
