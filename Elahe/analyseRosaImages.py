@@ -97,18 +97,12 @@ class ConnectedComponents:
 
 
 def extractGrayMapFromRedChannel(image):
-    """
-    Extract the red channel from an image.
-    Input: image as a numpy array.
-    Output: red channel of the image as a numpy array.
-    """
     blue = image[:,:,0]
     red = image[:,:,2]
     red_channel = red >= blue
 
-    # Convert image from colorful to gray scale
     gray_level_img = cvtColor(image, COLOR_BGR2GRAY)
-    out_img = red_channel*gray_level_img
+    out_image = red_channel*gray_level_img
 
     formattedImage = out_image.astype(np.uint8)
     return formattedImage

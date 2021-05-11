@@ -33,7 +33,7 @@ def loadImages(collectionDir: str) -> np.ndarray:
     output is a series of grayscale images
     """
     collectionDir = collectionDir+'/*.jpg'
-    imageCollection = imread_collection(collectionDir)
+    imageCollection = imread_collection(collectionDir)# imports as RGB image
     grayImage = np.zeros((len(imageCollection),imageCollection[0].shape[0],imageCollection[0].shape[1]))
     for i in range(len(imageCollection)):
         imageCollection[i][:,:,2]=0
@@ -41,8 +41,8 @@ def loadImages(collectionDir: str) -> np.ndarray:
     return grayImage
 
 
-
-def intensityCheck(Image, laser, xLaser, yLaser, rLaser, imageNumber):
+# def intensityCheck(Image, laser, xLaser, yLaser, rLaser, imageNumber):
+def intensityCheck(dataDictionary):
     """
     Purpose: remove images with low contrast or blurry
     1- use laplacian filter to remove blury images
@@ -51,24 +51,40 @@ def intensityCheck(Image, laser, xLaser, yLaser, rLaser, imageNumber):
            image number in the original folder
     output: reduced data
     """
-    index=np.array([])
-    ii=np.array([])
-    for kk in range(Image.shape[0]):
-        d1=Image[kk,:,:]
-        d1=256*((d1-np.min(d1))/(np.max(d1)-np.min(d1)))
+    image = dataDictionary["image"]
+    laserImage = dataDictionary["laserImage"]
+    xCenter = dataDictionary["xCenter"]
+    yCenter = dataDictionary["yCenter"]
+    radius = dataDictionary["radius"]
+    imageNumber = dataDictionary["imageNumber"]
+
+    index = np.array([])
+    ii = np.array([])
+    for kk in range(image.shape[0]):
+        d1 = image[kk,:,:]
+        d1 = 256*((d1 - np.min(d1))/(np.max(d1) - np.min(d1)))
         resLap = cv2.Laplacian(d1, cv2.CV_64F)
         score = resLap.var()
-        ii=np.hstack((ii,score))
-    T=np.mean(ii)
-    index=np.where(ii>T)
-    Image=np.delete(Image, index,axis=0)
-    laser=np.delete(laser, index,axis=0)
-    xLaser=np.delete(xLaser, index, axis=0)
-    yLaser=np.delete(yLaser, index, axis=0)
-    rLaser=np.delete(rLaser, index, axis=0)
-    imageNumber=np.delete(imageNumber, index, axis=0)
-    return Image, laser, xLaser, yLaser, rLaser, imageNumber
+        ii = np.hstack((ii, score))
+    Threshold = np.mean(ii)
+    index = np.where(ii > Threshold)
+    image =np.delete(image, index, axis=0)
+    laserImage = np.delete(laserImage, index, axis=0)
+    xCenter = np.delete(xCenter, index, axis=0)
+    yCenter = np.delete(yCenter, index, axis=0)
+    radius = np.delete(radius, index, axis=0)
+    imageNumber = np.delete(imageNumber, index, axis=0)
 
+    dataDictionary = {
+        "image": image,
+        "laserImage": laserImage,
+        "xCenter": xCenter,
+        "yCenter": yCenter
+        "radius": radius,
+        "imageNumber": imageNumber
+    }
+    return dataDictionary
+    # return image, laser, xLaser, yLaser, rLaser, imageNumber
 
 
 def seperateImages(grayImageCollection, collectionDir: str):
@@ -77,23 +93,22 @@ def seperateImages(grayImageCollection, collectionDir: str):
     Load retina image - then load the corresponding rosa image 
     Check to find the rosa, if found, append the image and other info a the numpy array
     Input: grayscale images (output of loadImages function), directory for the images folder
-    Output: numpy arrays including: retina images, rosa images,
-            x,y, and radius of rosa center, number of the images in the directory
+    Output: dictionary including: retina images, rosa images,
+            x,y, and radius of rosa center, numbers of the images in the directory
     """
+    # 1st image has to be the retina, 2nd has to be the rosa.
+    Thresh = np.mean(grayImageCollection)
+    counter = 0
+    image = np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
+    laserImage = np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
+    temp = np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
+    xCenter = np.array([])
+    yCenter = np.array([])
+    radius = np.array([])
+    imageNumber = np.array([])
 
-    Thresh=np.mean(grayImageCollection)
-    counter=0
-    Image=np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
-    laserImage=np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
-    temp=np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
-    xCenter=np.array([])
-    yCenter=np.array([])
-    radius=np.array([])
-    imageNumber=np.array([])
-    
-    for i in range(0, grayImageCollection.shape[0]): # Emile changed first ind to 0 instead of 1
+    for i in range(1, grayImageCollection.shape[0]):
         if (np.mean(grayImageCollection[i-1,:,:]) > Thresh and np.mean(grayImageCollection[i,:,:]) < Thresh):
-            print(i)
             if (i<10):
                 loadLaserImage=collectionDir+'/00'+str(i)+'.jpg'
             if (i>=10 and i<100):
@@ -102,19 +117,29 @@ def seperateImages(grayImageCollection, collectionDir: str):
                 loadLaserImage=collectionDir+"/"+str(i)+'.jpg'
             blob = mainRosa(loadLaserImage)
             if (blob['found'] == True):
-                temp[0,:,:]=grayImageCollection[i-1,:,:]
-                Image=np.vstack((Image,temp))
-                temp[0,:,:]=grayImageCollection[i,:,:]
-                laserImage=np.vstack((laserImage,temp))
+                temp[0,:,:] = grayImageCollection[i-1,:,:] # retina
+                image = np.vstack((image, temp)) # retina
+                temp[0,:,:] = grayImageCollection[i,:,:] # rosa
+                laserImage=np.vstack((laserImage,temp)) # rosa
 
-                xCenter=np.hstack((xCenter,int(blob['center']['x']*Image.shape[2])))
-                yCenter=np.hstack((yCenter,int(blob['center']['y']*Image.shape[1])))
-                radius=np.hstack((radius,int(blob['radius']*Image.shape[1])))
-                imageNumber=np.hstack((imageNumber,int(i-1)))
+                # the following arrays are 1D
+                xCenter = np.hstack((xCenter,int(blob['center']['x']*image.shape[2]))) # for the center of the rosa
+                yCenter = np.hstack((yCenter,int(blob['center']['y']*image.shape[1]))) # for the center of the rosa
+                radius = np.hstack((radius,int(blob['radius']*image.shape[1]))) # for the center of the rosa
+                imageNumber = np.hstack((imageNumber,int(i-1))) # it's a 1D array
 
-    Image=np.delete(Image,0,axis=0)
-    laserImage=np.delete(laserImage,0,axis=0)
-    return Image, laserImage, xCenter, yCenter, radius, imageNumber
+    image = np.delete(image,0,axis=0) # remove the first initialized empty matrix
+    laserImage = np.delete(laserImage,0,axis=0) # remove the first initialized empty matrix
+    dataDictionary = {
+        "image": image,
+        "laserImage": laserImage,
+        "xCenter": xCenter,
+        "yCenter": yCenter
+        "radius": radius,
+        "imageNumber": imageNumber
+    }
+    return dataDictionary
+    # return Image, laserImage, xCenter, yCenter, radius, imageNumber
 
 
 
@@ -223,7 +248,7 @@ def applyShift(xLaser,yLaser,shift):
     """
     Apply the shift value on the x and y of the rosa
     """
-    return (xLaser-shift[:,1]), (yLaser-shift[:,0])
+    return (xLaser - shift[:,1]), (yLaser - shift[:,0])
 
 def defineGrid(Image):
     temp=np.zeros(Image.shape)
