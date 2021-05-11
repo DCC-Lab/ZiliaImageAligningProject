@@ -12,7 +12,7 @@ This module has the following functions:
 
 """
 
-from functions1 import *
+from analyseImages import mainRosa
 
 from skimage.io import imread_collection
 from skimage.color import rgb2gray
