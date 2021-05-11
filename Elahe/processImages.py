@@ -11,7 +11,7 @@ This module has the following functions:
 - plotResult (Image,length,xCenterGrid,yCenterGrid,xRosa,yRosa)
 """
 
-from analyseImages import mainRosa
+from analyseRosaImages import mainRosa
 
 from skimage.io import imread_collection
 from skimage.color import rgb2gray
