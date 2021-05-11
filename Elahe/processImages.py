@@ -79,7 +79,7 @@ def intensityCheck(dataDictionary):
         "image": image,
         "laserImage": laserImage,
         "xCenter": xCenter,
-        "yCenter": yCenter
+        "yCenter": yCenter,
         "radius": radius,
         "imageNumber": imageNumber
     }
@@ -134,7 +134,7 @@ def seperateImages(grayImageCollection, collectionDir: str):
         "image": image,
         "laserImage": laserImage,
         "xCenter": xCenter,
-        "yCenter": yCenter
+        "yCenter": yCenter,
         "radius": radius,
         "imageNumber": imageNumber
     }

@@ -12,6 +12,9 @@ xLaser = np.array([])
 yLaser = np.array([])
 rLaser = np.array([])
 
+rightEye = True
+
+
 grayImage = loadImages(collectionDir)
 Image, laser, xLaser, yLaser, rLaser, imageNumber = seperateImages(grayImage, collectionDir)
 Image, laser, xLaser, yLaser, rLaser, imageNumber = intensityCheck(Image, laser, xLaser, yLaser, rLaser, imageNumber)
