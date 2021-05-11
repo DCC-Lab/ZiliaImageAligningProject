@@ -18,13 +18,21 @@ rightEye = True
 grayImage = loadImages(collectionDir)
 dataDictionary = seperateImages(grayImage, collectionDir)
 dataDictionary = intensityCheck(dataDictionary)
-indexShift = imageShift(Image)
-xRosa, yRosa = applyShift(xLaser, yLaser, indexShift)
-xCenterGrid, yCenterGrid, length = defineGrid(Image)
-Label = placeRosa(xCenterGrid, yCenterGrid, length, xRosa, yRosa)
-plotResult(Image, length, xCenterGrid, yCenterGrid, xRosa, yRosa)
 
-for j in range(Image.shape[0]):
+image = dataDictionary["image"]
+laser = dataDictionary["laserImage"]
+xLaser = dataDictionary["xCenter"]
+yLaser = dataDictionary["yCenter"]
+rLaser = dataDictionary["radius"]
+imageNumber = dataDictionary["imageNumber"]
+
+indexShift = imageShift(image)
+xRosa, yRosa = applyShift(xLaser, yLaser, indexShift)
+xCenterGrid, yCenterGrid, length = defineGrid(image)
+Label = placeRosa(xCenterGrid, yCenterGrid, length, xRosa, yRosa)
+plotResult(image, length, xCenterGrid, yCenterGrid, xRosa, yRosa)
+
+for j in range(image.shape[0]):
     window_name = 'Image'
     # center_coordinates = (1000-int(indexShift[j,1]),1000-int(indexShift[j,0]))
     center_coordinates = (int(xRosa[j]), int(yRosa[j]))
@@ -35,10 +43,9 @@ for j in range(Image.shape[0]):
     thickness = 5
     # Using cv2.circle() method
     # Draw a circle with blue line borders of thickness of 2 px
-    image = cv2.circle(Image[0,:,:], center_coordinates, radius, color, thickness)
+    image = cv2.circle(image[0,:,:], center_coordinates, radius, color, thickness)
     #pyplot.imsave(str(3*j)+'.jpg', image)
-    
-    
+
     window_name = 'Image'
     center_coordinates = (int(xLaser[j]),int(yLaser[j]))
     radius = int(rLaser[j])
@@ -48,7 +55,7 @@ for j in range(Image.shape[0]):
     thickness = 5
     # Using cv2.circle() method
     # Draw a circle with blue line borders of thickness of 2 px
-    image = cv2.circle(Image[j,:,:], center_coordinates, radius, color, thickness)
+    image = cv2.circle(image[j,:,:], center_coordinates, radius, color, thickness)
     #pyplot.imsave(str(3*j+1)+'.jpg',image)
     
     image = cv2.circle(laser[j,:,:], center_coordinates, radius, color, thickness)
