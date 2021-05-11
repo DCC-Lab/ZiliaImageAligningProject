@@ -1,5 +1,4 @@
-from functions1 import *
-from functions2 import *
+from processImages import *
 
 from tkinter.filedialog import askdirectory
 
