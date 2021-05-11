@@ -11,7 +11,6 @@ Then this module has the following functions:
 - extractGrayMapFromRedChannel(image)
 - analyzeBinaryImageForRosa(binary_image)
 - formatBlob(in_image, laser_spot_parameter)
-- formatImage(in_image: np.ndarray) -> np.ndarray
 - fineTuneRosaDetection(red_channel, c_h, c_w, radius)
 - findLaserSpotMainCall(in_image: np.ndarray)
 - findLaserSpotRecursive(red_channel, thr, max_value, start_time, rec_time)
@@ -81,7 +80,7 @@ class ConnectedComponents:
         except:
             contours, _ = findContours(
                 binary_image, RETR_TREE, CHAIN_APPROX_SIMPLE)
-        
+
         for cntr in contours:
             if len(cntr) > 4:
                 area = contourArea(cntr)
@@ -103,16 +102,16 @@ def extractGrayMapFromRedChannel(image):
     Input: image as a numpy array.
     Output: red channel of the image as a numpy array.
     """
-    b = image[:,:,0]
-    r = image[:,:,2]
-    red_channel = r >= b
+    blue = image[:,:,0]
+    red = image[:,:,2]
+    red_channel = red >= blue
 
     # Convert image from colorful to gray scale
     gray_level_img = cvtColor(image, COLOR_BGR2GRAY)
     out_img = red_channel*gray_level_img
 
-    out_img = out_img.astype(np.uint8)
-    return out_img
+    formattedImage = out_image.astype(np.uint8)
+    return formattedImage
 
 
 def analyzeBinaryImageForRosa(binary_image):
@@ -185,17 +184,6 @@ def formatBlob(in_image, laser_spot_parameter):
     return blob
 
 
-def formatImage(in_image: np.ndarray) -> np.ndarray:
-    """
-    This function makes shure data is only unsigned integers with
-    values ranging from 0 to 255.
-    Input: in_image(image as a numpy array)
-    Output: out_image(same as input, put data is only 8 bit unsigned integers.)
-    """
-    out_image = np.array(in_image, dtype=np.uint8)
-    return out_image
-
-
 def fineTuneRosaDetection(red_channel, c_h, c_w, radius):
     """
     Fine tune the detection of the Rosa in an image.
@@ -252,7 +240,7 @@ def findLaserSpotMainCall(in_image: np.ndarray):
             found(True or False, says if laser spot was found or not).
     """
 
-    formatted_image = formatImage(in_image)
+    formatted_image = in_image.astype(np.uint8)
 
     time_start = time.time()
     red_channel = extractGrayMapFromRedChannel(formatted_image)
