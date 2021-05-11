@@ -16,8 +16,8 @@ rightEye = True
 
 
 grayImage = loadImages(collectionDir)
-Image, laser, xLaser, yLaser, rLaser, imageNumber = seperateImages(grayImage, collectionDir)
-Image, laser, xLaser, yLaser, rLaser, imageNumber = intensityCheck(Image, laser, xLaser, yLaser, rLaser, imageNumber)
+dataDictionary = seperateImages(grayImage, collectionDir)
+dataDictionary = intensityCheck(dataDictionary)
 indexShift = imageShift(Image)
 xRosa, yRosa = applyShift(xLaser, yLaser, indexShift)
 xCenterGrid, yCenterGrid, length = defineGrid(Image)

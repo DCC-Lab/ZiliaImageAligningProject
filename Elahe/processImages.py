@@ -217,30 +217,30 @@ def imageShift(Image: np.ndarray) -> np.ndarray:
     Output: 2D numpy array with the shifts in each image regarding the first image
     """
 
-    Margin=250
-    N=100
-    temp=Image[:,Margin:Image.shape[1] - Margin,Margin:Image.shape[2] - Margin]
+    Margin = 250
+    N = 100
+    temp = Image[:, Margin:Image.shape[1] - Margin, Margin:Image.shape[2] - Margin]
     skeletonImage=np.zeros(Image.shape)
-    a=np.zeros(Image.shape)
-    indexShift=np.array([0,0])
-    totalShift=np.array([[0,0], [0,0]])
+    a = np.zeros(Image.shape)
+    indexShift = np.array([0, 0])
+    totalShift = np.array([[0, 0], [0, 0]])
     for j in range(temp.shape[0]):
         for i in range(temp.shape[1]):
-            y=np.convolve(temp[j,i,:], np.ones(N)/N, mode='valid')
+            y = np.convolve(temp[j,i,:], np.ones(N)/N, mode='valid')
             peaks, properties = find_peaks(-y,prominence=0.001,distance=250)
             skeletonImage[j,i+Margin,peaks+Margin]=1
         for i in range(temp.shape[2]):
-            y=np.convolve(temp[j,:,i], np.ones(N)/N, mode='valid')
+            y = np.convolve(temp[j,:,i], np.ones(N)/N, mode='valid')
             peaks, properties = find_peaks(-y,prominence=0.001,distance=250)
-            skeletonImage[j,peaks+Margin,i+Margin]=1
+            skeletonImage[j, peaks+Margin, i+Margin] = 1
 
-        a[j,:,:]=ndimage.binary_closing(skeletonImage[j,:,:], structure=np.ones((20,20))).astype(np.int)
+        a[j,:,:] = ndimage.binary_closing(skeletonImage[j,:,:], structure=np.ones((20,20))).astype(np.int)
 
         if (j>0):
-            out1=crossImage(a[j-1,:,:],a[j,:,:])
-            ind= np.unravel_index(np.argmax(out1, axis=None), out1.shape)
-            indexShift=np.vstack((indexShift,np.array(ind)-np.array([a.shape[1]/2,a.shape[2]/2])))
-            totalShift=np.vstack((totalShift,np.sum(indexShift,axis=0)))
+            out1 = crossImage(a[j-1,:,:],a[j,:,:])
+            ind = np.unravel_index(np.argmax(out1, axis=None), out1.shape)
+            indexShift = np.vstack((indexShift, np.array(ind)-np.array([a.shape[1]/2, a.shape[2]/2])))
+            totalShift = np.vstack((totalShift, np.sum(indexShift, axis=0)))
     return totalShift
 
 

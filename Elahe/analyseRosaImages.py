@@ -327,7 +327,7 @@ def mainRosa(image_path):
     Output: blob(a dictionary containting parameters from the blob in the
                 picure, which is the output of the formatBlob function).
     """
-    
+
     image = cv2.imread(image_path)
     print("le type est : ", type(image))
     image_size = image.shape
@@ -335,16 +335,3 @@ def mainRosa(image_path):
     blob, rec_time, found = findLaserSpotMainCall(image)
 
     return blob
-
-
-
-    # import matplotlib.pyplot as plt
-#     center = (int(blob['center']['x']*image_size[1]), int(blob['center']['y']*image_size[0]))
-#     radius = int(blob['radius']*image_size[0])
-#     cv2.circle(image, center, radius, (255,0,0), 2)
-
-#     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-#     plt.imshow(image_rgb)
-#     plt.show()
-
-
