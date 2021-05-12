@@ -1,9 +1,5 @@
 from processImages import *
 
-from tkinter.filedialog import askdirectory
-
-collectionDir = askdirectory(title="Select the folder containing data")
-
 # Initialize arrays
 grayImage = np.array([])
 Image = np.array([])
@@ -14,6 +10,7 @@ rLaser = np.array([])
 
 rightEye = True
 
+collectionDir = getCollectionDirectory()
 
 grayImage = loadImages(collectionDir)
 dataDictionary = seperateImages(grayImage, collectionDir)

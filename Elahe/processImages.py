@@ -24,6 +24,12 @@ from matplotlib import pyplot
 from scipy.signal import find_peaks
 from scipy import ndimage
 import scipy.signal
+from tkinter.filedialog import askdirectory
+
+
+def getCollectionDirectory():
+    collectionDir = askdirectory(title="Select the folder containing data")
+    return collectionDir
 
 
 def loadImages(collectionDir: str) -> np.ndarray:
@@ -32,6 +38,7 @@ def loadImages(collectionDir: str) -> np.ndarray:
     blue channel of the image = 0
     output is a series of grayscale images
     """
+
     collectionDir = collectionDir+'/*.jpg'
     imageCollection = imread_collection(collectionDir)# imports as RGB image
     grayImage = np.zeros((len(imageCollection),imageCollection[0].shape[0],imageCollection[0].shape[1]))
@@ -149,7 +156,7 @@ def seperateNewImages(grayImageCollection, collectionDir: str):
     Seperate images from the new data.
     """
     collectionDir_lowercase = collectionDir.lower()
-    Thresh=np.mean(grayImageCollection)
+    Thresh =np.mean(grayImageCollection)
     counter=0
     Image=np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
     laserImage=np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
@@ -158,43 +165,7 @@ def seperateNewImages(grayImageCollection, collectionDir: str):
     yCenter=np.array([])
     radius=np.array([])
     imageNumber=np.array([])
-
-
-    for i in range(0, grayImageCollection.shape[0]): # Emile changed first ind to 0 instead of 1
-        if (np.mean(grayImageCollection[i-1,:,:]) > Thresh and np.mean(grayImageCollection[i,:,:]) < Thresh):
-            print(i)
-            if (i<10):
-                loadLaserImage=collectionDir+'/00'+str(i)+'.jpg'
-            if (i>=10 and i<100):
-                loadLaserImage=collectionDir+'/0'+str(i)+'.jpg'
-            if (i>=100):
-                loadLaserImage=collectionDir+"/"+str(i)+'.jpg'
-            blob = mainRosa(loadLaserImage)
-
-            if "eye" in collectionDir_lowercase:
-                if "rosa" in collectionDir_lowercase:
-                    continue
-                else:
-                    blop["found"] = False
-            else:
-                if "rosa" in collectionDir_lowercase:
-                    blop["found"] = True
-
-
-            if (blob['found'] == True):
-                temp[0,:,:]=grayImageCollection[i-1,:,:]
-                Image=np.vstack((Image,temp))
-                temp[0,:,:]=grayImageCollection[i,:,:]
-                laserImage=np.vstack((laserImage,temp))
-
-                xCenter=np.hstack((xCenter,int(blob['center']['x']*Image.shape[2])))
-                yCenter=np.hstack((yCenter,int(blob['center']['y']*Image.shape[1])))
-                radius=np.hstack((radius,int(blob['radius']*Image.shape[1])))
-                imageNumber=np.hstack((imageNumber,int(i-1)))
-
-    Image=np.delete(Image,0,axis=0)
-    laserImage=np.delete(laserImage,0,axis=0)
-    return Image, laserImage, xCenter, yCenter, radius, imageNumber
+    return 0
 
 
 
