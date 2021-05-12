@@ -1,9 +1,6 @@
 import numpy as np
-from skimage.io import imread_collection
-from skimage.color import rgb2gray
 import matplotlib.pyplot as plt
 from tkinter.filedialog import askdirectory
-
 directory = askdirectory(title="Choose the folder containing the other modules.")
 import sys
 sys.path.insert(1, directory)
@@ -21,11 +18,4 @@ plt.show()
 
 print(randomPicture)
 
-# rng = np.random.default_rng(2021)
-# print(rng.random(4))
-# array([0.75694783, 0.94138187, 0.59246304, 0.31884171])
-
 # print(M[0,:,:])
-
-
-
