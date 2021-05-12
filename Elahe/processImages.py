@@ -27,6 +27,18 @@ import scipy.signal
 from tkinter.filedialog import askdirectory
 
 
+# def askWhichEye():
+#     while True:
+#         eye = input("Which eye is in the data [L/R]?")
+#         if eye in ["L", "R"]:
+#             return eye
+#         else:
+#             print("")
+
+def mirrorLeftEye(image):
+    reversedImage = None
+    return 
+
 def getCollectionDirectory():
     collectionDir = askdirectory(title="Select the folder containing data")
     return collectionDir
@@ -34,16 +46,15 @@ def getCollectionDirectory():
 
 def loadImages(collectionDir: str) -> np.ndarray:
     """
-    This function get the directory of a series of images
-    blue channel of the image = 0
-    output is a series of grayscale images
+    This function gets the directory of a series of images
+    Blue channel of the image = 0
+    Output is a series of grayscale images
     """
-
     collectionDir = collectionDir+'/*.jpg'
     imageCollection = imread_collection(collectionDir)# imports as RGB image
-    grayImage = np.zeros((len(imageCollection),imageCollection[0].shape[0],imageCollection[0].shape[1]))
+    grayImage = np.zeros((len(imageCollection), imageCollection[0].shape[0],imageCollection[0].shape[1]))
     for i in range(len(imageCollection)):
-        imageCollection[i][:,:,2]=0
+        imageCollection[i][:,:,2] = 0
         grayImage[i,:,:] = rgb2gray(imageCollection[i])
     return grayImage
 
@@ -116,18 +127,18 @@ def seperateImages(grayImageCollection, collectionDir: str):
 
     for i in range(1, grayImageCollection.shape[0]):
         if (np.mean(grayImageCollection[i-1,:,:]) > Thresh and np.mean(grayImageCollection[i,:,:]) < Thresh):
-            if (i<10):
-                loadLaserImage=collectionDir+'/00'+str(i)+'.jpg'
-            if (i>=10 and i<100):
-                loadLaserImage=collectionDir+'/0'+str(i)+'.jpg'
-            if (i>=100):
-                loadLaserImage=collectionDir+"/"+str(i)+'.jpg'
+            if (i < 10):
+                loadLaserImage = collectionDir+'/00'+str(i)+'.jpg'
+            if (i >= 10 and i < 100):
+                loadLaserImage = collectionDir+'/0'+str(i)+'.jpg'
+            if (i >= 100):
+                loadLaserImage = collectionDir+"/"+str(i)+'.jpg'
             blob = mainRosa(loadLaserImage)
             if (blob['found'] == True):
                 temp[0,:,:] = grayImageCollection[i-1,:,:] # retina
                 image = np.vstack((image, temp)) # retina
                 temp[0,:,:] = grayImageCollection[i,:,:] # rosa
-                laserImage=np.vstack((laserImage,temp)) # rosa
+                laserImage = np.vstack((laserImage,temp)) # rosa
 
                 # the following arrays are 1D
                 xCenter = np.hstack((xCenter,int(blob['center']['x']*image.shape[2]))) # for the center of the rosa

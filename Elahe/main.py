@@ -8,9 +8,13 @@ xLaser = np.array([])
 yLaser = np.array([])
 rLaser = np.array([])
 
-rightEye = True
+
 
 collectionDir = getCollectionDirectory()
+
+leftEye = False
+
+# eye = askWhichEye()
 
 grayImage = loadImages(collectionDir)
 dataDictionary = seperateImages(grayImage, collectionDir)
