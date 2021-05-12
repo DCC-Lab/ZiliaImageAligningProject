@@ -32,7 +32,7 @@ xCenterGrid, yCenterGrid, length = defineGrid(image)
 Label = placeRosa(xCenterGrid, yCenterGrid, length, xRosa, yRosa)
 plotResult(image, length, xCenterGrid, yCenterGrid, xRosa, yRosa)
 
-
+"""
 for j in range(image.shape[0]):
     window_name = 'Image'
     # center_coordinates = (1000-int(indexShift[j,1]),1000-int(indexShift[j,0]))
@@ -63,3 +63,4 @@ for j in range(image.shape[0]):
     #plt.imshow(image)
     #plt.show()
     #pyplot.imsave(str(3*j+2)+'.jpg', imageWithCircle)
+"""
