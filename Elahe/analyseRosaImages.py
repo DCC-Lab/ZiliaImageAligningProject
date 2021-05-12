@@ -329,7 +329,6 @@ def mainRosa(image_path):
     """
 
     image = cv2.imread(image_path)
-    print("le type est : ", type(image))
     image_size = image.shape
 
     blob, rec_time, found = findLaserSpotMainCall(image)

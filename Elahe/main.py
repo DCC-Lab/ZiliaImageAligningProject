@@ -32,6 +32,7 @@ xCenterGrid, yCenterGrid, length = defineGrid(image)
 Label = placeRosa(xCenterGrid, yCenterGrid, length, xRosa, yRosa)
 plotResult(image, length, xCenterGrid, yCenterGrid, xRosa, yRosa)
 
+
 for j in range(image.shape[0]):
     window_name = 'Image'
     # center_coordinates = (1000-int(indexShift[j,1]),1000-int(indexShift[j,0]))
@@ -43,8 +44,8 @@ for j in range(image.shape[0]):
     thickness = 5
     # Using cv2.circle() method
     # Draw a circle with blue line borders of thickness of 2 px
-    image = cv2.circle(image[0,:,:], center_coordinates, radius, color, thickness)
-    #pyplot.imsave(str(3*j)+'.jpg', image)
+    imageWithCircle = cv2.circle(image[0,:,:], center_coordinates, radius, color, thickness)
+    #pyplot.imsave(str(3*j)+'.jpg', imageWithCircle)
 
     window_name = 'Image'
     center_coordinates = (int(xLaser[j]),int(yLaser[j]))
@@ -55,10 +56,10 @@ for j in range(image.shape[0]):
     thickness = 5
     # Using cv2.circle() method
     # Draw a circle with blue line borders of thickness of 2 px
-    image = cv2.circle(image[j,:,:], center_coordinates, radius, color, thickness)
-    #pyplot.imsave(str(3*j+1)+'.jpg',image)
-    
-    image = cv2.circle(laser[j,:,:], center_coordinates, radius, color, thickness)
+    imageWithCircle = cv2.circle(image[j,:,:], center_coordinates, radius, color, thickness)
+    #pyplot.imsave(str(3*j+1)+'.jpg', imageWithCircle)
+
+    imageWithCircle = cv2.circle(laser[j,:,:], center_coordinates, radius, color, thickness)
     #plt.imshow(image)
     #plt.show()
-    #pyplot.imsave(str(3*j+2)+'.jpg', image)
+    #pyplot.imsave(str(3*j+2)+'.jpg', imageWithCircle)
