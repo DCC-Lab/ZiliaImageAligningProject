@@ -35,9 +35,9 @@ from tkinter.filedialog import askdirectory
 #         else:
 #             print("")
 
-def mirrorLeftEye(image):
-    reversedImage = None
-    return 
+def mirrorImage(image):
+    mirroredImage = image[:,::-1,:]
+    return mirroredImage
 
 def getCollectionDirectory():
     collectionDir = askdirectory(title="Select the folder containing data")

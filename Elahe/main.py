@@ -8,8 +8,6 @@ xLaser = np.array([])
 yLaser = np.array([])
 rLaser = np.array([])
 
-
-
 collectionDir = getCollectionDirectory()
 
 leftEye = False
