@@ -24,7 +24,6 @@ WARNING:
 
 import logging
 import time
-# opencv python (cv2) is related to computer vision things
 from cv2 import (
     findContours,
     contourArea,
@@ -35,10 +34,10 @@ from cv2 import (
     minEnclosingCircle, 
     minAreaRect,
     THRESH_TOZERO,
-    circle,
+#    circle,
     COLOR_BGR2GRAY,
     cvtColor,
-    morphologyEx,
+#    morphologyEx,
     MORPH_CLOSE
     )
 import cv2

@@ -1,13 +1,5 @@
 from processImages import *
 
-# Initialize arrays
-# grayImage = np.array([])
-# Image = np.array([])
-# laser = np.array([])
-# xLaser = np.array([])
-# yLaser = np.array([])
-# rLaser = np.array([])
-
 collectionDir = getCollectionDirectory()
 
 leftEye = False
@@ -18,17 +10,11 @@ while True:
         leftEye = True
         break
     elif leftOrRightEye == "R":
-        leftEye = False
         break
     else:
         print("The input is invalid.")
 
-if leftEye:
-    pass
-
-
-
-grayImage = loadImages(collectionDir)
+grayImage = loadImages(collectionDir, leftEye)
 dataDictionary = seperateImages(grayImage, collectionDir)
 dataDictionary = intensityCheck(dataDictionary)
 

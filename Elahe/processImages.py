@@ -18,8 +18,8 @@ from skimage.color import rgb2gray
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from scipy.ndimage import gaussian_filter
-import scipy.fftpack as fp
+#from scipy.ndimage import gaussian_filter
+#import scipy.fftpack as fp
 from matplotlib import pyplot
 from scipy.signal import find_peaks
 from scipy import ndimage
@@ -44,7 +44,7 @@ def getCollectionDirectory():
     return collectionDir
 
 
-def loadImages(collectionDir: str) -> np.ndarray:
+def loadImages(collectionDir: str, leftEye) -> np.ndarray:
     """
     This function gets the directory of a series of images
     Blue channel of the image = 0
@@ -52,6 +52,11 @@ def loadImages(collectionDir: str) -> np.ndarray:
     """
     collectionDir = collectionDir+'/*.jpg'
     imageCollection = imread_collection(collectionDir)# imports as RGB image
+    if leftEye:
+        temporaryCollection = []
+        for image in imageCollection:
+            temporaryCollection.append(mirrorImage(image))
+        imageCollection = np.array(temporaryCollection)
     grayImage = np.zeros((len(imageCollection), imageCollection[0].shape[0],imageCollection[0].shape[1]))
     for i in range(len(imageCollection)):
         imageCollection[i][:,:,2] = 0
