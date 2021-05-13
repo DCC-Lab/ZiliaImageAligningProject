@@ -1,18 +1,32 @@
 from processImages import *
 
 # Initialize arrays
-grayImage = np.array([])
-Image = np.array([])
-laser = np.array([])
-xLaser = np.array([])
-yLaser = np.array([])
-rLaser = np.array([])
+# grayImage = np.array([])
+# Image = np.array([])
+# laser = np.array([])
+# xLaser = np.array([])
+# yLaser = np.array([])
+# rLaser = np.array([])
 
 collectionDir = getCollectionDirectory()
 
 leftEye = False
 
-# eye = askWhichEye()
+while True:
+    leftOrRightEye = input("Left or right eye?[L/R]")
+    if leftOrRightEye == "L":
+        leftEye = True
+        break
+    elif leftOrRightEye == "R":
+        leftEye = False
+        break
+    else:
+        print("The input is invalid.")
+
+if leftEye:
+    pass
+
+
 
 grayImage = loadImages(collectionDir)
 dataDictionary = seperateImages(grayImage, collectionDir)
