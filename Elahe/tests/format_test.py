@@ -19,30 +19,36 @@ randomPicture3 = (np.random.rand(3,3,3)*255).astype(np.uint8)
 np.random.seed(4)
 randomPicture4 = (np.random.rand(3,3,3)*255).astype(np.uint8)
 
-def showTheRandomPictures():
+randomPicture1 = randomPicture1[:,:,-1:]
+plt.imshow(randomPicture1)
+plt.show()
+
+def showTheRandomPictures(save):
     plt.imshow(randomPicture1)
-    plt.imsave("random3x3pic1.jpg", randomPicture1)
     plt.show()
     plt.imshow(randomPicture2)
-    plt.imsave("random3x3pic2.jpg", randomPicture2)
     plt.show()
     plt.imshow(randomPicture3)
-    plt.imsave("random3x3pic3.jpg", randomPicture3)
     plt.show()
     plt.imshow(randomPicture4)
-    plt.imsave("random3x3pic4.jpg", randomPicture4)
     plt.show()
+    if save:
+        plt.imsave("random3x3pic1.jpg", randomPicture1)
+        plt.imsave("random3x3pic2.jpg", randomPicture2)
+        plt.imsave("random3x3pic3.jpg", randomPicture3)
+        plt.imsave("random3x3pic4.jpg", randomPicture4)
 
-# showTheRandomPictures()
 
-directory = getCollectionDirectory()
-grayImage = loadImages(directory)
+# showTheRandomPictures(False)
+
+# directory = getCollectionDirectory()
+# grayImage = loadImages(directory)
 # first dimension has the same size as the number of images...
-print(grayImage.shape)
+# print(grayImage.shape)
 
-plt.imshow(grayImage)
-plt.show()
-plt.imsave("grayImage.png", grayImage)
+# plt.imshow(grayImage)
+# plt.show()
+# plt.imsave("grayImage.png", grayImage)
 
-print(grayImage)
+# print(grayImage)
 
