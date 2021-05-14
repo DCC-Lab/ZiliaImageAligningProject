@@ -20,6 +20,10 @@ class TestUtilities(envtest.ZiliaTestCase):
         self.assertTrue(len(files) > 0)
         self.assertTrue(len(files) >= 3)
 
+        files = findFiles(directory=".", extension="py")
+        self.assertIsNotNone(files)
+        self.assertTrue(len(files) == 0)
+
     def testFindTestFiles(self):
         files = findFiles(directory=".", extension="test*.py")
         self.assertIsNotNone(files)
