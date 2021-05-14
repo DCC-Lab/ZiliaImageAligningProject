@@ -4,15 +4,16 @@ collectionDir = getCollectionDirectory()
 
 leftEye = False
 
-while True:
-    leftOrRightEye = input("Left or right eye?[L/R]")
-    if leftOrRightEye == "L":
-        leftEye = True
-        break
-    elif leftOrRightEye == "R":
-        break
-    else:
-        print("The input is invalid.")
+# To eventually implement with a tkinter interface.
+# while True:
+#     leftOrRightEye = input("Left or right eye?[L/R]")
+#     if leftOrRightEye == "L":
+#         leftEye = True
+#         break
+#     elif leftOrRightEye == "R":
+#         break
+#     else:
+#         print("The input is invalid.")
 
 grayImage = loadImages(collectionDir, leftEye)
 dataDictionary = seperateImages(grayImage, collectionDir)

@@ -27,17 +27,10 @@ import scipy.signal
 from tkinter.filedialog import askdirectory
 
 
-# def askWhichEye():
-#     while True:
-#         eye = input("Which eye is in the data [L/R]?")
-#         if eye in ["L", "R"]:
-#             return eye
-#         else:
-#             print("")
-
 def mirrorImage(image):
     mirroredImage = image[:,::-1,:]
     return mirroredImage
+
 
 def getCollectionDirectory():
     collectionDir = askdirectory(title="Select the folder containing data")
