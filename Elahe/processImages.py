@@ -84,7 +84,7 @@ def intensityCheck(dataDictionary):
         ii = np.hstack((ii, score))
     Threshold = np.mean(ii)
     index = np.where(ii > Threshold)
-    image =np.delete(image, index, axis=0)
+    image = np.delete(image, index, axis=0)
     laserImage = np.delete(laserImage, index, axis=0)
     xCenter = np.delete(xCenter, index, axis=0)
     yCenter = np.delete(yCenter, index, axis=0)
