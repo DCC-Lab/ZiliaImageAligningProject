@@ -38,17 +38,13 @@ class TestUtilities(envtest.ZiliaTestCase):
             self.assertTrue(os.path.exists(file))
             self.assertFalse(os.path.isdir(file))
 
-    def testFindFilesInDirectories(self):
-        # We are in a "tests/" directory, but the function only returns files
-        # it only matches the file name too
-        files = findFiles(directory="../", extension="tests*py")
-        self.assertIsNotNone(files)
-        self.assertTrue(len(files) >= 2)
-
-    def testFindFilesMatchDirectoryName(self):
-        # We are in a "tests/" directory, but the function only returns files
-        # it only matches the file name too
+    def testFindFilesCanMatchDirectoryName(self):
         files = findFiles(directory="../", extension="obsolete")
+        self.assertIsNotNone(files)
+        self.assertTrue(len(files) >= 0)
+
+    def testFindFilesCanMatchDirectoryNameWithPattern(self):
+        files = findFiles(directory="../", extension="obsolete/*py")
         self.assertIsNotNone(files)
         self.assertTrue(len(files) >= 0)
 
