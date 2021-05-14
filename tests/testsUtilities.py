@@ -36,7 +36,7 @@ class TestUtilities(envtest.ZiliaTestCase):
         self.assertIsNotNone(files)
         self.assertTrue(len(files) == 0)
 
-    def testConfirmFindDirectoriesOnly(self):
+    def testConfirmFindFilesOnly(self):
         files = findFiles(directory="../", extension="*")
         self.assertIsNotNone(files)
         self.assertTrue(len(files) >= 10) # Lots of files here
