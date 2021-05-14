@@ -73,5 +73,15 @@ class TestUtilities(envtest.ZiliaTestCase):
         self.assertIsNotNone(files)
         self.assertTrue(len(files) >= 0)
 
+    def testInvalidDirectory(self):
+        files = findFiles(directory="abcdWTF", extension="*")
+        self.assertIsNotNone(files)
+        self.assertTrue(len(files) == 0)
+
+    def testNoPatternOnDirectory(self):
+        files = findFiles(directory="../te?ts", extension="*")
+        self.assertIsNotNone(files)
+        self.assertTrue(len(files) == 0)
+
 if __name__ == '__main__':
     envtest.main()
