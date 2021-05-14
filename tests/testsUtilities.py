@@ -1,9 +1,10 @@
 import envtest  # modifies path
-from utilities import *
+from utilities import findFiles
 import os
 
 class TestUtilities(envtest.ZiliaTestCase):
-
+    # I wrote these tests to validate the behaviour of 
+    # the findFiles functions in utilities.py.
     def testFindAnyFiles(self):
         files = findFiles(directory=".", extension="*")
         self.assertIsNotNone(files)
@@ -11,7 +12,7 @@ class TestUtilities(envtest.ZiliaTestCase):
         self.assertTrue(len(files) >= 3)
 
     def testFindPythonFiles(self):
-        # I read the documentation for fnmatch, and 
+        # I read the documentation for fnmatch (used in findFiles), and 
         # findFiles should rename its extension argument "pattern"
         # https://docs.python.org/3/library/fnmatch.html
         files = findFiles(directory=".", extension="*.py")
@@ -44,15 +45,14 @@ class TestUtilities(envtest.ZiliaTestCase):
         for file in files:
             self.assertFalse(os.path.isabs(file))
 
-    @envtest.skipUnless(os.name=='posix',"Temp directory on Linux/macOS")
-    def testPosixFindDirectoriesReturnsAbsolutePathsWithAbsoluteDir(self):
-        files = findFiles(directory="/tmp", extension="*")
-        for file in files:
-            self.assertTrue(os.path.isabs(file))
+    def testFindDirectoriesReturnsAbsolutePathsWithAbsoluteDir(self):        
+        if os.name == 'posix':
+            files = findFiles(directory="/tmp", extension="*")
+        elif os.name == 'nt':
+            files = findFiles(directory=r"C:\Windows", extension="*.exe")
+        else:
+            self.fail("OS unknown")
 
-    @envtest.skipUnless(os.name=='nt',r"On Windows, take C:\Windows")
-    def testWindowsFindDirectoriesReturnsAbsolutePathsWithAbsoluteDir(self):
-        files = findFiles(directory=r"C:\Windows", extension="*.exe")
         for file in files:
             self.assertTrue(os.path.isabs(file))
 
