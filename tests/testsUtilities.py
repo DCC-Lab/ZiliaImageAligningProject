@@ -1,5 +1,6 @@
 import envtest  # modifies path
 from utilities import *
+import os
 
 class TestUtilities(envtest.ZiliaTestCase):
 
@@ -37,6 +38,23 @@ class TestUtilities(envtest.ZiliaTestCase):
         for file in files:
             self.assertTrue(os.path.exists(file))
             self.assertFalse(os.path.isdir(file))
+
+    def testFindDirectoriesReturnsPathsRelativeToProvidedArgument(self):
+        files = findFiles(directory="../", extension="*")
+        for file in files:
+            self.assertFalse(os.path.isabs(file))
+
+    @envtest.skipUnless(os.name=='posix',"Temp directory on Linux/macOS")
+    def testPosixFindDirectoriesReturnsAbsolutePathsWithAbsoluteDir(self):
+        files = findFiles(directory="/tmp", extension="*")
+        for file in files:
+            self.assertTrue(os.path.isabs(file))
+
+    @envtest.skipUnless(os.name=='nt',r"On Windows, take C:\Windows")
+    def testWindowsFindDirectoriesReturnsAbsolutePathsWithAbsoluteDir(self):
+        files = findFiles(directory=r"C:\Windows", extension="*.exe")
+        for file in files:
+            self.assertTrue(os.path.isabs(file))
 
     def testFindFilesCanMatchDirectoryName(self):
         files = findFiles(directory="../", extension="obsolete")
