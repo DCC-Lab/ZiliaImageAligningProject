@@ -1,6 +1,4 @@
 import envtest  # modifies path
-import matplotlib.pyplot as plt
-import sys
 
 class TestEnvironment(envtest.ZiliaTestCase):
 
@@ -11,6 +9,7 @@ class TestEnvironment(envtest.ZiliaTestCase):
         import utilities
         # if path is incorrect, this will throw an exception
 
+    
 
 if __name__ == '__main__':
     envtest.main()
