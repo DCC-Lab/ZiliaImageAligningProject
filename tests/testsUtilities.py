@@ -55,6 +55,13 @@ class TestUtilities(envtest.ZiliaTestCase):
 
         for file in files:
             self.assertTrue(os.path.isabs(file))
+    
+    @envtest.skipUnless(os.name == "nt", "Windows path test")
+    def testWindowsCanUseSlashInsteadOfBackslash(self):        
+        filesWithSlash = findFiles(directory=r"C:/Windows", extension="*.exe")
+        filesWithBackslash = findFiles(directory=r"C:\Windows", extension="*.exe")
+        self.assertTrue(len(filesWithSlash) > 0)
+        self.assertEqual(filesWithSlash, filesWithBackslash)
 
     def testFindFilesCanMatchDirectoryName(self):
         files = findFiles(directory="../", extension="obsolete")
