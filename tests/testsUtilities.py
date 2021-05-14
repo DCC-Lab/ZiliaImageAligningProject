@@ -30,7 +30,7 @@ class TestUtilities(envtest.ZiliaTestCase):
         self.assertTrue(len(files) > 0)
         self.assertTrue(len(files) >= 2)
 
-    def testFindDirectories(self):
+    def testCannotFindDirectories(self):
         # We are in a "tests/" directory, but the function only returns files
         files = findFiles(directory="../", extension="tests")
         self.assertIsNotNone(files)
