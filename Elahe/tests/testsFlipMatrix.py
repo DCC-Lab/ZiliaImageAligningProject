@@ -4,7 +4,27 @@ import numpy as np
 
 class TestFlipMatrix(envtest.ZiliaTestCase):
     def testNumpyAll(self):
-        A = np.array([1,2])
+        A = np.array([1, 2])
+        self.assertIsNotNone(A)
+        B = np.array([2, 1])
+        self.assertFalse(A is B)
+        for i in range(2):
+            self.assertTrue(A[i] != B[i])
+        self.assertTrue(A.all() == B.all())
+        sumA = []
+        sumB = []
+        for i in range(2):
+            sumA.append(A[i])
+            sumB.append(B[i])
+        sumA = sum(sumA)
+        sumB = sum(sumB)
+        self.assertTrue(sumA == sumB)
+        C = np.array([0,1])
+        self.assertFalse(A.all() == C.all())
+        self.assertFalse(C.all())
+        self.assertTrue(A.all())
+        # self.assertTrue(A.all() == sumA)
+        #print(type(A.all())) # retourne un 'numpy.bool'
 
     def testNumpyDiagonalMatrix(self):
         A = np.diag([1, 2, 3, 4, 5])
