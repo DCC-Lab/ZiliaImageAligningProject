@@ -67,10 +67,10 @@ ALGO_TIMEOUT_IN_SECONDS = 0.5
 class ConnectedComponents:
     def __init__(self):
         self.centroidList = []
-        self.radius_list = []
-        self.area_list = []
-        self.major_axis_list = []
-        self.minor_axis_list = []
+        self.radiusList = []
+        self.areaList = []
+        self.majorAxisList = []
+        self.minorAxisList = []
         self.contour = []
 
     def getPropertiesConnectedComponent(self, binaryImage, minLength=4, minArea=15):
@@ -92,13 +92,13 @@ class ConnectedComponents:
                 area = contourArea(cntr)
                 if int(area) > minArea:
                     center, radius = minEnclosingCircle(cntr)
-                    (_,_), (major_axis, minor_axis), _ = minAreaRect(cntr)
+                    (_,_), (majorAxis, minorAxis), _ = minAreaRect(cntr)
                     self.centroidList.append(center)
-                    self.radius_list.append(radius)
+                    self.radiusList.append(radius)
                     area = pi * radius * radius
-                    self.area_list.append(area)
-                    self.major_axis_list.append(minor_axis / 2)
-                    self.minor_axis_list.append(major_axis / 2)
+                    self.areaList.append(area)
+                    self.majorAxisList.append(minorAxis / 2)
+                    self.minorAxisList.append(majorAxis / 2)
                     self.contour.append(cntr)
 
 
@@ -119,23 +119,23 @@ def analyzeBinaryImageForRosa(binary_image):
 
     cc = ConnectedComponents()
     cc.getPropertiesConnectedComponent(binary_image)
-    if len(cc.area_list) >= 15:
+    if len(cc.areaList) >= 15:
         return False, 0, 0, 0
 
     t = time.time()
-    list_idx = np.flip(np.argsort(cc.area_list), 0)
+    list_idx = np.flip(np.argsort(cc.areaList), 0)
 
-    if len(cc.area_list) > 0:
-        area_number = len(cc.area_list)
+    if len(cc.areaList) > 0:
+        area_number = len(cc.areaList)
         if area_number > 1:
             LOGGER.debug("Multiple areas:" + str(area_number))
         for idx in list_idx:
             circle_centroid = cc.centroidList[idx]
-            circle_radius = cc.radius_list[idx]
+            circle_radius = cc.radiusList[idx]
             if int(circle_radius) > int(R_75_um * in_img_size[0]) and int(circle_radius) <= int(R_300_um * in_img_size[0]):
-                minor_axis = np.min([cc.minor_axis_list[idx], cc.major_axis_list[idx]])
-                major_axis = np.max([cc.minor_axis_list[idx], cc.major_axis_list[idx]])
-                is_a_circle = minor_axis/major_axis > ECCENTRICITY_CRITERIA
+                minorAxis = np.min([cc.minorAxisList[idx], cc.majorAxisList[idx]])
+                majorAxis = np.max([cc.minorAxisList[idx], cc.majorAxisList[idx]])
+                is_a_circle = minorAxis/majorAxis > ECCENTRICITY_CRITERIA
                 if is_a_circle:
                     return True, float(circle_centroid[1]), float(circle_centroid[0]), float(circle_radius)
     return False, 0, 0, 0
