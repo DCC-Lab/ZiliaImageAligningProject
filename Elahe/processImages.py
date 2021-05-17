@@ -18,8 +18,8 @@ from skimage.color import rgb2gray
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from scipy.ndimage import gaussian_filter
-import scipy.fftpack as fp
+#from scipy.ndimage import gaussian_filter
+#import scipy.fftpack as fp
 from matplotlib import pyplot
 from scipy.signal import find_peaks
 from scipy import ndimage
@@ -27,24 +27,17 @@ import scipy.signal
 from tkinter.filedialog import askdirectory
 
 
-# def askWhichEye():
-#     while True:
-#         eye = input("Which eye is in the data [L/R]?")
-#         if eye in ["L", "R"]:
-#             return eye
-#         else:
-#             print("")
+def mirrorImage(image):
+    mirroredImage = image[:,::-1,:]
+    return mirroredImage
 
-def mirrorLeftEye(image):
-    reversedImage = None
-    return 
 
 def getCollectionDirectory():
     collectionDir = askdirectory(title="Select the folder containing data")
     return collectionDir
 
 
-def loadImages(collectionDir: str) -> np.ndarray:
+def loadImages(collectionDir: str, leftEye) -> np.ndarray:
     """
     This function gets the directory of a series of images
     Blue channel of the image = 0
@@ -52,6 +45,11 @@ def loadImages(collectionDir: str) -> np.ndarray:
     """
     collectionDir = collectionDir+'/*.jpg'
     imageCollection = imread_collection(collectionDir)# imports as RGB image
+    if leftEye:
+        temporaryCollection = []
+        for image in imageCollection:
+            temporaryCollection.append(mirrorImage(image))
+        imageCollection = np.array(temporaryCollection)
     grayImage = np.zeros((len(imageCollection), imageCollection[0].shape[0],imageCollection[0].shape[1]))
     for i in range(len(imageCollection)):
         imageCollection[i][:,:,2] = 0
@@ -86,7 +84,7 @@ def intensityCheck(dataDictionary):
         ii = np.hstack((ii, score))
     Threshold = np.mean(ii)
     index = np.where(ii > Threshold)
-    image =np.delete(image, index, axis=0)
+    image = np.delete(image, index, axis=0)
     laserImage = np.delete(laserImage, index, axis=0)
     xCenter = np.delete(xCenter, index, axis=0)
     yCenter = np.delete(yCenter, index, axis=0)

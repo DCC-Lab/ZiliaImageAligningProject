@@ -19,7 +19,7 @@ randomPicture3 = (np.random.rand(3,3,3)*255).astype(np.uint8)
 np.random.seed(4)
 randomPicture4 = (np.random.rand(3,3,3)*255).astype(np.uint8)
 
-randomPicture1 = randomPicture1[:,:,-1:]
+randomPicture1 = randomPicture1[:,::-1,:]
 plt.imshow(randomPicture1)
 plt.show()
 

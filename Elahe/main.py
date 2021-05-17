@@ -1,22 +1,21 @@
 from processImages import *
 
-# Initialize arrays
-grayImage = np.array([])
-Image = np.array([])
-laser = np.array([])
-xLaser = np.array([])
-yLaser = np.array([])
-rLaser = np.array([])
-
-
-
 collectionDir = getCollectionDirectory()
 
 leftEye = False
 
-# eye = askWhichEye()
+# To eventually implement with a tkinter interface.
+# while True:
+#     leftOrRightEye = input("Left or right eye?[L/R]")
+#     if leftOrRightEye == "L":
+#         leftEye = True
+#         break
+#     elif leftOrRightEye == "R":
+#         break
+#     else:
+#         print("The input is invalid.")
 
-grayImage = loadImages(collectionDir)
+grayImage = loadImages(collectionDir, leftEye)
 dataDictionary = seperateImages(grayImage, collectionDir)
 dataDictionary = intensityCheck(dataDictionary)
 
