@@ -20,7 +20,16 @@ class TestNumpyEqualMethod(envtest.ZiliaTestCase):
         self.assertIsNotNone(B)
         self.assertTrue(type(np.equal(A, B)) == np.ndarray)
 
-    def testEqualMethodReturnsABoolMatrix(self):
+    def testEqualMethodReturnsAMatrix(self):
+        A = np.array([1, 2])
+        self.assertIsNotNone(A)
+        B = np.array([2, 1])
+        self.assertIsNotNone(B)
+        M = np.equal(A, B)
+        self.assertIsNotNone(M)
+        self.assertTrue(type(M) == np.ndarray)
+
+    def testEqualMethodReturnsBoolElements(self):
         A = np.array([1, 2])
         self.assertIsNotNone(A)
         B = np.array([2, 1])
