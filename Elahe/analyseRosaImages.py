@@ -66,11 +66,11 @@ ALGO_TIMEOUT_IN_SECONDS = 0.5
 
 class ConnectedComponents:
     def __init__(self):
-        self.area_list = []
         self.centroid_list = []
-        self.minor_axis_list = []
-        self.major_axis_list = []
         self.radius_list = []
+        self.area_list = []
+        self.major_axis_list = []
+        self.minor_axis_list = []
         self.contour = []
 
     def getPropertiesConnectedComponent(self, binary_image):
@@ -80,11 +80,13 @@ class ConnectedComponents:
         except:
             contours, _ = findContours(
                 binary_image, RETR_TREE, CHAIN_APPROX_SIMPLE)
+        self.filterConnectedComponents(contours)
 
+    def filterConnectedComponents(self, contours, minLength=4, minArea=15):
         for cntr in contours:
-            if len(cntr) > 4:
+            if len(cntr) > minLength:
                 area = contourArea(cntr)
-                if int(area) > 15:
+                if int(area) > minArea:
                     center, radius = minEnclosingCircle(cntr)
                     (_,_), (major_axis, minor_axis), _ = minAreaRect(cntr)
                     self.centroid_list.append(center)
