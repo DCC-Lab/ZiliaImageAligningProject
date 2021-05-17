@@ -66,30 +66,34 @@ ALGO_TIMEOUT_IN_SECONDS = 0.5
 
 class ConnectedComponents:
     def __init__(self):
-        self.centroid_list = []
+        self.centroidList = []
         self.radius_list = []
         self.area_list = []
         self.major_axis_list = []
         self.minor_axis_list = []
         self.contour = []
 
-    def getPropertiesConnectedComponent(self, binary_image):
-        try:
-            _, contours, _ = findContours(
-                binary_image, RETR_TREE, CHAIN_APPROX_SIMPLE)
-        except:
-            contours, _ = findContours(
-                binary_image, RETR_TREE, CHAIN_APPROX_SIMPLE)
-        self.filterConnectedComponents(contours)
+    def getPropertiesConnectedComponent(self, binaryImage, minLength=4, minArea=15):
+        contours = self.getContoursConnectedComponent(binaryImage)
+        self.filterConnectedComponents(contours, minLength, minArea)
 
-    def filterConnectedComponents(self, contours, minLength=4, minArea=15):
+    def getContoursConnectedComponent(self, binaryImage):
+        try:
+            _, unfilteredContours, _ = findContours(
+                binaryImage, RETR_TREE, CHAIN_APPROX_SIMPLE)
+        except:
+            unfilteredContours, _ = findContours(
+                binaryImage, RETR_TREE, CHAIN_APPROX_SIMPLE)
+        return unfilteredContours
+
+    def filterConnectedComponents(self, contours, minLength, minArea):
         for cntr in contours:
             if len(cntr) > minLength:
                 area = contourArea(cntr)
                 if int(area) > minArea:
                     center, radius = minEnclosingCircle(cntr)
                     (_,_), (major_axis, minor_axis), _ = minAreaRect(cntr)
-                    self.centroid_list.append(center)
+                    self.centroidList.append(center)
                     self.radius_list.append(radius)
                     area = pi * radius * radius
                     self.area_list.append(area)
@@ -126,7 +130,7 @@ def analyzeBinaryImageForRosa(binary_image):
         if area_number > 1:
             LOGGER.debug("Multiple areas:" + str(area_number))
         for idx in list_idx:
-            circle_centroid = cc.centroid_list[idx]
+            circle_centroid = cc.centroidList[idx]
             circle_radius = cc.radius_list[idx]
             if int(circle_radius) > int(R_75_um * in_img_size[0]) and int(circle_radius) <= int(R_300_um * in_img_size[0]):
                 minor_axis = np.min([cc.minor_axis_list[idx], cc.major_axis_list[idx]])
