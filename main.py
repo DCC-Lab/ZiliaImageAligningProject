@@ -26,7 +26,7 @@ yLaser = dataDictionary["yCenter"]
 rLaser = dataDictionary["radius"]
 imageNumber = dataDictionary["imageNumber"]
 
-indexShift = imageShift(image)
+indexShift = findImageShift(image)
 xRosa, yRosa = applyShift(xLaser, yLaser, indexShift)
 xCenterGrid, yCenterGrid, length = defineGrid(image)
 Label = placeRosa(xCenterGrid, yCenterGrid, length, xRosa, yRosa)

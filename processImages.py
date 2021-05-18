@@ -4,7 +4,7 @@ This module has the following functions:
 - intensityCheck(Image,laser,xLaser,yLaser,rLaser,imageNumber)
 - seperateImages(grayImageCollection,collectionDir)
 - crossImage(im1, im2)
-- imageShift(Image)
+- findImageShift(Image)
 - applyShift(xLaser,yLaser,shift)
 - defineGrid(Image)
 - placeRosa(xCenterGrid,yCenterGrid,length,xRosa,yRosa)
@@ -37,13 +37,14 @@ def getCollectionDirectory():
     return collectionDir
 
 
-def loadImages(collectionDir: str, leftEye) -> np.ndarray:
+def loadImages(collectionDir: str, leftEye: bool) -> np.ndarray:
     """
     This function gets the directory of a series of images
     Blue channel of the image = 0
     Output is a series of grayscale images
     """
     collectionDir = collectionDir+'/*.jpg'
+    #imageCollection is a collection of numpy arrays
     imageCollection = imread_collection(collectionDir)# imports as RGB image
     if leftEye:
         temporaryCollection = []
@@ -189,7 +190,7 @@ def crossImage(im1, im2):
     im2 -= np.mean(im2)
     return scipy.signal.fftconvolve(im1, im2[::-1,::-1], mode='same')
 
-def imageShift(Image: np.ndarray) -> np.ndarray:
+def findImageShift(Image: np.ndarray) -> np.ndarray:
     """
     Calculated the shift in x and y direction in two consecutive images
     Input: 3D numpy array (series of retina images)
