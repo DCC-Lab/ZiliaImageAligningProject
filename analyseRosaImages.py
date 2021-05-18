@@ -315,9 +315,9 @@ def binarizeLaserImage(input_image, thresh, max_value):
     maximum = max_value
 
     half_range = 3
-    retval, binary_image = threshold(
+    _, binary_image = threshold(
         gray_image, int(maximum * thresh)-half_range, 255, THRESH_TOZERO)
-    retval, binary_image = threshold(
+    _, binary_image = threshold(
         binary_image, int(maximum * thresh)+half_range, 255, THRESH_BINARY)
 
     return binary_image
@@ -336,6 +336,6 @@ def mainRosa(image_path):
     image = cv2.imread(image_path)
     image_size = image.shape
 
-    blob, rec_time, found = findLaserSpotMainCall(image)
+    blob, _, _ = findLaserSpotMainCall(image)
 
     return blob
