@@ -165,12 +165,11 @@ def seperateImages(grayImageCollection, collectionDir: str):
     return imageDataDictionary
 
 
-def listSortedFiles(directory: str, extension: str):
+def listNameOfFiles(directory: str, extension: str):
     foundFiles = []
     for file in os.listdir(directory):
         if fnmatch.fnmatch(file, f'*.{extension}'):
             foundFiles.append(file)
-    foundFiles.sort()
     return foundFiles
 
 
