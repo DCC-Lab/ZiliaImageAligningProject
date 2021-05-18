@@ -115,7 +115,7 @@ def seperateImages(grayImageCollection, collectionDir: str):
     """
     # 1st image has to be the retina, 2nd has to be the rosa.
     Thresh = np.mean(grayImageCollection)
-    counter = 0
+    numberOfRosaImages = 0
     image = np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
     laserImage = np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
     temp = np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
@@ -134,16 +134,19 @@ def seperateImages(grayImageCollection, collectionDir: str):
                 loadLaserImage = collectionDir+"/"+str(i)+'.jpg'
             blob = mainRosa(loadLaserImage)
             if (blob['found'] == True):
+
                 temp[0,:,:] = grayImageCollection[i-1,:,:] # retina
                 image = np.vstack((image, temp)) # retina
                 temp[0,:,:] = grayImageCollection[i,:,:] # rosa
                 laserImage = np.vstack((laserImage,temp)) # rosa
-
+                numberOfRosaImages += 1
                 # the following arrays are 1D
                 xCenter = np.hstack((xCenter,int(blob['center']['x']*image.shape[2]))) # for the center of the rosa
                 yCenter = np.hstack((yCenter,int(blob['center']['y']*image.shape[1]))) # for the center of the rosa
                 radius = np.hstack((radius,int(blob['radius']*image.shape[1]))) # for the center of the rosa
                 imageNumber = np.hstack((imageNumber,int(i-1))) # it's a 1D array
+    if numberOfRosaImages == 0:
+        raise ImportError("No laser spot was found. Try with different data.")
 
     image = np.delete(image,0,axis=0) # remove the first initialized empty matrix
     laserImage = np.delete(laserImage,0,axis=0) # remove the first initialized empty matrix
@@ -229,11 +232,7 @@ def applyShift(xLaser: np.ndarray, yLaser:np.ndarray, shift:np.ndarray):
     """
     Apply the shift value on the x and y of the rosa
     """
-    try:
-        shiftToApply = (xLaser - shift[:,1]), (yLaser - shift[:,0])
-    except ValueError:
-        raise ValueError("No laser spot was found. Try with different data.")
-    return shiftToApply
+    return (xLaser - shift[:,1]), (yLaser - shift[:,0])
 
 def defineGrid(Image):
     temp=np.zeros(Image.shape)

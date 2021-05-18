@@ -246,7 +246,7 @@ def findLaserSpotMainCall(in_image: np.ndarray):
     max_value_red_channel = np.max(red_channel)
  
     found, rec_time, c_h, c_w, radius = findLaserSpotRecursive(
-        red_channel, 0.95, max_value_red_channel, time_start, 0)
+        red_channel, max_value_red_channel, time_start)
 
     if found:
         c_h, c_w, fine_tuned_radius = fineTuneRosaDetection(red_channel, c_h, c_w, radius)
@@ -263,7 +263,7 @@ def findLaserSpotMainCall(in_image: np.ndarray):
     return blob, rec_time, found
 
 
-def findLaserSpotRecursive(red_channel, thr, max_value, start_time, rec_time):
+def findLaserSpotRecursive(red_channel, max_value, start_time, rec_time=0, thr=0.95):
     """
     Use a recursive algorithm to try to find the laser spot in the image.
     Input: red_channel(red channel of the image),
@@ -298,7 +298,7 @@ def findLaserSpotRecursive(red_channel, thr, max_value, start_time, rec_time):
 
     else:
         th = thr - 0.1
-        return findLaserSpotRecursive(red_channel, th, max_value, start_time, rec_time)
+        return findLaserSpotRecursive(red_channel, max_value, start_time, rec_time=rec_time, thr=th)
 
 
 def binarizeLaserImage(input_image, thresh, max_value):
