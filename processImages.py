@@ -225,11 +225,15 @@ def findImageShift(Image: np.ndarray) -> np.ndarray:
     return totalShift
 
 
-def applyShift(xLaser,yLaser,shift):
+def applyShift(xLaser: np.ndarray, yLaser:np.ndarray, shift:np.ndarray):
     """
     Apply the shift value on the x and y of the rosa
     """
-    return (xLaser - shift[:,1]), (yLaser - shift[:,0])
+    try:
+        shiftToApply = (xLaser - shift[:,1]), (yLaser - shift[:,0])
+    except ValueError:
+        raise ValueError("No laser spot was found. Try with different data.")
+    return shiftToApply
 
 def defineGrid(Image):
     temp=np.zeros(Image.shape)
