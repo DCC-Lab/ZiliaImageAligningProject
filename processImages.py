@@ -206,10 +206,7 @@ def loadNewImages(collectionDir: str, leftEye: bool, extension="jpg") -> np.ndar
     """
     fileNamesToLoad = getFilesToInclude(collectionDir, extension=extension)
     filePathsToLoad = getFilePaths(collectionDir, fileNamesToLoad)
-    imageCollection = imread_collection(filePathsToLoad) # HAS TO BE TESTED!!!!!!!
-    # collectionDir = collectionDir+'/*.'+extension
-    # #imageCollection is a collection of numpy arrays
-    # imageCollection = imread_collection(collectionDir)# imports as RGB image
+    imageCollection = imread_collection(filePathsToLoad)# imports as RGB image
     if leftEye:
         temporaryCollection = []
         for image in imageCollection:
