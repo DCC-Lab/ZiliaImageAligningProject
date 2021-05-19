@@ -173,14 +173,14 @@ def listNameOfFiles(directory: str, extension: str):
     return foundFiles
 
 
-def filterNewImages(directory: str, extension: str) -> list:
+def getFilesToExclude(directory: str, extension: str) -> list:
     listOfFiles = listNameOfFiles(directory, extension)
     filesToExclude = []
     for fileName in listOfFiles:
         name = fileName.lower()
-        if "eye" and "rosa" in name:
-            filesToExclude.append(fileName)
-    print(filesToExclude)
+        if "eye" in name:
+            if "rosa" in name:
+                filesToExclude.append(fileName)
     return filesToExclude
 
 
