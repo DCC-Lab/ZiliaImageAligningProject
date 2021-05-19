@@ -165,7 +165,7 @@ def seperateImages(grayImageCollection, collectionDir: str, extension="jpg"):
     return imageDataDictionary
 
 
-def listNameOfFiles(directory: str, extension: str):
+def listNameOfFiles(directory: str, extension="jpg"):
     foundFiles = []
     for file in os.listdir(directory):
         if fnmatch.fnmatch(file, f'*.{extension}'):
@@ -173,7 +173,7 @@ def listNameOfFiles(directory: str, extension: str):
     return foundFiles
 
 
-def getFilesToExclude(directory: str, extension: str) -> list:
+def getFilesToExclude(directory: str, extension="jpg") -> list:
     listOfFiles = listNameOfFiles(directory, extension)
     filesToExclude = []
     for fileName in listOfFiles:
@@ -190,7 +190,7 @@ def getFilesToExclude(directory: str, extension: str) -> list:
 
 
 # not shure yet if we'll need a grayImageCollection or just an imageCollection...
-def seperateNewImages(grayImageCollection, collectionDir: str):
+def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
     """
     Purpose: seperate new retina images from new rosa images
     Load retina image - then load the corresponding rosa image 

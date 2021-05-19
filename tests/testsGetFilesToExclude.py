@@ -12,17 +12,15 @@ class TestGetFilesToExclude(envtest.ZiliaTestCase):
         self.assertTrue(True)
 
     def testFilesDirectoryIsAccessible(self):
-        listOfFiles = listNameOfFiles(testFilesDirectory, "jpg")
+        listOfFiles = listNameOfFiles(testFilesDirectory, extension="jpg")
         self.assertTrue(len(listOfFiles) > 0)
         self.assertTrue(len(listOfFiles) < 30)
 
     def testOnlyTheRightFilesAreExcluded(self):
-        excludedFiles = getFilesToExclude(testFilesDirectory, "jpg")
+        excludedFiles = getFilesToExclude(testFilesDirectory, extension="jpg")
         for imageName in excludedFiles:
             self.assertTrue("eye" in imageName.lower())
             self.assertTrue("rosa" in imageName.lower())
-
-
 
 if __name__ == "__main__":
     envtest.main()
