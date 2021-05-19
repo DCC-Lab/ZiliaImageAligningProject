@@ -185,10 +185,17 @@ def getFilesToExclude(directory: str, extension="jpg") -> list:
 
 
 def getFilesToInclude(directory: str, extension="jpg"):
-    setOfFiles = set(listNameOfFiles(collectionDir, extension=extension))
-    setOfFilesToExclude = set(getFilesToExclude(collectionDir, extension=extension))
+    setOfFiles = set(listNameOfFiles(directory, extension=extension))
+    setOfFilesToExclude = set(getFilesToExclude(directory, extension=extension))
     listOfFilesToInclude = list( setOfFiles - setOfFilesToExclude )
     return listOfFilesToInclude
+
+
+def getFileNamesWithFullPath(directory: str, fileNames: list):
+    filesWithFullPath = []
+    for fileName in fileNames:
+        filesWithFullPath.append(directory+fileName)
+    return filesWithFullPath
 
 
 def loadNewImages(collectionDir: str, leftEye: bool, extension="jpg") -> np.ndarray:
@@ -197,6 +204,7 @@ def loadNewImages(collectionDir: str, leftEye: bool, extension="jpg") -> np.ndar
     Blue channel of the image = 0
     Output is a series of grayscale images
     """
+    filesToLoad = getFilesToInclude(collectionDir, extension=extension)
     collectionDir = collectionDir+'/*.'+extension
     #imageCollection is a collection of numpy arrays
     imageCollection = imread_collection(collectionDir)# imports as RGB image
