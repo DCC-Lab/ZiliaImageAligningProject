@@ -165,7 +165,7 @@ def seperateImages(grayImageCollection, collectionDir: str, extension="jpg"):
     return imageDataDictionary
 
 
-def listNameOfFiles(directory: str, extension="jpg"):
+def listNameOfFiles(directory: str, extension="jpg") -> list:
     foundFiles = []
     for file in os.listdir(directory):
         if fnmatch.fnmatch(file, f'*.{extension}'):
@@ -182,6 +182,14 @@ def getFilesToExclude(directory: str, extension="jpg") -> list:
             if "rosa" in name:
                 filesToExclude.append(fileName)
     return filesToExclude
+
+
+def getFilesToInclude(directory: str, extension="jpg"):
+    setOfFiles = set(listNameOfFiles(collectionDir, extension=extension))
+    setOfFilesToExclude = set(getFilesToExclude(collectionDir, extension=extension))
+    listOfFilesToInclude = list( setOfFiles - setOfFilesToExclude )
+    return listOfFilesToInclude
+
 
 
 def loadNewImages(collectionDir: str, leftEye: bool, extension="jpg") -> np.ndarray:
