@@ -49,7 +49,7 @@ from typing import TYPE_CHECKING
 
 LOGGER = logging.getLogger(__name__)
 
-ECCENTRICITY_CRITERIA = 0.7
+#ECCENTRICITY_CRITERIA = 0.7
 # IS_CONTOUR_EMPTY_CRITERIA = 0.4
 
 # R_25_um = 10/2048
@@ -60,7 +60,7 @@ R_75_um = 30/2048
 R_300_um = 100/2048
 
 # R_TH = R_TH_200um
-ALGO_TIMEOUT_IN_SECONDS = 0.5
+# ALGO_TIMEOUT_IN_SECONDS = 0.5
 
 
 class ConnectedComponents:
@@ -113,7 +113,7 @@ def extractGrayMapFromRedChannel(image):
     return formattedImage
 
 
-def analyzeBinaryImageForRosa(binary_image):
+def analyzeBinaryImageForRosa(binary_image, eccentricityCriteria=0.7):
     in_img_size = binary_image.shape
 
     cc = ConnectedComponents()
@@ -134,7 +134,7 @@ def analyzeBinaryImageForRosa(binary_image):
             if int(circle_radius) > int(R_75_um * in_img_size[0]) and int(circle_radius) <= int(R_300_um * in_img_size[0]):
                 minorAxis = np.min([cc.minorAxisList[idx], cc.majorAxisList[idx]])
                 majorAxis = np.max([cc.minorAxisList[idx], cc.majorAxisList[idx]])
-                is_a_circle = minorAxis/majorAxis > ECCENTRICITY_CRITERIA
+                is_a_circle = minorAxis/majorAxis > eccentricityCriteria
                 if is_a_circle:
                     return True, float(circle_centroid[1]), float(circle_centroid[0]), float(circle_radius)
     return False, 0, 0, 0
@@ -161,7 +161,7 @@ def formatBlob(in_image, laser_spot_parameter):
                 }
                 )
     """
-    captor_ratio = 1.18
+    # captor_ratio = 1.18
     c_h, c_w, radius, found = laser_spot_parameter
     h, w = in_image.shape[0], in_image.shape[1]
 
@@ -263,7 +263,7 @@ def findLaserSpotMainCall(in_image: np.ndarray):
     return blob, rec_time, found
 
 
-def findLaserSpotRecursive(red_channel, max_value, start_time, rec_time=0, thr=0.95):
+def findLaserSpotRecursive(red_channel, max_value, start_time, rec_time=0, thr=0.95, algoTimeoutInSeconds=0.5):
     """
     Use a recursive algorithm to try to find the laser spot in the image.
     Input: red_channel(red channel of the image),
@@ -283,7 +283,7 @@ def findLaserSpotRecursive(red_channel, max_value, start_time, rec_time=0, thr=0
     binary_image = binarizeLaserImage(red_channel, thr, max_value)
 
     current_time = time.time() - start_time
-    if current_time > ALGO_TIMEOUT_IN_SECONDS:
+    if current_time > algoTimeoutInSeconds:
         LOGGER.warning(
             f"Laser spot not found - too long: Took {str(current_time)} for {rec_time} iteration."
             )
@@ -301,7 +301,7 @@ def findLaserSpotRecursive(red_channel, max_value, start_time, rec_time=0, thr=0
         return findLaserSpotRecursive(red_channel, max_value, start_time, rec_time=rec_time, thr=th)
 
 
-def binarizeLaserImage(input_image, thresh, max_value):
+def binarizeLaserImage(input_image, thresh, max_value, half_range=3):
     """
     Turn an image into a binary image.
     Inputs : input_image(3D numpy array of the red channel of the image).
@@ -314,7 +314,6 @@ def binarizeLaserImage(input_image, thresh, max_value):
     gray_image = input_image
     maximum = max_value
 
-    half_range = 3
     _, binary_image = threshold(
         gray_image, int(maximum * thresh)-half_range, 255, THRESH_TOZERO)
     _, binary_image = threshold(
