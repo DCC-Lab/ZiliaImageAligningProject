@@ -39,13 +39,13 @@ def getCollectionDirectory():
     return collectionDir
 
 
-def loadImages(collectionDir: str, leftEye: bool) -> np.ndarray:
+def loadImages(collectionDir: str, leftEye: bool, extension="jpg") -> np.ndarray:
     """
     This function gets the directory of a series of images
     Blue channel of the image = 0
     Output is a series of grayscale images
     """
-    collectionDir = collectionDir+'/*.jpg'
+    collectionDir = collectionDir+'/*.'+extension
     #imageCollection is a collection of numpy arrays
     imageCollection = imread_collection(collectionDir)# imports as RGB image
     if leftEye:
@@ -105,7 +105,7 @@ def intensityCheck(dataDictionary):
     return dataDictionary
 
 
-def seperateImages(grayImageCollection, collectionDir: str):
+def seperateImages(grayImageCollection, collectionDir: str, extension="jpg"):
     """
     Purpose: seperate retina images from rosa images
     Load retina image - then load the corresponding rosa image 
@@ -131,11 +131,11 @@ def seperateImages(grayImageCollection, collectionDir: str):
         if (firstPicMeanValue > Thresh and secondPicMeanValue < Thresh):
             # The first picture is a retina image and the next one, a ROSA image.
             if (i < 10):
-                loadLaserImage = collectionDir+'/00'+str(i)+'.jpg'
+                loadLaserImage = collectionDir+'/00'+str(i)+"."+extension
             if (i >= 10 and i < 100):
-                loadLaserImage = collectionDir+'/0'+str(i)+'.jpg'
+                loadLaserImage = collectionDir+'/0'+str(i)+"."+extension
             if (i >= 100):
-                loadLaserImage = collectionDir+"/"+str(i)+'.jpg'
+                loadLaserImage = collectionDir+"/"+str(i)+"."+extension
             blob = mainRosa(loadLaserImage)
             if (blob['found'] == True):
 
@@ -173,15 +173,18 @@ def listNameOfFiles(directory: str, extension: str):
     return foundFiles
 
 
-    for root, directories, files in os.walk(os.path.normpath(directory)):
-        for file in files:
-            if fnmatch.fnmatch(file, extension):
-                foundFiles.append(os.path.join(root, file))
-    return foundFiles
+def filterNewImages(directory: str, extension: str) -> list:
+    listOfFiles = listNameOfFiles(directory, extension)
+    filesToExclude = []
+    for fileName in listOfFiles:
+        name = fileName.lower()
+        if "eye" and "rosa" in name:
+            filesToExclude.append(fileName)
+    print(filesToExclude)
+    return filesToExclude
 
 
-def filterNewImages(grayImageCollection: np.ndarray):
-    pass
+
     # if "rosa" and "eye" in grayImageCollection:
     #     pass
 
@@ -213,11 +216,11 @@ def seperateNewImages(grayImageCollection, collectionDir: str):
         if (firstPicMeanValue > Thresh and secondPicMeanValue < Thresh):
             # The first picture is a retina image and the next one, a ROSA image.
             if (i < 10):
-                loadLaserImage = collectionDir+'/00'+str(i)+'.jpg'
+                loadLaserImage = collectionDir+'/00'+str(i)+"."+extension
             if (i >= 10 and i < 100):
-                loadLaserImage = collectionDir+'/0'+str(i)+'.jpg'
+                loadLaserImage = collectionDir+'/0'+str(i)+"."+extension
             if (i >= 100):
-                loadLaserImage = collectionDir+"/"+str(i)+'.jpg'
+                loadLaserImage = collectionDir+"/"+str(i)+"."+extension
             blob = mainRosa(loadLaserImage)
             if (blob['found'] == True):
 
@@ -371,4 +374,4 @@ def plotResult (Image,length,xCenterGrid,yCenterGrid,xRosa,yRosa):
     img[::dx,:] = grid_color
 
     plt.imshow(img)
-    pyplot.imsave('Result.jpg',img)
+    pyplot.imsave('Result.jpg', img)
