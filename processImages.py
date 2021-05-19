@@ -191,7 +191,6 @@ def getFilesToInclude(directory: str, extension="jpg"):
     return listOfFilesToInclude
 
 
-
 def loadNewImages(collectionDir: str, leftEye: bool, extension="jpg") -> np.ndarray:
     """
     This function gets the directory of a series of images
