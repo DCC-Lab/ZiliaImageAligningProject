@@ -191,7 +191,7 @@ def getFilesToInclude(directory: str, extension="jpg"):
     return listOfFilesToInclude
 
 
-def getFileNamesWithFullPath(directory: str, fileNames: list) -> list:
+def getFilePaths(directory: str, fileNames: list) -> list:
     filesWithFullPath = []
     for fileName in fileNames:
         filesWithFullPath.append(directory+"/"+fileName)
@@ -204,10 +204,12 @@ def loadNewImages(collectionDir: str, leftEye: bool, extension="jpg") -> np.ndar
     Blue channel of the image = 0
     Output is a series of grayscale images
     """
-    filesToLoad = getFilesToInclude(collectionDir, extension=extension)
-    collectionDir = collectionDir+'/*.'+extension
-    #imageCollection is a collection of numpy arrays
-    imageCollection = imread_collection(collectionDir)# imports as RGB image
+    fileNamesToLoad = getFilesToInclude(collectionDir, extension=extension)
+    filePathsToLoad = getFilePaths(collectionDir, fileNamesToLoad)
+    imageCollection = imread_collection(filePathsToLoad) # HAS TO BE TESTED!!!!!!!
+    # collectionDir = collectionDir+'/*.'+extension
+    # #imageCollection is a collection of numpy arrays
+    # imageCollection = imread_collection(collectionDir)# imports as RGB image
     if leftEye:
         temporaryCollection = []
         for image in imageCollection:
