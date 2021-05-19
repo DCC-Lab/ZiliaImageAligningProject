@@ -191,7 +191,7 @@ def getFilesToInclude(directory: str, extension="jpg"):
     return listOfFilesToInclude
 
 
-def getFileNamesWithFullPath(directory: str, fileNames: list):
+def getFileNamesWithFullPath(directory: str, fileNames: list) -> list:
     filesWithFullPath = []
     for fileName in fileNames:
         filesWithFullPath.append(directory+"/"+fileName)
