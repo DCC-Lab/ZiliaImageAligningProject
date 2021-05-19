@@ -184,9 +184,25 @@ def getFilesToExclude(directory: str, extension="jpg") -> list:
     return filesToExclude
 
 
-
-    # if "rosa" and "eye" in grayImageCollection:
-    #     pass
+def loadNewImages(collectionDir: str, leftEye: bool, extension="jpg") -> np.ndarray:
+    """
+    This function gets the directory of a series of images
+    Blue channel of the image = 0
+    Output is a series of grayscale images
+    """
+    collectionDir = collectionDir+'/*.'+extension
+    #imageCollection is a collection of numpy arrays
+    imageCollection = imread_collection(collectionDir)# imports as RGB image
+    if leftEye:
+        temporaryCollection = []
+        for image in imageCollection:
+            temporaryCollection.append(mirrorImage(image))
+        imageCollection = np.array(temporaryCollection)
+    grayImage = np.zeros((len(imageCollection), imageCollection[0].shape[0],imageCollection[0].shape[1]))
+    for i in range(len(imageCollection)):
+        imageCollection[i][:,:,2] = 0
+        grayImage[i,:,:] = rgb2gray(imageCollection[i])
+    return grayImage
 
 
 # not shure yet if we'll need a grayImageCollection or just an imageCollection...
