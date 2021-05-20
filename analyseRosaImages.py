@@ -323,7 +323,7 @@ def binarizeLaserImage(input_image, thresh, max_value, half_range=3):
 
 
 # if __name__ == "__main__":
-def mainRosa(image_path):
+def analyzeRosa(image_path):
     """
     Import an image as a numpy array and give parameters of the blob.
     Input: image_path(file path of the image you want to import. Must not

@@ -11,7 +11,7 @@ This module has the following functions:
 - plotResult (Image,length,xCenterGrid,yCenterGrid,xRosa,yRosa)
 """
 
-from analyseRosaImages import mainRosa
+from analyseRosaImages import analyzeRosa
 
 from skimage.io import imread_collection
 from skimage.color import rgb2gray
@@ -114,7 +114,7 @@ def seperateImages(grayImageCollection, collectionDir: str, extension="jpg"):
                 loadLaserImage = collectionDir+'/0'+str(i)+"."+extension
             if (i >= 100):
                 loadLaserImage = collectionDir+"/"+str(i)+"."+extension
-            blob = mainRosa(loadLaserImage)
+            blob = analyzeRosa(loadLaserImage)
             if (blob['found'] == True):
 
                 temp[0,:,:] = grayImageCollection[i-1,:,:] # retina
@@ -229,7 +229,7 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
                 loadLaserImage = collectionDir+'/0'+str(i)+"."+extension
             if (i >= 100):
                 loadLaserImage = collectionDir+"/"+str(i)+"."+extension
-            blob = mainRosa(loadLaserImage)
+            blob = analyzeRosa(loadLaserImage)
             if (blob['found'] == True):
 
                 temp[0,:,:] = grayImageCollection[i-1,:,:] # retina
