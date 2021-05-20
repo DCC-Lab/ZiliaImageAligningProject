@@ -298,21 +298,13 @@ def applyShift(xLaser: np.ndarray, yLaser:np.ndarray, shift:np.ndarray):
     """
     return (xLaser - shift[:,1]), (yLaser - shift[:,0])
 
-def defineGrid(Image):
-    temp = np.zeros(Image.shape)
-    temp[np.where(Image>=np.mean(Image)*1.9)] = 1
-    kernel = np.ones((5,5),np.uint8)
-    openingTemp = cv2.morphologyEx(temp[0,:,:], cv2.MORPH_OPEN, kernel)
-    nonZero = np.nonzero(openingTemp)
-    upToDown = np.max(nonZero[0])-np.min(nonZero[0])
-    rightToLeft = np.max(nonZero[1])-np.min(nonZero[1])
-    upToDownCenter = int(((np.max(nonZero[0])+np.min(nonZero[0]))/2)-(upToDown-rightToLeft))
-    rightToLeftCenter = int((np.max(nonZero[1])+np.min(nonZero[1]))/2)
-    length = int((np.min([upToDown,rightToLeft]))/2)
-    return rightToLeftCenter, upToDownCenter, length
 
-
-def placeRosa(xCenterGrid, yCenterGrid, length, xRosa, yRosa):
+def placeRosa(gridParameters, shiftParameters):
+    xCenterGrid = gridParameters[0]
+    yCenterGrid = gridParameters[1]
+    length = gridParameters[2]
+    xRosa = shiftParameters[0]
+    yRosa = shiftParameters[1]
     xLabel = np.array(['1','2','3','4','5','6','7','8','9','10'])
     yLabel = np.array(['A','B','C','D','E','F','J','K','L','M'])
 
@@ -332,31 +324,50 @@ def placeRosa(xCenterGrid, yCenterGrid, length, xRosa, yRosa):
     return outputLabel
 
 
-def plotResult (Image, length, xCenterGrid, yCenterGrid, xRosa, yRosa):
+def defineGrid(Image):
+    temp = np.zeros(Image.shape)
+    temp[np.where(Image >= np.mean(Image)*1.9)] = 1
+    kernel = np.ones((5,5), np.uint8)
+    openingTemp = cv2.morphologyEx(temp[0,:,:], cv2.MORPH_OPEN, kernel)
+    nonZero = np.nonzero(openingTemp)
+    upToDown = np.max(nonZero[0]) - np.min(nonZero[0])
+    rightToLeft = np.max(nonZero[1]) - np.min(nonZero[1])
+    upToDownCenter = int(((np.max(nonZero[0]) + np.min(nonZero[0]))/2) - (upToDown-rightToLeft))
+    rightToLeftCenter = int((np.max(nonZero[1]) + np.min(nonZero[1]))/2)
+    length = int((np.min([upToDown, rightToLeft]))/2)
+    return rightToLeftCenter, upToDownCenter, length
+
+
+def plotResult (Image, shiftParameters, gridParameters):
+    xCenterGrid = gridParameters[0]
+    yCenterGrid = gridParameters[1]
+    length = gridParameters[2]
+    xRosa = shiftParameters[0]
+    yRosa = shiftParameters[1]
     for j in range(Image.shape[0]):
-        window_name = 'Image'  
-        centerCoordinates = (int(xRosa[j]),int(yRosa[j]))
+        window_name = 'Image'
+        centerCoordinates = (int(xRosa[j]), int(yRosa[j]))
         radius = 30
         color = (0, 255, 0)
         thickness = 5
         image = cv2.circle(Image[0,:,:], centerCoordinates, radius, color, thickness)
-        left = np.max([xCenterGrid-(length*5),0])
-        
-    up = np.max([yCenterGrid-(length*5),0])
-    right = np.min([(5*length),(Image.shape[1]-xCenterGrid)])+xCenterGrid
-    down = right = np.min([(5*length), (Image.shape[2]-yCenterGrid)])+yCenterGrid
-    temp = Image[0,up:down,left:right]
-    xNewCenter = xCenterGrid-left
-    yNewCenter = yCenterGrid-up
-    gridImage = np.zeros([length*10,length*10])
+        left = np.max([xCenterGrid - (length*5), 0])
+
+    up = np.max([yCenterGrid - (length*5), 0])
+    right = np.min([(5*length), (Image.shape[1] - xCenterGrid)]) + xCenterGrid
+    down = right = np.min([(5*length), (Image.shape[2] - yCenterGrid)]) + yCenterGrid
+    temp = Image[0,up:down, left:right]
+    xNewCenter = xCenterGrid - left
+    yNewCenter = yCenterGrid - up
+    gridImage = np.zeros([length*10, length*10])
     # Set slicing limits:
-    LOW_SLICE_Y = ((5*length)-yNewCenter)
-    HIGH_SLICE_Y = ((5*length)+(temp.shape[0]-yNewCenter))
-    LOW_SLICE_X = ((5*length)-xNewCenter)
-    HIGH_SLICE_X = ((5*length)+(temp.shape[1]-xNewCenter))
+    LOW_SLICE_Y = ((5*length) - yNewCenter)
+    HIGH_SLICE_Y = ((5*length) + (temp.shape[0] - yNewCenter))
+    LOW_SLICE_X = ((5*length) - xNewCenter)
+    HIGH_SLICE_X = ((5*length) + (temp.shape[1] - xNewCenter))
     # Slicing:
     gridImage[LOW_SLICE_Y:HIGH_SLICE_Y, LOW_SLICE_X:HIGH_SLICE_X] = temp
-    
+
     plt.figure()
     img = gridImage.copy()
     dx, dy = length,length
@@ -368,5 +379,5 @@ def plotResult (Image, length, xCenterGrid, yCenterGrid, xRosa, yRosa):
     img[:,::dy] = grid_color
     img[::dx,:] = grid_color
 
-    plt.imshow(img)
+    # plt.imshow(img)
     pyplot.imsave('Result.jpg', img)

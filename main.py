@@ -27,12 +27,13 @@ rLaser = dataDictionary["radius"]
 imageNumber = dataDictionary["imageNumber"]
 
 indexShift = findImageShift(image)
-xRosa, yRosa = applyShift(xLaser, yLaser, indexShift)
-xCenterGrid, yCenterGrid, length = defineGrid(image)
+shiftParameters = applyShift(xLaser, yLaser, indexShift)
+# xCenterGrid, yCenterGrid, length = defineGrid(image)
+gridParameters = defineGrid(image)
 
-# Label = placeRosa(xCenterGrid, yCenterGrid, length, xRosa, yRosa)
+Label = placeRosa(gridParameters, shiftParameters)
 
-plotResult(image, length, xCenterGrid, yCenterGrid, xRosa, yRosa)
+plotResult(image, shiftParameters, gridParameters)
 
 """
 for j in range(image.shape[0]):
