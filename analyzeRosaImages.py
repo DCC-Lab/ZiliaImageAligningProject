@@ -1,27 +1,3 @@
-"""
-Has the following class:
-- ConnectedComponents
-
-This class has the following methods:
-- __init__(self)
-- getPropertiesConnectedComponent(self, binary_image)
-
-
-Then this module has the following functions:
-- extractGrayMapFromRedChannel(image)
-- analyzeBinaryImageForRosa(binary_image)
-- formatBlob(in_image, laser_spot_parameter)
-- fineTuneRosaDetection(red_channel, c_h, c_w, radius)
-- findLaserSpotMainCall(in_image: np.ndarray)
-- findLaserSpotRecursive(red_channel, thr, max_value, start_time, rec_time)
-- binarizeLaserImage(input_image, thresh, max_value)
-- mainRosa(image_path)
-
-WARNING:
--mainRosa is called in functions2.py!!!
-
-"""
-
 import logging
 import time
 from cv2 import (

@@ -1,16 +1,3 @@
-"""
-This module has the following functions:
-- loadImages(collectionDir)
-- intensityCheck(Image,laser,xLaser,yLaser,rLaser,imageNumber)
-- seperateImages(grayImageCollection,collectionDir)
-- crossImage(im1, im2)
-- findImageShift(Image)
-- applyShift(xLaser,yLaser,shift)
-- defineGrid(Image)
-- placeRosa(xCenterGrid,yCenterGrid,length,xRosa,yRosa)
-- plotResult (Image,length,xCenterGrid,yCenterGrid,xRosa,yRosa)
-"""
-
 from analyzeRosaImages import analyzeRosa
 
 from skimage.io import imread_collection
