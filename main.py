@@ -15,7 +15,7 @@ leftEye = False
 #     else:
 #         print("The input is invalid.")
 
-grayImage = loadImages(collectionDir, leftEye)
+grayImage = loadImages(collectionDir, leftEye=leftEye)
 dataDictionary = seperateImages(grayImage, collectionDir)
 dataDictionary = intensityCheck(dataDictionary)
 

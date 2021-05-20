@@ -39,7 +39,7 @@ def getCollectionDirectory():
     return collectionDir
 
 
-def loadImages(collectionDir: str, leftEye: bool, extension="jpg") -> np.ndarray:
+def loadImages(collectionDir: str, leftEye=False, extension="jpg") -> np.ndarray:
     """
     This function gets the directory of a series of images
     Blue channel of the image = 0
@@ -198,7 +198,7 @@ def getFilePaths(directory: str, fileNames: list) -> list:
     return filesWithFullPath
 
 
-def loadNewImages(collectionDir: str, leftEye: bool, extension="jpg") -> np.ndarray:
+def loadNewImages(collectionDir: str, leftEye=False, extension="jpg") -> np.ndarray:
     """
     This function gets the directory of a series of images
     Blue channel of the image = 0
