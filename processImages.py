@@ -332,7 +332,7 @@ def placeRosa(xCenterGrid, yCenterGrid, length, xRosa, yRosa):
     return outputLabel
 
 
-def plotResult (Image,length,xCenterGrid,yCenterGrid,xRosa,yRosa):
+def plotResult (Image, length, xCenterGrid, yCenterGrid, xRosa, yRosa):
     for j in range(Image.shape[0]):
         window_name = 'Image'  
         centerCoordinates = (int(xRosa[j]),int(yRosa[j]))

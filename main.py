@@ -30,7 +30,7 @@ indexShift = findImageShift(image)
 xRosa, yRosa = applyShift(xLaser, yLaser, indexShift)
 xCenterGrid, yCenterGrid, length = defineGrid(image)
 
-Label = placeRosa(xCenterGrid, yCenterGrid, length, xRosa, yRosa)
+# Label = placeRosa(xCenterGrid, yCenterGrid, length, xRosa, yRosa)
 
 plotResult(image, length, xCenterGrid, yCenterGrid, xRosa, yRosa)
 
