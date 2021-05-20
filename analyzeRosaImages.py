@@ -27,14 +27,11 @@ LOGGER = logging.getLogger(__name__)
 
 #ECCENTRICITY_CRITERIA = 0.7
 # IS_CONTOUR_EMPTY_CRITERIA = 0.4
-
 # R_25_um = 10/2048
-R_75_um = 30/2048
-
+# R_75_um = 30/2048
 # R_TH_100um = 44/2048
 # R_TH_200um = 80/2048
-R_300_um = 100/2048
-
+# R_300_um = 100/2048
 # R_TH = R_TH_200um
 # ALGO_TIMEOUT_IN_SECONDS = 0.5
 
@@ -89,7 +86,7 @@ def extractGrayMapFromRedChannel(image):
     return formattedImage
 
 
-def analyzeBinaryImageForRosa(binary_image, eccentricityCriteria=0.7):
+def analyzeBinaryImageForRosa(binary_image, eccentricityCriteria=0.7, R_75_um=30/2048, R_300_um=100/2048):
     in_img_size = binary_image.shape
 
     cc = ConnectedComponents()
