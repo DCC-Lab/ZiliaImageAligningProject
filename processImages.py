@@ -39,28 +39,6 @@ def getCollectionDirectory():
     return collectionDir
 
 
-def loadImages(collectionDir: str, leftEye=False, extension="jpg") -> np.ndarray:
-    """
-    This function gets the directory of a series of images
-    Blue channel of the image = 0
-    Output is a series of grayscale images
-    """
-    collectionDir = collectionDir+'/*.'+extension
-    #imageCollection is a collection of numpy arrays
-    imageCollection = imread_collection(collectionDir)# imports as RGB image
-    if leftEye:
-        temporaryCollection = []
-        for image in imageCollection:
-            temporaryCollection.append(mirrorImage(image))
-        imageCollection = np.array(temporaryCollection)
-    grayImage = np.zeros((len(imageCollection), imageCollection[0].shape[0],imageCollection[0].shape[1]))
-    for i in range(len(imageCollection)):
-        imageCollection[i][:,:,2] = 0
-        grayImage[i,:,:] = rgb2gray(imageCollection[i])
-    return grayImage
-
-
-# def intensityCheck(Image, laser, xLaser, yLaser, rLaser, imageNumber):
 def intensityCheck(dataDictionary):
     """
     Purpose: remove images with low contrast or blurry
@@ -198,7 +176,7 @@ def getFilePaths(directory: str, fileNames: list) -> list:
     return filesWithFullPath
 
 
-def loadNewImages(collectionDir: str, leftEye=False, extension="jpg") -> np.ndarray:
+def loadImages(collectionDir: str, leftEye=False, extension="jpg") -> np.ndarray:
     """
     This function gets the directory of a series of images
     Blue channel of the image = 0
