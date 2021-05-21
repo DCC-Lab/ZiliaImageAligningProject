@@ -5,7 +5,7 @@ from processImages import *
 testFilesDirectory = r"C:\Users\elm77\OneDrive\Documents\ULaval\2021_2_Ete\CERVO\Projet\code\mini_test_sample_newdata"
 
 class TestGetFilePaths(envtest.ZiliaTestCase):
-    
+
     def testInit(self):
         self.assertTrue(True)
 
@@ -23,6 +23,8 @@ class TestGetFilePaths(envtest.ZiliaTestCase):
         self.assertIsNotNone(fileNamesWithPath)
         for name in fileNamesWithPath:
             self.assertTrue(os.path.exists(name))
+        # print(fileNamesWithPath)
+        # print(np.sort(fileNamesWithPath))
 
 
 if __name__ == "__main__":

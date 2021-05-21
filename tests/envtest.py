@@ -131,6 +131,6 @@ def expectedFailure(func):
 
 def patchMatplotLib():
     return patch('matplotlib.pyplot.show', new=Mock())
-     
+
 # append module root directory to sys.path
 sys.path.insert(0, os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )

@@ -184,7 +184,6 @@ def loadImages(collectionDir: str, leftEye=False, extension="jpg") -> np.ndarray
     return grayImage
 
 
-# not shure yet if we'll need a grayImageCollection or just an imageCollection...
 def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
     """
     Purpose: seperate new retina images from new rosa images
@@ -205,9 +204,9 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
     radius = np.array([])
     imageNumber = np.array([])
 
-
     listOfImages = getFilesToInclude(collectionDir, extension=extension)
     listOfImagePaths = getFilePaths(collectionDir, listOfImages)
+    sortedPaths = np.sort(listOfImagePaths)
 
     for i in range(1, grayImageCollection.shape[0]):
         firstPicMeanValue = np.mean(grayImageCollection[i-1,:,:])
@@ -249,7 +248,6 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
     return imageDataDictionary
 
 
-
 def crossImage(im1, im2):
     """
     Calculate the cross correlation between two images
@@ -260,6 +258,7 @@ def crossImage(im1, im2):
     im1 -= np.mean(im1)
     im2 -= np.mean(im2)
     return scipy.signal.fftconvolve(im1, im2[::-1,::-1], mode='same')
+
 
 def findImageShift(Image: np.ndarray) -> np.ndarray:
     """
