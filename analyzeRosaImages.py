@@ -77,10 +77,10 @@ class ConnectedComponents:
 def extractGrayMapFromRedChannel(image):
     blue = image[:,:,0]
     red = image[:,:,2]
-    red_channel = red >= blue
+    redChannel = red >= blue
 
     gray_level_img = cvtColor(image, COLOR_BGR2GRAY)
-    out_image = red_channel*gray_level_img
+    out_image = redChannel*gray_level_img
 
     formattedImage = out_image.astype(np.uint8)
     return formattedImage
@@ -156,16 +156,16 @@ def formatBlob(in_image, laser_spot_parameter):
     return blob
 
 
-def fineTuneRosaDetection(red_channel, c_h, c_w, radius):
+def fineTuneRosaDetection(redChannel, c_h, c_w, radius):
     """
     Fine tune the detection of the Rosa in an image.
-    Input: red_channel(red channel of the image).
+    Input: redChannel(red channel of the image).
            c_h(the height of the circle).
            c_w(the width of the circle).
            radius(the radius of the circle).
     Output: 
     """
-    h, w = np.shape(red_channel)
+    h, w = np.shape(redChannel)
     c_h, c_w = int(c_h), int(c_w)
 
     c_h_orig, c_w_orig = int(c_h), int(c_w)
@@ -179,13 +179,13 @@ def fineTuneRosaDetection(red_channel, c_h, c_w, radius):
     w_min = np.amax([int(c_w-w_crop), 0])
     w_max = np.amin([int(c_w+w_crop), h])
 
-    crop_img = red_channel[h_min:h_max, w_min:w_max]
+    crop_img = redChannel[h_min:h_max, w_min:w_max]
 
     new_img = np.zeros((h,w))
     new_img[h_min:h_max, w_min:w_max] = crop_img
     perc = int(np.max([np.percentile(crop_img, 95) - 1, 0]))
 
-    in_img_size = red_channel.shape
+    in_img_size = redChannel.shape
     if int(perc) == 0:
         return c_h, c_w, original_radius
 
@@ -215,14 +215,14 @@ def findLaserSpotMainCall(in_image: np.ndarray):
     formatted_image = in_image.astype(np.uint8)
 
     time_start = time.time()
-    red_channel = extractGrayMapFromRedChannel(formatted_image)
-    max_value_red_channel = np.max(red_channel)
+    redChannel = extractGrayMapFromRedChannel(formatted_image)
+    maxValueRedChannel = np.max(redChannel)
  
     found, rec_time, c_h, c_w, radius = findLaserSpotRecursive(
-        red_channel, max_value_red_channel, time_start)
+        redChannel, maxValueRedChannel, time_start)
 
     if found:
-        c_h, c_w, fine_tuned_radius = fineTuneRosaDetection(red_channel, c_h, c_w, radius)
+        c_h, c_w, fine_tuned_radius = fineTuneRosaDetection(redChannel, c_h, c_w, radius)
         radius = fine_tuned_radius
 
     blob = formatBlob(in_image, [c_h, c_w, radius, found])
@@ -236,10 +236,10 @@ def findLaserSpotMainCall(in_image: np.ndarray):
     return blob, rec_time, found
 
 
-def findLaserSpotRecursive(red_channel, max_value, start_time, rec_time=0, thr=0.95, algoTimeoutInSeconds=0.5):
+def findLaserSpotRecursive(redChannel, max_value, start_time, rec_time=0, thr=0.95, algoTimeoutInSeconds=0.5):
     """
     Use a recursive algorithm to try to find the laser spot in the image.
-    Input: red_channel(red channel of the image),
+    Input: redChannel(red channel of the image),
            thr(the set threshold),
            max_value(maximum light intensity of red channel),
            start_time,
@@ -253,7 +253,7 @@ def findLaserSpotRecursive(red_channel, max_value, start_time, rec_time=0, thr=0
     """
     rec_time = rec_time + 1
 
-    binary_image = binarizeLaserImage(red_channel, thr, max_value)
+    binary_image = binarizeLaserImage(redChannel, thr, max_value)
 
     current_time = time.time() - start_time
     if current_time > algoTimeoutInSeconds:
@@ -271,7 +271,7 @@ def findLaserSpotRecursive(red_channel, max_value, start_time, rec_time=0, thr=0
 
     else:
         th = thr - 0.1
-        return findLaserSpotRecursive(red_channel, max_value, start_time, rec_time=rec_time, thr=th)
+        return findLaserSpotRecursive(redChannel, max_value, start_time, rec_time=rec_time, thr=th)
 
 
 def binarizeLaserImage(input_image, thresh, max_value, half_range=3):

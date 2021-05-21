@@ -205,6 +205,10 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
     radius = np.array([])
     imageNumber = np.array([])
 
+
+    listOfImages = getFilesToInclude(collectionDir, extension=extension)
+    listOfImagePaths = getFilePaths(collectionDir, listOfImages)
+
     for i in range(1, grayImageCollection.shape[0]):
         firstPicMeanValue = np.mean(grayImageCollection[i-1,:,:])
         secondPicMeanValue = np.mean(grayImageCollection[i,:,:])

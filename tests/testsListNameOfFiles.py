@@ -33,4 +33,3 @@ class TestListNameOfFiles(envtest.ZiliaTestCase):
 
 if __name__ == "__main__":
     envtest.main()
-
