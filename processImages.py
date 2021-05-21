@@ -89,7 +89,6 @@ def seperateImages(grayImageCollection, collectionDir: str, extension="jpg"):
     yCenter = np.array([])
     radius = np.array([])
     imageNumber = np.array([])
-
     for i in range(1, grayImageCollection.shape[0]):
         firstPicMeanValue = np.mean(grayImageCollection[i-1,:,:])
         secondPicMeanValue = np.mean(grayImageCollection[i,:,:])
@@ -103,7 +102,6 @@ def seperateImages(grayImageCollection, collectionDir: str, extension="jpg"):
                 loadLaserImage = collectionDir+"/"+str(i)+"."+extension
             blob = analyzeRosa(loadLaserImage)
             if (blob['found'] == True):
-
                 temp[0,:,:] = grayImageCollection[i-1,:,:] # retina
                 image = np.vstack((image, temp)) # retina
                 temp[0,:,:] = grayImageCollection[i,:,:] # rosa
@@ -116,7 +114,6 @@ def seperateImages(grayImageCollection, collectionDir: str, extension="jpg"):
                 imageNumber = np.hstack((imageNumber,int(i-1))) # it's a 1D array
     if numberOfRosaImages == 0:
         raise ImportError("No laser spot was found. Try with different data.")
-
     image = np.delete(image, 0, axis=0) # remove the first initialized empty matrix
     laserImage = np.delete(laserImage, 0, axis=0) # remove the first initialized empty matrix
     imageDataDictionary = {
@@ -203,25 +200,15 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
     yCenter = np.array([])
     radius = np.array([])
     imageNumber = np.array([])
-
     listOfImages = getFilesToInclude(collectionDir, extension=extension)
     listOfImagePaths = getFilePaths(collectionDir, listOfImages)
     sortedPaths = np.sort(listOfImagePaths)
-
+    # first pic = eye, 2nd pic = rosa, because sorted alphabetically
     for i in range(1, grayImageCollection.shape[0]):
-        firstPicMeanValue = np.mean(grayImageCollection[i-1,:,:])
-        secondPicMeanValue = np.mean(grayImageCollection[i,:,:])
-        if (firstPicMeanValue > Thresh and secondPicMeanValue < Thresh):
-            # The first picture is a retina image and the next one, a ROSA image.
-            if (i < 10):
-                loadLaserImage = collectionDir+'/00'+str(i)+"."+extension
-            if (i >= 10 and i < 100):
-                loadLaserImage = collectionDir+'/0'+str(i)+"."+extension
-            if (i >= 100):
-                loadLaserImage = collectionDir+"/"+str(i)+"."+extension
+        if "eye" in sortedPaths[i-1]:
+            loadLaserImage = sortedPaths[i]
             blob = analyzeRosa(loadLaserImage)
             if (blob['found'] == True):
-
                 temp[0,:,:] = grayImageCollection[i-1,:,:] # retina
                 image = np.vstack((image, temp)) # retina
                 temp[0,:,:] = grayImageCollection[i,:,:] # rosa
@@ -234,7 +221,6 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
                 imageNumber = np.hstack((imageNumber,int(i-1))) # it's a 1D array
     if numberOfRosaImages == 0:
         raise ImportError("No laser spot was found. Try with different data.")
-
     image = np.delete(image,0,axis=0) # remove the first initialized empty matrix
     laserImage = np.delete(laserImage,0,axis=0) # remove the first initialized empty matrix
     imageDataDictionary = {
