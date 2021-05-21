@@ -17,7 +17,7 @@ leftEye = False
 
 grayImage = loadImages(collectionDir, leftEye=leftEye)
 dataDictionary = seperateImages(grayImage, collectionDir)
-dataDictionary = intensityCheck(dataDictionary)
+dataDictionary = removeBadImages(dataDictionary)
 
 image = dataDictionary["image"]
 laser = dataDictionary["laserImage"]

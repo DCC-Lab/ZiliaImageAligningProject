@@ -18,7 +18,7 @@ class TestImreadCollection(envtest.ZiliaTestCase):
         self.assertTrue(len(collectionWithDir) < 10)
 
 
-    def testDirectoryPathAndListOfPathsReturnatricesWithSameLength(self):
+    def testDirectoryPathAndListOfPathsReturnMatricesWithSameLength(self):
         collectionWithDir = imread_collection(testDirectory+"/*.jpg")
         self.assertIsNotNone(collectionWithDir)
         listOfFiles = listNameOfFiles(testDirectory, extension="jpg")

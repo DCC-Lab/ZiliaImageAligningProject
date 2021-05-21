@@ -16,17 +16,17 @@ import fnmatch
 import os
 
 
-def mirrorImage(image):
-    mirroredImage = image[:,::-1,:]
-    return mirroredImage
-
-
 def getCollectionDirectory():
     collectionDir = askdirectory(title="Select the folder containing data")
     return collectionDir
 
 
-def intensityCheck(dataDictionary):
+def mirrorImage(image):
+    mirroredImage = image[:,::-1,:]
+    return mirroredImage
+
+
+def removeBadImages(dataDictionary):
     """
     Purpose: remove images with low contrast or blurry
     1- use laplacian filter to remove blury images
@@ -191,7 +191,6 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
             x,y, and radius of rosa center, numbers of the images in the directory
     """
     # 1st image has to be the retina, 2nd has to be the rosa.
-    Thresh = np.mean(grayImageCollection)
     numberOfRosaImages = 0
     image = np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
     laserImage = np.empty((1, grayImageCollection.shape[1], grayImageCollection.shape[2]), float)
@@ -209,16 +208,16 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
             loadLaserImage = sortedPaths[i]
             blob = analyzeRosa(loadLaserImage)
             if (blob['found'] == True):
+                numberOfRosaImages += 1
                 temp[0,:,:] = grayImageCollection[i-1,:,:] # retina
                 image = np.vstack((image, temp)) # retina
                 temp[0,:,:] = grayImageCollection[i,:,:] # rosa
                 laserImage = np.vstack((laserImage,temp)) # rosa
-                numberOfRosaImages += 1
                 # the following arrays are 1D
-                xCenter = np.hstack((xCenter,int(blob['center']['x']*image.shape[2]))) # for the center of the rosa
-                yCenter = np.hstack((yCenter,int(blob['center']['y']*image.shape[1]))) # for the center of the rosa
-                radius = np.hstack((radius,int(blob['radius']*image.shape[1]))) # for the center of the rosa
-                imageNumber = np.hstack((imageNumber,int(i-1))) # it's a 1D array
+                xCenter = np.hstack((xCenter, int(blob['center']['x']*image.shape[2]))) # for the center of the rosa
+                yCenter = np.hstack((yCenter, int(blob['center']['y']*image.shape[1]))) # for the center of the rosa
+                radius = np.hstack((radius, int(blob['radius']*image.shape[1]))) # for the center of the rosa
+                imageNumber = np.hstack((imageNumber, int(i-1))) # it's a 1D array
     if numberOfRosaImages == 0:
         raise ImportError("No laser spot was found. Try with different data.")
     image = np.delete(image,0,axis=0) # remove the first initialized empty matrix
@@ -246,46 +245,47 @@ def crossImage(im1, im2):
     return scipy.signal.fftconvolve(im1, im2[::-1,::-1], mode='same')
 
 
-def findImageShift(Image: np.ndarray) -> np.ndarray:
+def findImageShift(Image: np.ndarray, Margin=250, N=100) -> np.ndarray:
     """
     Calculated the shift in x and y direction in two consecutive images
     Input: 3D numpy array (series of retina images)
     The shift in the first image is considered to be zero
     Output: 2D numpy array with the shifts in each image regarding the first image
     """
-
-    Margin = 250
-    N = 100
     temp = Image[:, Margin:Image.shape[1] - Margin, Margin:Image.shape[2] - Margin]
-    skeletonImage=np.zeros(Image.shape)
+    skeletonImage = np.zeros(Image.shape)
     a = np.zeros(Image.shape)
     indexShift = np.array([0, 0])
     totalShift = np.array([[0, 0], [0, 0]])
     for j in range(temp.shape[0]):
         for i in range(temp.shape[1]):
             y = np.convolve(temp[j,i,:], np.ones(N)/N, mode='valid')
-            peaks, properties = find_peaks(-y,prominence=0.001,distance=250)
-            skeletonImage[j,i+Margin,peaks+Margin]=1
+            peaks, _ = find_peaks(-y, prominence=0.001, distance=250)
+            skeletonImage[j,i+Margin,peaks+Margin] = 1
         for i in range(temp.shape[2]):
             y = np.convolve(temp[j,:,i], np.ones(N)/N, mode='valid')
-            peaks, properties = find_peaks(-y,prominence=0.001,distance=250)
+            peaks, _ = find_peaks(-y, prominence=0.001, distance=250)
             skeletonImage[j, peaks+Margin, i+Margin] = 1
-
         a[j,:,:] = ndimage.binary_closing(skeletonImage[j,:,:], structure=np.ones((20,20))).astype(np.int)
-
         if (j > 0):
-            out1 = crossImage(a[j-1,:,:],a[j,:,:])
+            out1 = crossImage(a[j-1,:,:], a[j,:,:])
             ind = np.unravel_index(np.argmax(out1, axis=None), out1.shape)
             indexShift = np.vstack((indexShift, np.array(ind)-np.array([a.shape[1]/2, a.shape[2]/2])))
             totalShift = np.vstack((totalShift, np.sum(indexShift, axis=0)))
-    return totalShift
+    # return totalShift
+    return totalShift[1:,:]
+    # return totalShift[:-1,:]
 
 
 def applyShift(xLaser: np.ndarray, yLaser:np.ndarray, shift:np.ndarray):
     """
     Apply the shift value on the x and y of the rosa
     """
-    return (xLaser - shift[:,1]), (yLaser - shift[:,0])
+    shift2 = (yLaser - shift[:,0])
+    shift1 = (xLaser - shift[:,1])
+    shift = shift1, shift2
+    return shift
+    # return (xLaser - shift[:,1]), (yLaser - shift[:,0])
 
 
 def placeRosa(gridParameters, shiftParameters):
