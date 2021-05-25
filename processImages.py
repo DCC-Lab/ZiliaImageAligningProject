@@ -357,14 +357,12 @@ def plotResult (Image, shiftParameters, gridParameters):
 
     plt.figure()
     img = gridImage.copy()
-    dx, dy = length,length
-
-    # Custom (rgb) grid color
-    grid_color = 0
-
+    dx, dy = length, length
+    # Custom (rgb) grid color:
+    gridColor = 0
     # Modify the image to include the grid
-    img[:,::dy] = grid_color
-    img[::dx,:] = grid_color
+    img[:,::dy] = gridColor
+    img[::dx,:] = gridColor
 
     # plt.imshow(img)
     pyplot.imsave('Result.jpg', img)
