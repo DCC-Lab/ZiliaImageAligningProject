@@ -89,6 +89,7 @@ def seperateImages(grayImageCollection, collectionDir: str, extension="jpg"):
     yCenter = np.array([])
     radius = np.array([])
     imageNumber = np.array([])
+
     for i in range(1, grayImageCollection.shape[0]):
         firstPicMeanValue = np.mean(grayImageCollection[i-1,:,:])
         secondPicMeanValue = np.mean(grayImageCollection[i,:,:])
@@ -105,13 +106,13 @@ def seperateImages(grayImageCollection, collectionDir: str, extension="jpg"):
                 temp[0,:,:] = grayImageCollection[i-1,:,:] # retina
                 image = np.vstack((image, temp)) # retina
                 temp[0,:,:] = grayImageCollection[i,:,:] # rosa
-                laserImage = np.vstack((laserImage,temp)) # rosa
+                laserImage = np.vstack((laserImage, temp)) # rosa
                 numberOfRosaImages += 1
                 # the following arrays are 1D
                 xCenter = np.hstack((xCenter,int(blob['center']['x']*image.shape[2]))) # for the center of the rosa
                 yCenter = np.hstack((yCenter,int(blob['center']['y']*image.shape[1]))) # for the center of the rosa
                 radius = np.hstack((radius,int(blob['radius']*image.shape[1]))) # for the center of the rosa
-                imageNumber = np.hstack((imageNumber,int(i-1))) # it's a 1D array
+                imageNumber = np.hstack((imageNumber, int(i-1))) # it's a 1D array
     if numberOfRosaImages == 0:
         raise ImportError("No laser spot was found. Try with different data.")
     image = np.delete(image, 0, axis=0) # remove the first initialized empty matrix
@@ -199,6 +200,7 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
     yCenter = np.array([])
     radius = np.array([])
     imageNumber = np.array([])
+
     listOfImages = getFilesToInclude(collectionDir, extension=extension)
     listOfImagePaths = getFilePaths(collectionDir, listOfImages)
     sortedPaths = np.sort(listOfImagePaths)
@@ -212,7 +214,7 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
                 temp[0,:,:] = grayImageCollection[i-1,:,:] # retina
                 image = np.vstack((image, temp)) # retina
                 temp[0,:,:] = grayImageCollection[i,:,:] # rosa
-                laserImage = np.vstack((laserImage,temp)) # rosa
+                laserImage = np.vstack((laserImage, temp)) # rosa
                 # the following arrays are 1D
                 xCenter = np.hstack((xCenter, int(blob['center']['x']*image.shape[2]))) # for the center of the rosa
                 yCenter = np.hstack((yCenter, int(blob['center']['y']*image.shape[1]))) # for the center of the rosa
@@ -233,18 +235,6 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
     return imageDataDictionary
 
 
-def crossImage(im1, im2):
-    """
-    Calculate the cross correlation between two images
-    Get rid of the averages, otherwise the results are not good
-    Input: two 2D numpy arrays
-    Output: cross correlation
-    """
-    im1 -= np.mean(im1)
-    im2 -= np.mean(im2)
-    return scipy.signal.fftconvolve(im1, im2[::-1,::-1], mode='same')
-
-
 def findImageShift(Image: np.ndarray, Margin=250, N=100) -> np.ndarray:
     """
     Calculated the shift in x and y direction in two consecutive images
@@ -256,7 +246,8 @@ def findImageShift(Image: np.ndarray, Margin=250, N=100) -> np.ndarray:
     skeletonImage = np.zeros(Image.shape)
     a = np.zeros(Image.shape)
     indexShift = np.array([0, 0])
-    totalShift = np.array([[0, 0], [0, 0]])
+    totalShift = np.array([[0, 0]])
+    print("totalShift.shape = ", totalShift.shape)
     for j in range(temp.shape[0]):
         for i in range(temp.shape[1]):
             y = np.convolve(temp[j,i,:], np.ones(N)/N, mode='valid')
@@ -270,7 +261,7 @@ def findImageShift(Image: np.ndarray, Margin=250, N=100) -> np.ndarray:
         if (j > 0):
             out1 = crossImage(a[j-1,:,:], a[j,:,:])
             ind = np.unravel_index(np.argmax(out1, axis=None), out1.shape)
-            indexShift = np.vstack((indexShift, np.array(ind)-np.array([a.shape[1]/2, a.shape[2]/2])))
+            indexShift = np.vstack((indexShift, np.array(ind) - np.array([a.shape[1]/2, a.shape[2]/2])))
             totalShift = np.vstack((totalShift, np.sum(indexShift, axis=0)))
     return totalShift
     # return totalShift[1:,:]
@@ -281,11 +272,27 @@ def applyShift(xLaser: np.ndarray, yLaser:np.ndarray, shift:np.ndarray):
     """
     Apply the shift value on the x and y of the rosa
     """
-    # shift2 = (yLaser - shift[:,0])
-    # shift1 = (xLaser - shift[:,1])
-    # shift = shift1, shift2
-    # return shift
-    return (xLaser - shift[:,1]), (yLaser - shift[:,0])
+    print("yLaser = ", yLaser)
+    print("xLaser = ", xLaser)
+    print("shift[:,0] = ", shift[:,0])
+    print("shift[:,1] = ", shift[:,1])
+    shift2 = (yLaser - shift[:,0])
+    shift1 = (xLaser - shift[:,1])
+    shift = shift1, shift2
+    return shift
+    # return (xLaser - shift[:,1]), (yLaser - shift[:,0])
+
+
+def crossImage(im1, im2):
+    """
+    Calculate the cross correlation between two images
+    Get rid of the averages, otherwise the results are not good
+    Input: two 2D numpy arrays
+    Output: cross correlation
+    """
+    im1 -= np.mean(im1)
+    im2 -= np.mean(im2)
+    return scipy.signal.fftconvolve(im1, im2[::-1,::-1], mode='same')
 
 
 def placeRosa(gridParameters, shiftParameters):

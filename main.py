@@ -5,6 +5,9 @@ from processImages import *
 # Old data:
 # collectionDir = r"C:\Users\elm77\OneDrive\Documents\ULaval\2021_2_Ete\CERVO\Projet\code\mini_test_sample"
 
+# More old data:
+# collectionDir = r"C:\Users\elm77\OneDrive\Documents\ULaval\2021_2_Ete\CERVO\Projet\code\right_eye_small_sample"
+
 # New data:
 collectionDir = r"C:\Users\elm77\OneDrive\Documents\ULaval\2021_2_Ete\CERVO\Projet\code\mini_test_sample_newdata"
 
@@ -22,6 +25,7 @@ leftEye = False
 #         print("The input is invalid.")
 
 grayImage = loadImages(collectionDir, leftEye=leftEye)
+# dataDictionary = seperateImages(grayImage, collectionDir)
 dataDictionary = seperateNewImages(grayImage, collectionDir)
 dataDictionary = removeBadImages(dataDictionary)
 
