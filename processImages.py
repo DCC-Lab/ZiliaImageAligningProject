@@ -247,7 +247,6 @@ def findImageShift(Image: np.ndarray, Margin=250, N=100) -> np.ndarray:
     a = np.zeros(Image.shape)
     indexShift = np.array([0, 0])
     totalShift = np.array([[0, 0]])
-    print("totalShift.shape = ", totalShift.shape)
     for j in range(temp.shape[0]):
         for i in range(temp.shape[1]):
             y = np.convolve(temp[j,i,:], np.ones(N)/N, mode='valid')
@@ -272,15 +271,7 @@ def applyShift(xLaser: np.ndarray, yLaser:np.ndarray, shift:np.ndarray):
     """
     Apply the shift value on the x and y of the rosa
     """
-    print("yLaser = ", yLaser)
-    print("xLaser = ", xLaser)
-    print("shift[:,0] = ", shift[:,0])
-    print("shift[:,1] = ", shift[:,1])
-    shift2 = (yLaser - shift[:,0])
-    shift1 = (xLaser - shift[:,1])
-    shift = shift1, shift2
-    return shift
-    # return (xLaser - shift[:,1]), (yLaser - shift[:,0])
+    return (xLaser - shift[:,1]), (yLaser - shift[:,0])
 
 
 def crossImage(im1, im2):
