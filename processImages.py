@@ -220,8 +220,8 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
                 imageNumber = np.hstack((imageNumber, int(i-1))) # it's a 1D array
     if numberOfRosaImages == 0:
         raise ImportError("No laser spot was found. Try with different data.")
-    image = np.delete(image,0,axis=0) # remove the first initialized empty matrix
-    laserImage = np.delete(laserImage,0,axis=0) # remove the first initialized empty matrix
+    image = np.delete(image, 0, axis=0) # remove the first initialized empty matrix
+    laserImage = np.delete(laserImage, 0, axis=0) # remove the first initialized empty matrix
     imageDataDictionary = {
         "image": image,
         "laserImage": laserImage,
@@ -272,8 +272,8 @@ def findImageShift(Image: np.ndarray, Margin=250, N=100) -> np.ndarray:
             ind = np.unravel_index(np.argmax(out1, axis=None), out1.shape)
             indexShift = np.vstack((indexShift, np.array(ind)-np.array([a.shape[1]/2, a.shape[2]/2])))
             totalShift = np.vstack((totalShift, np.sum(indexShift, axis=0)))
-    # return totalShift
-    return totalShift[1:,:]
+    return totalShift
+    # return totalShift[1:,:]
     # return totalShift[:-1,:]
 
 
@@ -281,11 +281,11 @@ def applyShift(xLaser: np.ndarray, yLaser:np.ndarray, shift:np.ndarray):
     """
     Apply the shift value on the x and y of the rosa
     """
-    shift2 = (yLaser - shift[:,0])
-    shift1 = (xLaser - shift[:,1])
-    shift = shift1, shift2
-    return shift
-    # return (xLaser - shift[:,1]), (yLaser - shift[:,0])
+    # shift2 = (yLaser - shift[:,0])
+    # shift1 = (xLaser - shift[:,1])
+    # shift = shift1, shift2
+    # return shift
+    return (xLaser - shift[:,1]), (yLaser - shift[:,0])
 
 
 def placeRosa(gridParameters, shiftParameters):
