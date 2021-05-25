@@ -295,18 +295,18 @@ def placeRosa(gridParameters, shiftParameters):
     xLabel = np.array(['1','2','3','4','5','6','7','8','9','10'])
     yLabel = np.array(['A','B','C','D','E','F','J','K','L','M'])
 
-    xGrid = np.array(range(-5*length,5*length))
+    xGrid = np.array(range(-5*length, 5*length))
     xlabel = np.array( ["" for x in range(xGrid.shape[0])])
     for x in range(xLabel.shape[0]):
-        xlabel[x*length:(x+1)*length]=xLabel[x]
-    yGrid = np.array(range(-5*length,5*length))
+        xlabel[x*length:(x+1)*length] = xLabel[x]
+    yGrid = np.array(range(-5*length, 5*length))
     ylabel = np.array( ["" for x in range(yGrid.shape[0])])
     for y in range(yLabel.shape[0]):
-        ylabel[y*length:(y+1)*length]=yLabel[y]
+        ylabel[y*length:(y+1)*length] = yLabel[y]
     outputLabel = []
     for j in range(xRosa.shape[0]):
-        L = str(str(xlabel[(np.where(xGrid == xRosa[j]-xCenterGrid))[0]][0])+
-                       str(ylabel[(np.where(yGrid == yRosa[j]-yCenterGrid))[0]][0]))
+        L = str(str(xlabel[(np.where(xGrid == xRosa[j] - xCenterGrid))[0]][0]) +
+                       str(ylabel[(np.where(yGrid == yRosa[j] - yCenterGrid))[0]][0]))
         outputLabel.append(L)
     return outputLabel
 
