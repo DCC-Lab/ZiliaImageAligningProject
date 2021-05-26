@@ -325,21 +325,24 @@ def defineGrid(Image):
     return rightToLeftCenter, upToDownCenter, length
 
 
-def plotResult (Image, shiftParameters, gridParameters):
+def plotResult(Image, shiftParameters, gridParameters, rosaRadius=30):
+    pyplot.imsave("preResult1.jpg", Image[0,:,:])
     xCenterGrid = gridParameters[0]
     yCenterGrid = gridParameters[1]
     length = gridParameters[2]
     xRosa = shiftParameters[0]
     yRosa = shiftParameters[1]
     for j in range(Image.shape[0]):
-        window_name = 'Image'
         centerCoordinates = (int(xRosa[j]), int(yRosa[j]))
-        radius = 30
-        color = (0, 255, 0)
+        color = (0, 255, 0) # original
+        # color = (121, 188, 114)
         thickness = 5
-        image = cv2.circle(Image[0,:,:], centerCoordinates, radius, color, thickness)
+        image = cv2.circle(Image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
         left = np.max([xCenterGrid - (length*5), 0])
+        # plt.imshow(image)
+        # plt.show()
 
+    pyplot.imsave("preResult2.jpg", image)
     up = np.max([yCenterGrid - (length*5), 0])
     right = np.min([(5*length), (Image.shape[1] - xCenterGrid)]) + xCenterGrid
     down = right = np.min([(5*length), (Image.shape[2] - yCenterGrid)]) + yCenterGrid
@@ -354,6 +357,7 @@ def plotResult (Image, shiftParameters, gridParameters):
     HIGH_SLICE_X = ((5*length) + (temp.shape[1] - xNewCenter))
     # Slicing:
     gridImage[LOW_SLICE_Y:HIGH_SLICE_Y, LOW_SLICE_X:HIGH_SLICE_X] = temp
+    pyplot.imsave("preResult3.jpg", gridImage)
 
     plt.figure()
     img = gridImage.copy()
