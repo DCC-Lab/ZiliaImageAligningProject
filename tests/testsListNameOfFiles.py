@@ -24,13 +24,10 @@ class TestListNameOfFiles(envtest.ZiliaTestCase):
         files = listNameOfFiles(directory, "jpg")
         self.assertTrue(files == [])
 
-    @envtest.skip("Directory missing")
     def testDifferentFoldersCanBeReadUsingTheRightPath(self):
-        directory = self.testFilesDirectory + "/testing/"
-        files = listNameOfFiles(directory, "jpg")
+        files = listNameOfFiles(self.testSmallFilesDirectory, "jpg")
         self.assertIsNotNone(files)
-        self.assertTrue(len(files) > 0)
-        # print(len(files))
+        self.assertTrue(len(files) == 1)
 
 if __name__ == "__main__":
     envtest.main()

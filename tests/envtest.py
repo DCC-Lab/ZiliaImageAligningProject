@@ -21,7 +21,15 @@ class ZiliaTestCase(unittest.TestCase):
     stdout = None
     stderr = None
 
-    testFilesDirectory = r"TestImages/miniTestSampleNewData"
+    testFilesRootDirectory = r"TestImages"
+
+    @property
+    def testFilesDirectory(self):
+        return ZiliaTestCase.testFilesRootDirectory + r"/miniTestSampleNewData"
+
+    @property
+    def testSmallFilesDirectory (self):
+        return ZiliaTestCase.testFilesRootDirectory + r"/smallFiles"
 
     def __init__(self, tests=()):
         super(ZiliaTestCase, self).__init__(tests)
