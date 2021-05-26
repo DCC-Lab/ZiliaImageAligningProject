@@ -1,27 +1,3 @@
-"""
-Has the following class:
-- ConnectedComponents
-
-This class has the following methods:
-- __init__(self)
-- getPropertiesConnectedComponent(self, binary_image)
-
-
-Then this module has the following functions:
-- extractGrayMapFromRedChannel(image)
-- analyzeBinaryImageForRosa(binary_image)
-- formatBlob(in_image, laser_spot_parameter)
-- fineTuneRosaDetection(red_channel, c_h, c_w, radius)
-- findLaserSpotMainCall(in_image: np.ndarray)
-- findLaserSpotRecursive(red_channel, thr, max_value, start_time, rec_time)
-- binarizeLaserImage(input_image, thresh, max_value)
-- mainRosa(image_path)
-
-WARNING:
--mainRosa is called in functions2.py!!!
-
-"""
-
 import logging
 import time
 from cv2 import (
@@ -49,18 +25,15 @@ from typing import TYPE_CHECKING
 
 LOGGER = logging.getLogger(__name__)
 
-ECCENTRICITY_CRITERIA = 0.7
+#ECCENTRICITY_CRITERIA = 0.7
 # IS_CONTOUR_EMPTY_CRITERIA = 0.4
-
 # R_25_um = 10/2048
-R_75_um = 30/2048
-
+# R_75_um = 30/2048
 # R_TH_100um = 44/2048
 # R_TH_200um = 80/2048
-R_300_um = 100/2048
-
+# R_300_um = 100/2048
 # R_TH = R_TH_200um
-ALGO_TIMEOUT_IN_SECONDS = 0.5
+# ALGO_TIMEOUT_IN_SECONDS = 0.5
 
 
 class ConnectedComponents:
@@ -104,20 +77,20 @@ class ConnectedComponents:
 def extractGrayMapFromRedChannel(image):
     blue = image[:,:,0]
     red = image[:,:,2]
-    red_channel = red >= blue
+    redChannel = red >= blue
 
-    gray_level_img = cvtColor(image, COLOR_BGR2GRAY)
-    out_image = red_channel*gray_level_img
+    grayLevelImg = cvtColor(image, COLOR_BGR2GRAY)
+    out_image = redChannel*grayLevelImg
 
     formattedImage = out_image.astype(np.uint8)
     return formattedImage
 
 
-def analyzeBinaryImageForRosa(binary_image):
-    in_img_size = binary_image.shape
+def analyzeBinaryImageForRosa(binaryImage, eccentricityCriteria=0.7, R_75_um=30/2048, R_300_um=100/2048):
+    in_img_size = binaryImage.shape
 
     cc = ConnectedComponents()
-    cc.getPropertiesConnectedComponent(binary_image)
+    cc.getPropertiesConnectedComponent(binaryImage)
     if len(cc.areaList) >= 15:
         return False, 0, 0, 0
 
@@ -125,25 +98,25 @@ def analyzeBinaryImageForRosa(binary_image):
     list_idx = np.flip(np.argsort(cc.areaList), 0)
 
     if len(cc.areaList) > 0:
-        area_number = len(cc.areaList)
-        if area_number > 1:
-            LOGGER.debug("Multiple areas:" + str(area_number))
+        areaNumber = len(cc.areaList)
+        if areaNumber > 1:
+            LOGGER.debug("Multiple areas:" + str(areaNumber))
         for idx in list_idx:
-            circle_centroid = cc.centroidList[idx]
-            circle_radius = cc.radiusList[idx]
-            if int(circle_radius) > int(R_75_um * in_img_size[0]) and int(circle_radius) <= int(R_300_um * in_img_size[0]):
+            circleCentroid = cc.centroidList[idx]
+            circleRadius = cc.radiusList[idx]
+            if int(circleRadius) > int(R_75_um * in_img_size[0]) and int(circleRadius) <= int(R_300_um * in_img_size[0]):
                 minorAxis = np.min([cc.minorAxisList[idx], cc.majorAxisList[idx]])
                 majorAxis = np.max([cc.minorAxisList[idx], cc.majorAxisList[idx]])
-                is_a_circle = minorAxis/majorAxis > ECCENTRICITY_CRITERIA
+                is_a_circle = minorAxis/majorAxis > eccentricityCriteria
                 if is_a_circle:
-                    return True, float(circle_centroid[1]), float(circle_centroid[0]), float(circle_radius)
+                    return True, float(circleCentroid[1]), float(circleCentroid[0]), float(circleRadius)
     return False, 0, 0, 0
 
 
-def formatBlob(in_image, laser_spot_parameter):
+def formatBlob(inImage, laser_spot_parameter):
     """
     Format parameters of the blop and turn them into an organized dictionary.
-    Input: in_image(image as a numpy array).
+    Input: inImage(image as a numpy array).
            laser_spot_parameter(an iterable object containing [circle height,
                             circle width, circle radius, True/False value
                             that tells if the spot was found or not]).
@@ -161,14 +134,14 @@ def formatBlob(in_image, laser_spot_parameter):
                 }
                 )
     """
-    captor_ratio = 1.18
-    c_h, c_w, radius, found = laser_spot_parameter
-    h, w = in_image.shape[0], in_image.shape[1]
+    # captor_ratio = 1.18
+    circleHeight, circleWidth, radius, found = laser_spot_parameter
+    h, w = inImage.shape[0], inImage.shape[1]
 
     rectangle_height = min(h,w)
     rectangle_width = max(h,w)
 
-    r, c = c_w, c_h
+    r, c = circleWidth, circleHeight
 
     radius = int(radius)
     blob = {
@@ -183,159 +156,157 @@ def formatBlob(in_image, laser_spot_parameter):
     return blob
 
 
-def fineTuneRosaDetection(red_channel, c_h, c_w, radius):
+def fineTuneRosaDetection(redChannel, circleHeight, circleWidth, radius):
     """
     Fine tune the detection of the Rosa in an image.
-    Input: red_channel(red channel of the image).
-           c_h(the height of the circle).
-           c_w(the width of the circle).
+    Input: redChannel(red channel of the image).
+           circleHeight(the height of the circle).
+           circleWidth(the width of the circle).
            radius(the radius of the circle).
     Output: 
     """
-    h, w = np.shape(red_channel)
-    c_h, c_w = int(c_h), int(c_w)
+    h, w = np.shape(redChannel)
+    circleHeight, circleWidth = int(circleHeight), int(circleWidth)
 
-    c_h_orig, c_w_orig = int(c_h), int(c_w)
+    circleHeightOrig, circleWidthOrig = int(circleHeight), int(circleWidth)
     original_radius = int(radius)
 
     h_crop = h/8
     w_crop = w/8
-    h_min = np.amax([int(c_h-h_crop), 0])
-    h_max = np.amin([int(c_h+h_crop), h])
+    h_min = np.amax([int(circleHeight-h_crop), 0])
+    h_max = np.amin([int(circleHeight+h_crop), h])
     
-    w_min = np.amax([int(c_w-w_crop), 0])
-    w_max = np.amin([int(c_w+w_crop), h])
+    w_min = np.amax([int(circleWidth-w_crop), 0])
+    w_max = np.amin([int(circleWidth+w_crop), h])
 
-    crop_img = red_channel[h_min:h_max, w_min:w_max]
+    crop_img = redChannel[h_min:h_max, w_min:w_max]
 
     new_img = np.zeros((h,w))
     new_img[h_min:h_max, w_min:w_max] = crop_img
     perc = int(np.max([np.percentile(crop_img, 95) - 1, 0]))
 
-    in_img_size = red_channel.shape
+    in_img_size = redChannel.shape
     if int(perc) == 0:
-        return c_h, c_w, original_radius
+        return circleHeight, circleWidth, original_radius
 
     else:
-        _, binary_image = threshold(new_img, int(perc), 255, THRESH_BINARY)
+        _, binaryImage = threshold(new_img, int(perc), 255, THRESH_BINARY)
 
-        binary_image = binary_image.astype(np.uint8)
-        found, c_h, c_w, radius = analyzeBinaryImageForRosa(binary_image)
+        binaryImage = binaryImage.astype(np.uint8)
+        found, circleHeight, circleWidth, radius = analyzeBinaryImageForRosa(binaryImage)
         if found:
-            return c_h, c_w, radius
+            return circleHeight, circleWidth, radius
         else:
-            return c_h_orig, c_w_orig, original_radius
-    return c_h_orig, c_w_orig, original_radius
+            return circleHeightOrig, circleWidthOrig, original_radius
+    return circleHeightOrig, circleWidthOrig, original_radius
 
 
-def findLaserSpotMainCall(in_image: np.ndarray):
+def findLaserSpotMainCall(inImage: np.ndarray):
     """
     Try to find the laser spot in the image.
     Calls a recursive algorithm to do so.
     Input: image as a 3D numpy array.
     Output: blob(output of the formatBlop function, which is a dictionary
                 containing parameters of the blob).
-            rec_time(number of times the recusive algorithm was called).
+            recTime(number of times the recusive algorithm was called).
             found(True or False, says if laser spot was found or not).
     """
 
-    formatted_image = in_image.astype(np.uint8)
+    formattedImage = inImage.astype(np.uint8)
 
     time_start = time.time()
-    red_channel = extractGrayMapFromRedChannel(formatted_image)
-    max_value_red_channel = np.max(red_channel)
+    redChannel = extractGrayMapFromRedChannel(formattedImage)
+    maxValueRedChannel = np.max(redChannel)
  
-    found, rec_time, c_h, c_w, radius = findLaserSpotRecursive(
-        red_channel, 0.95, max_value_red_channel, time_start, 0)
+    found, recTime, circleHeight, circleWidth, radius = findLaserSpotRecursive(
+        redChannel, maxValueRedChannel, time_start)
 
     if found:
-        c_h, c_w, fine_tuned_radius = fineTuneRosaDetection(red_channel, c_h, c_w, radius)
+        circleHeight, circleWidth, fine_tuned_radius = fineTuneRosaDetection(redChannel, circleHeight, circleWidth, radius)
         radius = fine_tuned_radius
 
-    blob = formatBlob(in_image, [c_h, c_w, radius, found])
+    blob = formatBlob(inImage, [circleHeight, circleWidth, radius, found])
     time_elapsed = (time.time() - time_start)
 
     laser_found = "Laser found" if found else "Laser NOT found"
 
     LOGGER.warning(
-            f"{laser_found}. Took {str(time_elapsed)}. Recursive count {str(rec_time)}")
+            f"{laser_found}. Took {str(time_elapsed)}. Recursive count {str(recTime)}")
 
-    return blob, rec_time, found
+    return blob, recTime, found
 
 
-def findLaserSpotRecursive(red_channel, thr, max_value, start_time, rec_time):
+def findLaserSpotRecursive(redChannel, maxValue, startTime, recTime=0, thr=0.95, algoTimeoutInSeconds=0.5):
     """
     Use a recursive algorithm to try to find the laser spot in the image.
-    Input: red_channel(red channel of the image),
+    Input: redChannel(red channel of the image),
            thr(the set threshold),
-           max_value(maximum light intensity of red channel),
-           start_time,
-           rec_time(number of times the recursive algorithm got executed so
+           maxValue(maximum light intensity of red channel),
+           startTime,
+           recTime(number of times the recursive algorithm got executed so
               far).
     Output: Found(True or False, says if laser spot was found or not),
-            rec_time(number of times the recursive algorithm was ececuted),
-            c_h(0 if "found" is False, circle height if found is True),
-            c_w(0 if "found" is False, circle width if found is True),
+            recTime(number of times the recursive algorithm was ececuted),
+            circleHeight(0 if "found" is False, circle height if found is True),
+            circleWidth(0 if "found" is False, circle width if found is True),
             radius(0 if found is False, circle radius if found is True).
     """
-    rec_time = rec_time + 1
+    recTime = recTime + 1
 
-    binary_image = binarizeLaserImage(red_channel, thr, max_value)
+    binaryImage = binarizeLaserImage(redChannel, thr, maxValue)
 
-    current_time = time.time() - start_time
-    if current_time > ALGO_TIMEOUT_IN_SECONDS:
+    current_time = time.time() - startTime
+    if current_time > algoTimeoutInSeconds:
         LOGGER.warning(
-            f"Laser spot not found - too long: Took {str(current_time)} for {rec_time} iteration."
+            f"Laser spot not found - too long: Took {str(current_time)} for {recTime} iteration."
             )
-        return False, rec_time, 0, 0, 0
+        return False, recTime, 0, 0, 0
 
     if thr < 0.4:
-        LOGGER.debug(f"Laser spot not found after {rec_time} iteration in {str(current_time)}")
-        return False, rec_time, 0, 0, 0
-    found, c_h, c_w, circle_radius = analyzeBinaryImageForRosa(binary_image)
+        LOGGER.debug(f"Laser spot not found after {recTime} iteration in {str(current_time)}")
+        return False, recTime, 0, 0, 0
+    found, circleHeight, circleWidth, circleRadius = analyzeBinaryImageForRosa(binaryImage)
     if found:
-        return True, rec_time, c_h, c_w, circle_radius
+        return True, recTime, circleHeight, circleWidth, circleRadius
 
     else:
         th = thr - 0.1
-        return findLaserSpotRecursive(red_channel, th, max_value, start_time, rec_time)
+        return findLaserSpotRecursive(redChannel, maxValue, startTime, recTime=recTime, thr=th)
 
 
-def binarizeLaserImage(input_image, thresh, max_value):
+def binarizeLaserImage(inputImage, thresh, maxValue, halfRange=3):
     """
     Turn an image into a binary image.
-    Inputs : input_image(3D numpy array of the red channel of the image).
+    Inputs : inputImage(3D numpy array of the red channel of the image).
              thresh(the threshold that is used as a reference to know which
                    pixels shall be turned to 0 while turning the image into
                    a binary image).
-             max_value(maximum light intensity value of the input image)
-    Output : binary_image(numpy array of the image turned into a binary image).
+             maxValue(maximum light intensity value of the input image)
+    Output : binaryImage(numpy array of the image turned into a binary image).
     """
-    gray_image = input_image
-    maximum = max_value
+    grayImage = inputImage
+    maximum = maxValue
 
-    half_range = 3
-    retval, binary_image = threshold(
-        gray_image, int(maximum * thresh)-half_range, 255, THRESH_TOZERO)
-    retval, binary_image = threshold(
-        binary_image, int(maximum * thresh)+half_range, 255, THRESH_BINARY)
+    _, binaryImage = threshold(
+        grayImage, int(maximum * thresh) - halfRange, 255, THRESH_TOZERO)
+    _, binaryImage = threshold(
+        binaryImage, int(maximum * thresh) + halfRange, 255, THRESH_BINARY)
 
-    return binary_image
+    return binaryImage
 
 
 # if __name__ == "__main__":
-def mainRosa(image_path):
+def analyzeRosa(imagePath):
     """
     Import an image as a numpy array and give parameters of the blob.
-    Input: image_path(file path of the image you want to import. Must not
+    Input: imagePath(file path of the image you want to import. Must not
                 include accents [è, é, etc.], or else it will not work).
     Output: blob(a dictionary containting parameters from the blob in the
                 picure, which is the output of the formatBlob function).
     """
 
-    image = cv2.imread(image_path)
-    image_size = image.shape
+    image = cv2.imread(imagePath)
 
-    blob, rec_time, found = findLaserSpotMainCall(image)
+    blob, _, _ = findLaserSpotMainCall(image)
 
     return blob

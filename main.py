@@ -1,6 +1,15 @@
 from processImages import *
 
-collectionDir = getCollectionDirectory()
+# collectionDir = getCollectionDirectory()
+
+# Old data:
+# collectionDir = r"./tests/TestImages/miniTestSampleOldData"
+
+# More old data:
+# collectionDir = r"./tests/TestImages/rightEyeSampleOldData"
+
+# New data:
+collectionDir = r"./tests/TestImages/miniTestSampleNewData"
 
 leftEye = False
 
@@ -15,9 +24,10 @@ leftEye = False
 #     else:
 #         print("The input is invalid.")
 
-grayImage = loadImages(collectionDir, leftEye)
-dataDictionary = seperateImages(grayImage, collectionDir)
-dataDictionary = intensityCheck(dataDictionary)
+grayImage = loadImages(collectionDir, leftEye=leftEye)
+# dataDictionary = seperateImages(grayImage, collectionDir)
+dataDictionary = seperateNewImages(grayImage, collectionDir)
+dataDictionary = removeBadImages(dataDictionary)
 
 image = dataDictionary["image"]
 laser = dataDictionary["laserImage"]
@@ -26,11 +36,14 @@ yLaser = dataDictionary["yCenter"]
 rLaser = dataDictionary["radius"]
 imageNumber = dataDictionary["imageNumber"]
 
-indexShift = imageShift(image)
-xRosa, yRosa = applyShift(xLaser, yLaser, indexShift)
-xCenterGrid, yCenterGrid, length = defineGrid(image)
-Label = placeRosa(xCenterGrid, yCenterGrid, length, xRosa, yRosa)
-plotResult(image, length, xCenterGrid, yCenterGrid, xRosa, yRosa)
+indexShift = findImageShift(image)
+shiftParameters = applyShift(xLaser, yLaser, indexShift)
+# xCenterGrid, yCenterGrid, length = defineGrid(image)
+gridParameters = defineGrid(image)
+
+Label = placeRosa(gridParameters, shiftParameters)
+
+plotResult(image, shiftParameters, gridParameters)
 
 """
 for j in range(image.shape[0]):
