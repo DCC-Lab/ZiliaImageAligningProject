@@ -24,8 +24,9 @@ class TestListNameOfFiles(envtest.ZiliaTestCase):
         files = listNameOfFiles(directory, "jpg")
         self.assertTrue(files == [])
 
+    @envtest.skip("Directory missing")
     def testDifferentFoldersCanBeReadUsingTheRightPath(self):
-        directory = r"C:\Users\elm77\OneDrive\Documents\ULaval\2021_2_Ete\CERVO\Projet\code\mini_test_sample_newdata\testing"
+        directory = self.testFilesDirectory + "/testing/"
         files = listNameOfFiles(directory, "jpg")
         self.assertIsNotNone(files)
         self.assertTrue(len(files) > 0)

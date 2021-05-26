@@ -20,6 +20,9 @@ class ZiliaTestCase(unittest.TestCase):
     setupCalled = False
     stdout = None
     stderr = None
+
+    testFilesDirectory = r"TestImages/miniTestSampleNewData"
+
     def __init__(self, tests=()):
         super(ZiliaTestCase, self).__init__(tests)
         warnings.simplefilter("ignore")
