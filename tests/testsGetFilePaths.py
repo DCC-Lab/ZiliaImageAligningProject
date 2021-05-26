@@ -2,7 +2,7 @@ import envtest
 import os
 from processImages import *
 
-testFilesDirectory = r"C:\Users\elm77\OneDrive\Documents\ULaval\2021_2_Ete\CERVO\Projet\code\mini_test_sample_newdata"
+testFilesDirectory = r"TestImages/miniTestSampleNewData/"
 
 class TestGetFilePaths(envtest.ZiliaTestCase):
 
