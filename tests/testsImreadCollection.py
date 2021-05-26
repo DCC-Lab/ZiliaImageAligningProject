@@ -13,7 +13,6 @@ class TestImreadCollection(envtest.ZiliaTestCase):
         collectionWithDir = imread_collection(self.testFilesDirectory+"/*.jpg")
         self.assertIsNotNone(collectionWithDir)
         self.assertTrue(len(collectionWithDir) > 0)
-        self.assertTrue(len(collectionWithDir) < 10)
 
 
     def testFilesDirectoryPathAndListOfPathsReturnMatricesWithSameLength(self):
@@ -49,6 +48,24 @@ class TestImreadCollection(envtest.ZiliaTestCase):
         # print(collectionWithPaths)
 
 
+    def testlistNameOfFilesNotNone(self):
+        listOfFiles = listNameOfFiles(self.testFilesDirectory, extension="jpg")
+        self.assertIsNotNone(listOfFiles)
+
+    def testFilePaths(self):
+        listOfFiles = listNameOfFiles(self.testFilesDirectory, extension="jpg")
+        self.assertIsNotNone(listOfFiles)
+        listOfPaths = getFilePaths(self.testFilesDirectory, listOfFiles)
+        self.assertIsNotNone(listOfPaths)
+
+    def testFilePathsIntoImReadCollection(self):
+        listOfFiles = listNameOfFiles(self.testFilesDirectory, extension="jpg")
+        self.assertIsNotNone(listOfFiles)
+        listOfPaths = getFilePaths(self.testFilesDirectory, listOfFiles)
+        self.assertIsNotNone(listOfPaths)
+        collectionWithPaths = imread_collection(listOfPaths)
+        self.assertIsNotNone(collectionWithPaths)
+
     def testFilesDirectoryPathAndListOfPathsReturnEqualSubmatrices(self):
         collectionWithDir = imread_collection(self.testFilesDirectory+"/*.jpg")
         self.assertIsNotNone(collectionWithDir)
@@ -58,10 +75,18 @@ class TestImreadCollection(envtest.ZiliaTestCase):
         self.assertIsNotNone(listOfPaths)
         collectionWithPaths = imread_collection(listOfPaths)
         self.assertIsNotNone(collectionWithPaths)
+        
         for image1 in collectionWithDir:
-            for image2 in collectionWithPaths:
-                equality = np.equal(collectionWithDir, collectionWithPaths)
-                self.assertTrue(equality.all())
+            hasBeenMatched = False
+            for i, image2 in enumerate(collectionWithPaths):
+                equality = np.equal(image1, image2)
+
+                if equality.all():
+                    hasBeenMatched = True
+                    break
+                else:
+                    pass
+            self.assertTrue(hasBeenMatched)
 
 if __name__ == "__main__":
     envtest.main()
