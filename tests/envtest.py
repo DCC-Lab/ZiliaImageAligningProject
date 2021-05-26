@@ -28,8 +28,12 @@ class ZiliaTestCase(unittest.TestCase):
         return ZiliaTestCase.testFilesRootDirectory + r"/miniTestSampleNewData"
 
     @property
-    def testSmallFilesDirectory (self):
+    def testSmallFilesDirectory(self):
         return ZiliaTestCase.testFilesRootDirectory + r"/smallFiles"
+
+    @property
+    def testCV2CircleDirectory(self):
+        return ZiliaTestCase.testFilesRootDirectory + r"/testsCV2Circle"
 
     def __init__(self, tests=()):
         super(ZiliaTestCase, self).__init__(tests)

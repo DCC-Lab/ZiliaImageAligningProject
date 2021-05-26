@@ -18,7 +18,11 @@ from processImages import *
 # collectionDir = r"E:\Baseline3\Kenya\20210316-141909-kenya-od-onh-rlp2-20210525T144923Z-001\20210316-141909-kenya-od-onh-rlp2"
 
 # Partial data that looks ok:
-collectionDir = r"C:\Users\elm77\OneDrive\Documents\ULaval\2021_2_Ete\CERVO\Projet\code\sampleFromBaseline3"
+# collectionDir = r"C:\Users\elm77\OneDrive\Documents\ULaval\2021_2_Ete\CERVO\Projet\code\sampleFromBaseline3"
+
+# 521 files:
+collectionDir = r"C:\Users\elm77\OneDrive\Documents\ULaval\2021_2_Ete\CERVO\Projet\code\20210316-144549-kenya-os-onh-rlp6"
+
 
 
 leftEye = False
@@ -51,7 +55,7 @@ shiftParameters = applyShift(xLaser, yLaser, indexShift)
 # xCenterGrid, yCenterGrid, length = defineGrid(image)
 gridParameters = defineGrid(image)
 
-Label = placeRosa(gridParameters, shiftParameters)
+# Label = placeRosa(gridParameters, shiftParameters)
 
 plotResult(image, shiftParameters, gridParameters)
 

@@ -306,7 +306,7 @@ def placeRosa(gridParameters, shiftParameters):
     outputLabel = []
     for j in range(xRosa.shape[0]):
         L = str(str(xlabel[(np.where(xGrid == xRosa[j] - xCenterGrid))[0]][0]) +
-                       str(ylabel[(np.where(yGrid == yRosa[j] - yCenterGrid))[0]][0]))
+                       str(ylabel[(np.where(yGrid == yRosa[j] - yCenterGrid))[0]][0])) # error with large set of data...
         outputLabel.append(L)
     return outputLabel
 
