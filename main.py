@@ -3,13 +3,13 @@ from processImages import *
 # collectionDir = getCollectionDirectory()
 
 # Old data:
-collectionDir = r"./tests/TestImages/miniTestSampleOldData"
+# collectionDir = r"./tests/TestImages/miniTestSampleOldData"
 
 # More old data:
 # collectionDir = r"./tests/TestImages/rightEyeSampleOldData"
 
 # New data:
-# collectionDir = r"./tests/TestImages/miniTestSampleNewData"
+collectionDir = r"./tests/TestImages/miniTestSampleNewData"
 
 leftEye = False
 
@@ -25,8 +25,8 @@ leftEye = False
 #         print("The input is invalid.")
 
 grayImage = loadImages(collectionDir, leftEye=leftEye)
-dataDictionary = seperateImages(grayImage, collectionDir)
-# dataDictionary = seperateNewImages(grayImage, collectionDir)
+# dataDictionary = seperateImages(grayImage, collectionDir)
+dataDictionary = seperateNewImages(grayImage, collectionDir)
 dataDictionary = removeBadImages(dataDictionary)
 
 image = dataDictionary["image"]
