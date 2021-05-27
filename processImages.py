@@ -332,15 +332,13 @@ def plotResult(Image, shiftParameters, gridParameters, rosaRadius=30):
     length = gridParameters[2]
     xRosa = shiftParameters[0]
     yRosa = shiftParameters[1]
+
     for j in range(Image.shape[0]):
         centerCoordinates = (int(xRosa[j]), int(yRosa[j]))
-        color = (0, 255, 0) # original
-        # color = (121, 188, 114)
+        color = (0, 255, 0)
         thickness = 5
         image = cv2.circle(Image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
-        left = np.max([xCenterGrid - (length*5), 0])
-        # plt.imshow(image)
-        # plt.show()
+    left = np.max([xCenterGrid - (length*5), 0])
 
     pyplot.imsave("preResult2.jpg", image)
     up = np.max([yCenterGrid - (length*5), 0])
@@ -368,5 +366,4 @@ def plotResult(Image, shiftParameters, gridParameters, rosaRadius=30):
     img[:,::dy] = gridColor
     img[::dx,:] = gridColor
 
-    # plt.imshow(img)
     pyplot.imsave('Result.jpg', img)
