@@ -16,9 +16,9 @@ import fnmatch
 import os
 
 
-def getCollectionDirectory() -> str:
-    collectionDir = askdirectory(title="Select the folder containing data")
-    return collectionDir
+# def getCollectionDirectory() -> str:
+#     collectionDir = askdirectory(title="Select the folder containing data")
+#     return collectionDir
 
 
 def mirrorImage(image) -> np.ndarray:
