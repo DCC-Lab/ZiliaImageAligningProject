@@ -16,17 +16,17 @@ import fnmatch
 import os
 
 
-def getCollectionDirectory():
+def getCollectionDirectory() -> str:
     collectionDir = askdirectory(title="Select the folder containing data")
     return collectionDir
 
 
-def mirrorImage(image):
+def mirrorImage(image) -> np.ndarray:
     mirroredImage = image[:,::-1,:]
     return mirroredImage
 
 
-def removeBadImages(dataDictionary):
+def removeBadImages(dataDictionary) -> dict:
     """
     Purpose: remove images with low contrast or blurry
     1- use laplacian filter to remove blury images
@@ -70,7 +70,7 @@ def removeBadImages(dataDictionary):
     return dataDictionary
 
 
-def seperateImages(grayImageCollection, collectionDir: str, extension="jpg"):
+def seperateImages(grayImageCollection, collectionDir: str, extension="jpg") -> dict:
     """
     Purpose: seperate retina images from rosa images
     Load retina image - then load the corresponding rosa image 
@@ -147,7 +147,7 @@ def getFilesToExclude(directory: str, extension="jpg") -> list:
     return filesToExclude
 
 
-def getFilesToInclude(directory: str, extension="jpg"):
+def getFilesToInclude(directory: str, extension="jpg") -> list:
     setOfFiles = set(listNameOfFiles(directory, extension=extension))
     setOfFilesToExclude = set(getFilesToExclude(directory, extension=extension))
     listOfFilesToInclude = list( setOfFiles - setOfFilesToExclude )
@@ -182,7 +182,7 @@ def loadImages(collectionDir: str, leftEye=False, extension="jpg") -> np.ndarray
     return grayImage
 
 
-def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
+def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg") -> dict:
     """
     Purpose: seperate new retina images from new rosa images
     Load retina image - then load the corresponding rosa image 
@@ -267,14 +267,14 @@ def findImageShift(Image: np.ndarray, Margin=250, N=100) -> np.ndarray:
     # return totalShift[:-1,:]
 
 
-def applyShift(xLaser: np.ndarray, yLaser:np.ndarray, shift:np.ndarray):
+def applyShift(xLaser: np.ndarray, yLaser:np.ndarray, shift:np.ndarray) -> tuple:
     """
     Apply the shift value on the x and y of the rosa
     """
     return (xLaser - shift[:,1]), (yLaser - shift[:,0])
 
 
-def crossImage(im1, im2):
+def crossImage(im1, im2) -> np.ndarray:
     """
     Calculate the cross correlation between two images
     Get rid of the averages, otherwise the results are not good
@@ -283,10 +283,11 @@ def crossImage(im1, im2):
     """
     im1 -= np.mean(im1)
     im2 -= np.mean(im2)
-    return scipy.signal.fftconvolve(im1, im2[::-1,::-1], mode='same')
+    cross = scipy.signal.fftconvolve(im1, im2[::-1,::-1], mode='same')
+    return cross
 
 
-def placeRosa(gridParameters, shiftParameters):
+def placeRosa(gridParameters, shiftParameters) -> list:
     xCenterGrid = gridParameters[0]
     yCenterGrid = gridParameters[1]
     length = gridParameters[2]
@@ -311,7 +312,7 @@ def placeRosa(gridParameters, shiftParameters):
     return outputLabel
 
 
-def defineGrid(Image):
+def defineGrid(Image) -> tuple:
     temp = np.zeros(Image.shape)
     temp[np.where(Image >= np.mean(Image)*1.9)] = 1
     kernel = np.ones((5,5), np.uint8)
@@ -325,7 +326,7 @@ def defineGrid(Image):
     return rightToLeftCenter, upToDownCenter, length
 
 
-def plotResult(Image, shiftParameters, gridParameters, rosaRadius=30):
+def plotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None:
     pyplot.imsave("preResult1.jpg", Image[0,:,:])
     xCenterGrid = gridParameters[0]
     yCenterGrid = gridParameters[1]
