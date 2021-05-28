@@ -372,13 +372,14 @@ def plotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None:
 
 
 def newPlotResult(image, shiftParameters, gridParameters, rosaRadius=30, thickness=5) -> None:
-    pyplot.imsave("preResult1.jpg", image[0,:,:])
-    imageWithCircles = drawRosaCircles(image, shiftParameters, rosaRadius=rosaRadius, thickness=thickness)
-    pyplot.imsave("preResult2.jpg", imageWithCircles)
+    # pyplot.imsave("preResult1.jpg", image[0,:,:])
+    # imageWithCircles = drawRosaCircles(image, shiftParameters, rosaRadius=rosaRadius, thickness=thickness)
+    drawRosaCircles(image, shiftParameters, rosaRadius=rosaRadius, thickness=thickness)
+    # pyplot.imsave("preResult2.jpg", imageWithCircles)
     rescaledImage = rescaleImage(image, gridParameters)
-    pyplot.imsave("preResult3.jpg", rescaledImage)
+    # pyplot.imsave("preResult3.jpg", rescaledImage)
     rescaledImageWithGrid = drawGrid(rescaledImage, gridParameters)
-    pyplot.imsave('Result.jpg', rescaledImageWithGrid)
+    # pyplot.imsave('Result.jpg', rescaledImageWithGrid)
 
 
 def drawRosaCircles(image, shiftParameters, rosaRadius=30, thickness=5):
@@ -388,7 +389,7 @@ def drawRosaCircles(image, shiftParameters, rosaRadius=30, thickness=5):
         centerCoordinates = (int(xRosa[j]), int(yRosa[j]))
         color = (0, 255, 0)
         Image = cv2.circle(image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
-    return Image
+    # return Image
 
 
 def rescaleImage(image, gridParameters):
