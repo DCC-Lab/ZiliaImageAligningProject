@@ -312,21 +312,37 @@ def placeRosa(gridParameters, shiftParameters) -> list:
     return outputLabel
 
 
-def defineGrid(Image) -> tuple:
+def oldDefineGrid(Image) -> tuple:
     temp = np.zeros(Image.shape)
     temp[np.where(Image >= np.mean(Image)*1.9)] = 1
     kernel = np.ones((5,5), np.uint8)
-    openingTemp = cv2.morphologyEx(temp[0,:,:], cv2.MORPH_OPEN, kernel)
+    openingTemp = cv2.morphologyEx(temp[0,:,:], cv2.MORPH_OPEN, kernel) # to reduce noise
     nonZero = np.nonzero(openingTemp)
-    upToDown = np.max(nonZero[0]) - np.min(nonZero[0])
-    rightToLeft = np.max(nonZero[1]) - np.min(nonZero[1])
+    upToDown = np.max(nonZero[0]) - np.min(nonZero[0]) # height?
+    rightToLeft = np.max(nonZero[1]) - np.min(nonZero[1]) # width?
     upToDownCenter = int(((np.max(nonZero[0]) + np.min(nonZero[0]))/2) - (upToDown-rightToLeft))
     rightToLeftCenter = int((np.max(nonZero[1]) + np.min(nonZero[1]))/2)
     length = int((np.min([upToDown, rightToLeft]))/2)
     return rightToLeftCenter, upToDownCenter, length
+    # return xCenterGrid, yCenterGrid, length
 
 
-def plotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None:
+def defineGrid(Image) -> tuple:
+    temp = np.zeros(Image.shape)
+    temp[np.where(Image >= np.mean(Image)*1.9)] = 1
+    openingKernel = np.ones((5,5), np.uint8)
+    smoothedFirstImage = cv2.morphologyEx(temp[0,:,:], cv2.MORPH_OPEN, openingKernel) # to reduce noise
+    nonZeroIndexes = np.nonzero(smoothedFirstImage)
+    upToDown = np.max(nonZeroIndexes[0]) - np.min(nonZeroIndexes[0]) # height?
+    rightToLeft = np.max(nonZeroIndexes[1]) - np.min(nonZeroIndexes[1]) # width?
+    verticalCenterOfGrid = int(((np.max(nonZeroIndexes[0]) + np.min(nonZeroIndexes[0]))/2) - (upToDown-rightToLeft))
+    horizontalCenterOfGrid = int((np.max(nonZeroIndexes[1]) + np.min(nonZeroIndexes[1]))/2)
+    length = int((np.min([upToDown, rightToLeft]))/2)
+    return horizontalCenterOfGrid, verticalCenterOfGrid, length
+    # return xCenterGrid, yCenterGrid, length
+
+
+def oldPlotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None:
     pyplot.imsave("preResult1.jpg", Image[0,:,:])
     xCenterGrid = gridParameters[0]
     yCenterGrid = gridParameters[1]
@@ -371,7 +387,7 @@ def plotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None:
     pyplot.imsave('Result.jpg', img)
 
 
-def newPlotResult(image, shiftParameters, gridParameters, rosaRadius=30, thickness=5) -> None:
+def plotResult(image, shiftParameters, gridParameters, rosaRadius=30, thickness=5) -> None:
     # pyplot.imsave("preResult1.jpg", image[0,:,:])
     # imageWithCircles = drawRosaCircles(image, shiftParameters, rosaRadius=rosaRadius, thickness=thickness)
     drawRosaCircles(image, shiftParameters, rosaRadius=rosaRadius, thickness=thickness)
@@ -382,19 +398,18 @@ def newPlotResult(image, shiftParameters, gridParameters, rosaRadius=30, thickne
     pyplot.imsave('Result.jpg', rescaledImageWithGrid)
 
 
-def drawRosaCircles(image, shiftParameters, rosaRadius=30, thickness=5):
+def drawRosaCircles(image, shiftParameters, rosaRadius=30, thickness=5, color=(0, 255, 0)):
     xRosa = shiftParameters[0]
     yRosa = shiftParameters[1]
     for j in range(image.shape[0]):
         centerCoordinates = (int(xRosa[j]), int(yRosa[j]))
-        color = (0, 255, 0)
-        Image = cv2.circle(image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
+        cv2.circle(image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
 
 
 def rescaleImage(image, gridParameters):
-    xCenterGrid = gridParameters[0]
-    yCenterGrid = gridParameters[1]
-    length = gridParameters[2]
+    xCenterGrid = gridParameters[0]# int
+    yCenterGrid = gridParameters[1]# int
+    length = gridParameters[2]# int
 
     left = np.max([xCenterGrid - (length*5), 0])
 

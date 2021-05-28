@@ -57,8 +57,7 @@ gridParameters = defineGrid(image)
 
 # Label = placeRosa(gridParameters, shiftParameters)
 
-# plotResult(image, shiftParameters, gridParameters)
-newPlotResult(image, shiftParameters, gridParameters)
+plotResult(image, shiftParameters, gridParameters)
 
 """
 for j in range(image.shape[0]):
