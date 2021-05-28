@@ -368,3 +368,22 @@ def plotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None:
     img[::dx,:] = gridColor
 
     pyplot.imsave('Result.jpg', img)
+
+
+def newPlotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None:
+    pass
+
+
+def drawRosaCircles():
+    pass
+
+
+def rescaleImage():
+    pass
+
+
+def drawGrid():
+    pass
+
+
+
