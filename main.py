@@ -17,7 +17,7 @@ collectionDir = r"./tests/TestImages/miniTestSampleNewData"
 # More new data that looks bad:
 # collectionDir = r"E:\Baseline3\Kenya\20210316-141909-kenya-od-onh-rlp2-20210525T144923Z-001\20210316-141909-kenya-od-onh-rlp2"
 
-# Partial data that looks ok:
+# Partial new data that looks ok:
 # collectionDir = r"C:\Users\elm77\OneDrive\Documents\ULaval\2021_2_Ete\CERVO\Projet\code\sampleFromBaseline3"
 
 # 521 files:
@@ -57,7 +57,8 @@ gridParameters = defineGrid(image)
 
 # Label = placeRosa(gridParameters, shiftParameters)
 
-plotResult(image, shiftParameters, gridParameters)
+# plotResult(image, shiftParameters, gridParameters)
+newPlotResult(image, shiftParameters, gridParameters)
 
 """
 for j in range(image.shape[0]):

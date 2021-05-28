@@ -339,6 +339,7 @@ def plotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None:
         color = (0, 255, 0)
         thickness = 5
         image = cv2.circle(Image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
+
     left = np.max([xCenterGrid - (length*5), 0])
 
     pyplot.imsave("preResult2.jpg", image)
@@ -370,20 +371,57 @@ def plotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None:
     pyplot.imsave('Result.jpg', img)
 
 
-def newPlotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None:
-    pass
+def newPlotResult(image, shiftParameters, gridParameters, rosaRadius=30, thickness=5) -> None:
+    pyplot.imsave("preResult1.jpg", image[0,:,:])
+    imageWithCircles = drawRosaCircles(image, shiftParameters, rosaRadius=rosaRadius, thickness=thickness)
+    pyplot.imsave("preResult2.jpg", imageWithCircles)
+    rescaledImage = rescaleImage(image, gridParameters)
+    pyplot.imsave("preResult3.jpg", rescaledImage)
+    rescaledImageWithGrid = drawGrid(rescaledImage, gridParameters)
+    pyplot.imsave('Result.jpg', rescaledImageWithGrid)
 
 
-def drawRosaCircles():
-    pass
+def drawRosaCircles(image, shiftParameters, rosaRadius=30, thickness=5):
+    xRosa = shiftParameters[0]
+    yRosa = shiftParameters[1]
+    for j in range(image.shape[0]):
+        centerCoordinates = (int(xRosa[j]), int(yRosa[j]))
+        color = (0, 255, 0)
+        Image = cv2.circle(image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
+    return Image
 
 
-def rescaleImage():
-    pass
+def rescaleImage(image, gridParameters):
+    xCenterGrid = gridParameters[0]
+    yCenterGrid = gridParameters[1]
+    length = gridParameters[2]
+
+    left = np.max([xCenterGrid - (length*5), 0])
+
+    up = np.max([yCenterGrid - (length*5), 0])
+    right = np.min([(5*length), (image.shape[1] - xCenterGrid)]) + xCenterGrid
+    down = right = np.min([(5*length), (image.shape[2] - yCenterGrid)]) + yCenterGrid
+    temp = image[0,up:down, left:right]
+    xNewCenter = xCenterGrid - left
+    yNewCenter = yCenterGrid - up
+    gridImage = np.zeros([length*10, length*10])
+    # Set slicing limits:
+    LOW_SLICE_Y = ((5*length) - yNewCenter)
+    HIGH_SLICE_Y = ((5*length) + (temp.shape[0] - yNewCenter))
+    LOW_SLICE_X = ((5*length) - xNewCenter)
+    HIGH_SLICE_X = ((5*length) + (temp.shape[1] - xNewCenter))
+    # Slicing:
+    gridImage[LOW_SLICE_Y:HIGH_SLICE_Y, LOW_SLICE_X:HIGH_SLICE_X] = temp
+
+    return gridImage
 
 
-def drawGrid():
-    pass
-
-
-
+def drawGrid(image, gridParameters):
+    length = gridParameters[2]
+    dx, dy = length, length
+    # Custom (rgb) grid color:
+    gridColor = 0
+    # Modify the image to include the grid
+    image[:,::dy] = gridColor
+    image[::dx,:] = gridColor
+    return image
