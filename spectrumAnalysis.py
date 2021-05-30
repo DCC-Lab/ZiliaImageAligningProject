@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 def loadComponentesSpectra():
@@ -25,8 +26,13 @@ def loadComponentesSpectra():
         }
     return components_spectra
 
-RefNothingInfront = pd.read_csv ('int75_LEDON_nothingInFront.csv',sep='\t')
-print(RefNothingInfront)
-a=RefNothingInfront.to_numpy()
-print(a.shape)
+def loadWhiteRef():
+    RefNothingInfront = pd.read_csv ('int75_LEDON_nothingInFront.csv',sep=',',skiprows=23).to_numpy()
+    RefWhite = pd.read_csv ('int75_WHITEREFERENCE.csv',sep=',',skiprows=23).to_numpy()
+    wavelengthRef=RefWhite[:,1]
+    print(np.mean(RefWhite[4:],axis=1)-np.mean(RefNothingInfront[4:],axis=1))
+    return np.mean(RefWhite[4:],axis=1)-np.mean(RefNothingInfront[4:],axis=1),wavelengthRef
+
+
+
 
