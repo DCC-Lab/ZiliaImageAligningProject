@@ -30,12 +30,12 @@ class TestNumpyAllMethod(envtest.ZiliaTestCase):
             sumB.append(B[i])
         self.assertTrue( sum(sumA) == sum(sumB) )
         self.assertFalse(A.all() == sum(sumA))
-        #print(type(A.all())) # retourne un 'numpy.bool'
+        #print(type(A.all())) # retourne un 'numpy.bool_'
 
     def testNumpyAllReturnsABool(self):
         A = np.array([1, 2])
         self.assertIsNotNone(A)
-        # print(type(A.all())) # retourne un 'numpy.bool'
+        # print(type(A.all())) # retourne un 'numpy.bool_'
         self.assertTrue(type(A.all()) == np.bool_)
 
     def testNumpyAllJustChecksIfValueIsZeroOrNot(self):

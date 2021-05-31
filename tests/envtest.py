@@ -35,6 +35,14 @@ class ZiliaTestCase(unittest.TestCase):
     def testCV2CircleDirectory(self):
         return ZiliaTestCase.testFilesRootDirectory + r"/testsCV2Circle"
 
+    @property
+    def testMirrorImageDirectory(self):
+        return ZiliaTestCase.testFilesRootDirectory + r"/testMirrorImage"
+
+    @property
+    def testAlignmentDirectory(self):
+        return ZiliaTestCase.testFilesRootDirectory + r"/testAlignment"
+
     def __init__(self, tests=()):
         super(ZiliaTestCase, self).__init__(tests)
         warnings.simplefilter("ignore")

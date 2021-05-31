@@ -3,6 +3,8 @@ from skimage.io import imread
 from processImages import *
 
 
+"""Ce module de tests est encore incomplet. À compléter plus tard."""
+
 class TestDefineGrid(envtest.ZiliaTestCase):
 
     def testInit(self):
