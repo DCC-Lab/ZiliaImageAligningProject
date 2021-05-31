@@ -2,8 +2,7 @@ import envtest
 from skimage.io import imread
 from processImages import *
 
-
-"""Ce module de tests est encore incomplet. À compléter plus tard."""
+"""Incomplete, to finish later after improving shift detection."""
 
 class TestDefineGrid(envtest.ZiliaTestCase):
 
