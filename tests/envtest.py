@@ -43,6 +43,10 @@ class ZiliaTestCase(unittest.TestCase):
     def testAlignmentDirectory(self):
         return ZiliaTestCase.testFilesRootDirectory + r"/testAlignment"
 
+    @property
+    def testCannyDirectory(self):
+        return ZiliaTestCase.testFilesRootDirectory + r"/testCanny"
+
     def __init__(self, tests=()):
         super(ZiliaTestCase, self).__init__(tests)
         warnings.simplefilter("ignore")
