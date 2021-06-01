@@ -37,7 +37,8 @@ def loadWhiteRef():
     wRef=np.mean(RefWhite[:,4:],axis=1)-np.mean(RefNothingInfront[:,4:],axis=1)
     wavelengthCropped=wavelengthRef[np.where(np.logical_and(500<= wavelengthRef, wavelengthRef <= 600))]
     RefCropped = wRef[np.where(np.logical_and(500 <= wavelengthRef, wavelengthRef <= 600))]
-    return RefCropped,wavelengthCropped
+    RefCroppedNormalized=RefCropped/np.std(RefCropped)
+    return RefCroppedNormalized,wavelengthCropped
 
 def loadDarkRef():
     ''' returns cropped (between 500 to 600) dark reference and the wavelength'''
@@ -65,18 +66,36 @@ def normalizeSpec():
     dRef, dRefWavelength = loadDarkRef()
     spectrum, specWavelength = loadSpectrum()
     dRefTile = np.tile(dRef, (spectrum.shape[1], 1))
-    return spectrum-dRefTile.T , specWavelength
+    SpectrumData=spectrum-dRefTile.T
+    STDspectrum=np.std(SpectrumData,axis=1)
+    SpectrumDataNormalized=SpectrumData.T/STDspectrum
+    return SpectrumDataNormalized , specWavelength
+
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return idx
+
+def absorbanceSpectrum():
+    ref, refWavelength = loadWhiteRef()
+    spectrum, spectrumWavelength = normalizeSpec()
+    refModified = np.zeros(spectrum.shape)
+    print(ref.shape)
+    for i in range(spectrumWavelength.shape[0]):
+        refModified[:, i] = ref[find_nearest(refWavelength, spectrumWavelength[i])]
+    return np.log(refModified / spectrum)
+
+
+def componentsCoef():
 
 
 
 
-
-components=loadComponentesSpectra()
-wRef, wRefWavelength=loadWhiteRef()
-
-
-print(dRefTile)
-print()
-
-print(specWavelength)
+# components=loadComponentesSpectra()
+# wRef, wRefWavelength=loadWhiteRef()
+# # print(wRef)
+# a,w=normalizeSpec()
+# print(a.shape)
+# print(a)
+# print(w.shape)
 
