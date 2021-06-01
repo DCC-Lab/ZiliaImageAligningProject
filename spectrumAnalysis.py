@@ -48,7 +48,7 @@ def cropFunction(Spec):
         np.where(np.logical_and(lowerLimit <= Spec.wavelength, Spec.wavelength <= upperLimit))]
     return croppedSpectrum
 
-def normalizedSpectrum(Spec):
+def normalizeRef(Spec):
     Spec.data=Spec.data/np.std(Spec.data)
     return Spec
 
@@ -62,7 +62,7 @@ def loadWhiteRef(referenceNameNothinInfront='int75_LEDON_nothingInFront.csv',
     refSpectrum.wavelength = RefWhite[:,1]
     refSpectrum.data = np.mean(RefWhite[:,4:],axis=1)-np.mean(RefNothingInfront[:,4:],axis=1)
     croppedRef=cropFunction(refSpectrum)
-    RefCroppedNormalized=normalizedSpectrum(croppedRef)
+    RefCroppedNormalized=normalizeRef(croppedRef)
     return RefCroppedNormalized
 
 
@@ -77,32 +77,26 @@ def loadDarkRef(skipRows=4):
     croppedDarkRef=cropFunction(darkRefSpec)
     return croppedDarkRef
 
-a=loadWhiteRef()
-b=loadDarkRef()
-print(b.wavelength.shape)
-print(b.data.shape)
-
-
-def loadSpectrum():
+def loadSpectrum(skipRows=4):
     ''' returns dark reference and the wavelength'''
     filetypes = [("csv files", "*.csv")]
     csv_file_path = askopenfilename(title="select the spectrum .csv file", filetypes=filetypes)
-    spectrumData = pd.read_csv(csv_file_path, sep=',', skiprows=4).to_numpy()
-    spectrum=spectrumData[:, 3:]
-    specWavelength=spectrumData[:, 0]
-    wavelengthCropped = specWavelength[np.where(np.logical_and(lowerLimit <= specWavelength, specWavelength <= upperLimit))]
-    specCropped = spectrum[np.where(np.logical_and(lowerLimit <= specWavelength, specWavelength <= upperLimit))]
-    return specCropped,wavelengthCropped
+    spectrumData = pd.read_csv(csv_file_path, sep=',', skiprows=skipRows).to_numpy()
+    spec = spectrum()
+    spec.data = spectrumData[:, 3:]
+    spec.wavelength = spectrumData[:, 0]
+    croppedSpectrum = cropFunction(spec)
+    return croppedSpectrum
 
-def normalizeSpec():
+def normalizeSpectrum(spec,darkRef):
     """returns the normalized spectrum for the data"""
-    dRef, dRefWavelength = loadDarkRef()
-    spectrum, specWavelength = loadSpectrum()
-    dRefTile = np.tile(dRef, (spectrum.shape[1], 1))
-    SpectrumData=spectrum-dRefTile.T
+    dRefTile = np.tile(darkRef.data, (spec.data.shape[1], 1))
+    SpectrumData=spec.data-dRefTile.T
     STDspectrum=np.std(SpectrumData,axis=1)
-    SpectrumDataNormalized=SpectrumData.T/STDspectrum
-    return SpectrumDataNormalized , specWavelength
+    SpectrumDataNormalized = spectrum()
+    SpectrumDataNormalized.data = SpectrumData.T/STDspectrum
+    SpectrumDataNormalized.wavelength = spec.wavelength
+    return SpectrumDataNormalized
 
 def find_nearest(array, value):
     """find the nearest value to a value in an array and returns the index"""
@@ -110,15 +104,17 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     return idx
 
-def absorbanceSpectrum():
+def absorbanceSpectrum(refSpec,normalizedSpec):
     """calculate the absorbance spectrum using white reference and normalized spectrum"""
-    ref, refWavelength = loadWhiteRef()
-    spectrum, spectrumWavelength = normalizeSpec()
-    refModified = np.zeros(spectrum.shape)
-    for i in range(spectrumWavelength.shape[0]):
-        refModified[:, i] = ref[find_nearest(refWavelength, spectrumWavelength[i])]
-    return np.log(refModified / spectrum),spectrumWavelength
-
+    # ref, refWavelength = loadWhiteRef()
+    # spectrum, spectrumWavelength = normalizeSpec()
+    ModifiedData = np.zeros(normalizedSpec.data.shape)
+    for i in range(normalizedSpec.wavelength.shape[0]):
+        ModifiedData[:, i] = refSpec.data[find_nearest(refSpec.wavelength, normalizedSpec.wavelength[i])]
+    ModifiedSpec=spectrum()
+    ModifiedSpec.data = np.log(ModifiedData / normalizedSpec.data)
+    ModifiedSpec.wavelength = normalizedSpec.wavelength
+    return ModifiedSpec
 
 def cropComponents():
     """crop the components regarding the upper limit and lower limit wavelengths"""
@@ -136,6 +132,14 @@ def cropComponents():
         "deoxyhemoglobin": deoxyhemoglobin,
         "melanin": melanin}
     return componentsCrop
+
+a=loadWhiteRef()
+b=loadDarkRef()
+c=loadSpectrum()
+d=normalizeSpectrum(c,b)
+e=absorbanceSpectrum(a,d)
+print(e.wavelength.shape)
+print(e.data.shape)
 
 def componentsToArray(components):
     variables = np.ones(componentsCrop["oxyhemoglobin"].shape)
