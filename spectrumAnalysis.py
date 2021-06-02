@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
+from scipy.optimize import nnls
+from fnnls import fnnls
 
 # global variables for cropping wavelength
 lowerLimit=510
@@ -106,8 +108,6 @@ def find_nearest(array, value):
 
 def absorbanceSpectrum(refSpec,normalizedSpec):
     """calculate the absorbance spectrum using white reference and normalized spectrum"""
-    # ref, refWavelength = loadWhiteRef()
-    # spectrum, spectrumWavelength = normalizeSpec()
     ModifiedData = np.zeros(normalizedSpec.data.shape)
     for i in range(normalizedSpec.wavelength.shape[0]):
         ModifiedData[:, i] = refSpec.data[find_nearest(refSpec.wavelength, normalizedSpec.wavelength[i])]
@@ -116,43 +116,77 @@ def absorbanceSpectrum(refSpec,normalizedSpec):
     ModifiedSpec.wavelength = normalizedSpec.wavelength
     return ModifiedSpec
 
-def cropComponents():
+def scattering(spec,bValue=1.5):
+    return (spec.wavelength / 500) ** (-1 * bValue)
+
+def reflection(spec):
+    return (-np.log(spec.wavelength.reshape(-1, 1))).T
+
+
+
+def cropComponents(absorbanceSpectrum):
     """crop the components regarding the upper limit and lower limit wavelengths"""
     Components = loadComponentesSpectra()
-    absorbance, spectrumWavelength = absorbanceSpectrum()
-    oxyhemoglobin = np.zeros(spectrumWavelength.shape)
-    deoxyhemoglobin = np.zeros(spectrumWavelength.shape)
-    melanin = np.zeros(spectrumWavelength.shape)
-    for i in range(spectrumWavelength.shape[0]):
-        oxyhemoglobin[i] = Components["oxyhemoglobin"][find_nearest(Components["wavelengths"], spectrumWavelength[i])]
-        deoxyhemoglobin[i] = Components["oxyhemoglobin"][find_nearest(Components["wavelengths"], spectrumWavelength[i])]
-        melanin[i] = Components["eumelanin"][find_nearest(Components["wavelengths"], spectrumWavelength[i])]
+    # absorbance, spectrumWavelength = absorbanceSpectrum()
+    oxyhemoglobin = np.zeros(absorbanceSpectrum.wavelength.shape)
+    deoxyhemoglobin = np.zeros(absorbanceSpectrum.wavelength.shape)
+    melanin = np.zeros(absorbanceSpectrum.wavelength.shape)
+    scat=scattering(absorbanceSpectrum)
+    ref=reflection(absorbanceSpectrum)
+    for i in range(absorbanceSpectrum.wavelength.shape[0]):
+        oxyhemoglobin[i] = Components["oxyhemoglobin"][find_nearest(Components["wavelengths"],
+                                                                    absorbanceSpectrum.wavelength[i])]
+        deoxyhemoglobin[i] = Components["oxyhemoglobin"][find_nearest(Components["wavelengths"],
+                                                                      absorbanceSpectrum.wavelength[i])]
+        melanin[i] = Components["eumelanin"][find_nearest(Components["wavelengths"],
+                                                          absorbanceSpectrum.wavelength[i])]
     componentsCrop = {
+        "scattering": scat,
+        "reflection": ref,
         "oxyhemoglobin": oxyhemoglobin,
         "deoxyhemoglobin": deoxyhemoglobin,
         "melanin": melanin}
     return componentsCrop
+
+def componentsToArray(components):
+    variables = np.ones(components["oxyhemoglobin"].shape)
+    variables = np.vstack([variables, components["oxyhemoglobin"]])
+    variables = np.vstack([variables, components["deoxyhemoglobin"]])
+    variables = np.vstack([variables, components["melanin"]])
+    variables = np.vstack([variables, components["scattering"]])
+    variables = np.vstack([variables, components["reflection"]])
+    return variables
+
+from sklearn.linear_model import LinearRegression
+
+# reg_nnls = LinearRegression(positive=True)
+# y_pred_nnls = reg_nnls.fit(X_train, y_train).predict(X_test)
+# r2_score_nnls = r2_score(y_test, y_pred_nnls)
+# print("NNLS R2 score", r2_score_nnls)
+
+def getCoef(absorbance,variables):
+    print(variables)
+    for i in range(absorbance.data.shape[0]):
+        coef=np.linalg.lstsq(variables.T,absorbance.data[i,:].T)
+        # coef=nnls(variables.T,absorbance.data[i,:].T,maxiter=200 )
+        # coef = fnnls(variables.T, absorbance.data[i, :].T)
+        # reg_nnls = LinearRegression(positive=True)
+        # y_pred_nnls = reg_nnls.fit(variables.T, absorbance.data[i, :].T)
+        # print(y_pred_nnls.coef_)
+        print(coef)
+    return
 
 a=loadWhiteRef()
 b=loadDarkRef()
 c=loadSpectrum()
 d=normalizeSpectrum(c,b)
 e=absorbanceSpectrum(a,d)
-print(e.wavelength.shape)
-print(e.data.shape)
+f=cropComponents(e)
+h=componentsToArray(f)
+getCoef(e,h)
+print(h.shape)
 
-def componentsToArray(components):
-    variables = np.ones(componentsCrop["oxyhemoglobin"].shape)
-    variables = np.vstack([variables, componentsCrop["oxyhemoglobin"]])
-    variables = np.vstack([variables, componentsCrop["deoxyhemoglobin"]])
-    variables = np.vstack([variables, componentsCrop["melanin"]])
-    return variables
 
-def getCoef(absorbance,variables):
-    for i in range(absorbance.shape[0]):
-        coef=np.linalg.lstsq(variables,absorbance[i,:])
-        print(coef)
-    return
 
 # componentsCrop=cropComponents()
 # variables=componentsToArray(componentsCrop)
