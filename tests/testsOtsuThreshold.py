@@ -61,7 +61,6 @@ class TestThreshAndBinary(envtest.ZiliaTestCase):
         # plt.imshow(binaryImage, cmap=plt.cm.gray)
         # plt.show()
 
-
     def testBinarizeColorImageWithOtsu(self):
         image = imread(self.testCannyDirectory+"/kenyaMedium.jpg")
         thresh = threshold_otsu(image)
