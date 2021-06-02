@@ -204,6 +204,7 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg") 
     listOfImages = getFilesToInclude(collectionDir, extension=extension)
     listOfImagePaths = getFilePaths(collectionDir, listOfImages)
     sortedPaths = np.sort(listOfImagePaths)
+    sortedFileNames = np.sort(listOfImages)
     # first pic = eye, 2nd pic = rosa, because sorted alphabetically
     for i in range(1, grayImageCollection.shape[0]):
         if "eye" in sortedPaths[i-1]:
@@ -211,6 +212,7 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg") 
             blob = analyzeRosa(loadLaserImage)
             if (blob['found'] == True):
                 numberOfRosaImages += 1
+                currentImageNumber = int(sortedFileNames[i][:3].lstrip("0"))
                 temp[0,:,:] = grayImageCollection[i-1,:,:] # retina
                 image = np.vstack((image, temp)) # retina
                 temp[0,:,:] = grayImageCollection[i,:,:] # rosa
@@ -219,7 +221,7 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg") 
                 xCenter = np.hstack((xCenter, int(blob['center']['x']*image.shape[2]))) # for the center of the rosa
                 yCenter = np.hstack((yCenter, int(blob['center']['y']*image.shape[1]))) # for the center of the rosa
                 radius = np.hstack((radius, int(blob['radius']*image.shape[1]))) # for the center of the rosa
-                imageNumber = np.hstack((imageNumber, int(i-1))) # it's a 1D array
+                imageNumber = np.hstack((imageNumber, currentImageNumber)) # it's a 1D array
     if numberOfRosaImages == 0:
         raise ImportError("No laser spot was found. Try with different data.")
     image = np.delete(image, 0, axis=0) # remove the first initialized empty matrix
