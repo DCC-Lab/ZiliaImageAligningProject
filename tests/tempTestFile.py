@@ -9,12 +9,33 @@ from skimage.draw import ellipse_perimeter
 from skimage.transform import hough_ellipse
 from skimage.feature import canny
 from skimage import color, img_as_ubyte
+import time
 
 class TestHoughEllipse(envtest.ZiliaTestCase):
 
-    def testAccuracyParameterHigh(self):
-        # Default accuracy == 1. Let's try 100.
-        image_rgb = imread(self.testCannyDirectory+"/kenyaMedium.jpg")
+    def plotEllipseResult(self, best, imageRgb, edges):
+        # Code taken from an example in the scikit-image documentation.
+        yc, xc, a, b = [int(round(x)) for x in best[1:5]]
+        orientation = best[5]
+        # Draw the ellipse on the original image
+        cy, cx = ellipse_perimeter(yc, xc, a, b, orientation)
+        imageRgb[cy, cx] = (0, 0, 255)
+        # Draw the edge (white) and the resulting ellipse (red)
+        edges = color.gray2rgb(img_as_ubyte(edges))
+        edges[cy, cx] = (250, 0, 0)
+        fig2, (ax1, ax2) = plt.subplots(ncols=2, nrows=1, figsize=(8, 4),
+                                        sharex=True, sharey=True)
+        ax1.set_title('Original picture')
+        ax1.imshow(imageRgb)
+        ax2.set_title('Edge (white) and result (red)')
+        ax2.imshow(edges)
+        plt.show()
+
+    # @envtest.skip("Skip the plots and the calculating time.")
+    def testAccuracyParameter50(self):
+        # Default accuracy == 1. Let's try 50.
+        startTime = time.time()
+        imageRgb = imread(self.testCannyDirectory+"/kenyaMedium.jpg")
         grayImage = imread(self.testCannyDirectory+"/kenyaMedium.jpg", as_gray=True)
         thresh = threshold_otsu(grayImage)
         binaryImage = grayImage > thresh
@@ -24,34 +45,15 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
         minMajorAxis = int((1/6)*ySize)
         maxMinorAxis = int(0.5*xSize)
         houghResult = hough_ellipse(canniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=100)
+            max_size=maxMinorAxis, accuracy=50)
         houghResult.sort(order='accumulator')
         # Estimated parameters for the ellipse
         best = list(houghResult[-1])
-
-        # this test barely took about 14 seconds, but the result looks
-        # like a straight line, which is very bad.
-
-
-
-        yc, xc, a, b = [int(round(x)) for x in best[1:5]]
-        orientation = best[5]
-        # Draw the ellipse on the original image
-        cy, cx = ellipse_perimeter(yc, xc, a, b, orientation)
-        image_rgb[cy, cx] = (0, 0, 255)
-        # Draw the edge (white) and the resulting ellipse (red)
-        edges = color.gray2rgb(img_as_ubyte(canniedImage))
-        edges[cy, cx] = (250, 0, 0)
-        fig2, (ax1, ax2) = plt.subplots(ncols=2, nrows=1, figsize=(8, 4),
-                                sharex=True, sharey=True)
-        ax1.set_title('Original picture')
-        ax1.imshow(image_rgb)
-        ax2.set_title('Edge (white) and result (red)')
-        ax2.imshow(edges)
-        plt.show()
-        # plt.imshow(cannied, cmap=plt.cm.gray)
-        # plt.show()
-
+        totalAlgorithmTime = time.time() - startTime
+        print(totalAlgorithmTime)# 12.88 s
+        self.plotEllipseResult(best, imageRgb, canniedImage)
+        # Was pretty fast, and result looks pretty good, but not as much as 
+        # accuracy 1...
 
 if __name__ == "__main__":
     envtest.main()
