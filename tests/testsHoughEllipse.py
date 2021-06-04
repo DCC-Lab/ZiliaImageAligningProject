@@ -109,6 +109,7 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
         minMajorAxis = int((1/6)*ySize)
         maxMinorAxis = int(0.5*xSize)
         houghResults = hough_ellipse(canniedImage, min_size=minMajorAxis, max_size=maxMinorAxis)
+        # Took about 96 seconds
 
     def plotEllipseResult(self, best, imageRgb, edges):
         # Code taken from an example in the scikit-image documentation.
@@ -128,23 +129,29 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
         ax2.imshow(edges)
         plt.show()
 
-    @envtest.skip("Skip the plots and the calculating time.")
-    def testAccuracyParameter100(self):
-        # Default accuracy == 1. Let's try 100, which should be extremely high.
-        imageRgb = imread(self.testCannyDirectory+"/kenyaMedium.jpg")
-        grayImage = imread(self.testCannyDirectory+"/kenyaMedium.jpg", as_gray=True)
+    def evaluateHoughEllipseFullSizePicture(self, fileName, accuracy=1, minMajorAxisScale=1/6, maxMinorAxisScale=0.5, threshold=4):
+        # To prevent repetition of this code.
+        imageRgb = imread(self.testCannyDirectory+"/"+fileName)
+        grayImage = imread(self.testCannyDirectory+"/"+fileName, as_gray=True)
         thresh = threshold_otsu(grayImage)
         binaryImage = grayImage > thresh
         canniedImage = canny(binaryImage)
         xSize = grayImage.shape[0]
         ySize = grayImage.shape[1]
-        minMajorAxis = int((1/6)*ySize)
-        maxMinorAxis = int(0.5*xSize)
+        minMajorAxis = int(minMajorAxisScale*ySize)
+        maxMinorAxis = int(maxMinorAxisScale*xSize)
         houghResult = hough_ellipse(canniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=100)
+            max_size=maxMinorAxis, accuracy=accuracy, threshold=threshold)
         houghResult.sort(order='accumulator')
         # Estimated parameters for the ellipse
         best = list(houghResult[-1])
+        return best, imageRgb, canniedImage
+
+    @envtest.skip("Skip the plots and the calculating time.")
+    def testAccuracyParameter100(self):
+        # Default accuracy == 1. Let's try 100, which should be extremely high.
+        fileName = "/kenyaMedium.jpg"
+        best, imageRgb, canniedImage = self.evaluateHoughEllipseFullSizePicture(fileName, accuracy=100)
         self.plotEllipseResult(best, imageRgb, canniedImage)
         # this test barely took about 14 seconds, but the result looks
         # like a straight line, which is very bad.
@@ -153,20 +160,8 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     def testAccuracyParameter50(self):
         # Default accuracy == 1. Let's try 50.
         startTime = time.time()
-        imageRgb = imread(self.testCannyDirectory+"/kenyaMedium.jpg")
-        grayImage = imread(self.testCannyDirectory+"/kenyaMedium.jpg", as_gray=True)
-        thresh = threshold_otsu(grayImage)
-        binaryImage = grayImage > thresh
-        canniedImage = canny(binaryImage)
-        xSize = grayImage.shape[0]
-        ySize = grayImage.shape[1]
-        minMajorAxis = int((1/6)*ySize)
-        maxMinorAxis = int(0.5*xSize)
-        houghResult = hough_ellipse(canniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=50)
-        houghResult.sort(order='accumulator')
-        # Estimated parameters for the ellipse
-        best = list(houghResult[-1])
+        fileName = "/kenyaMedium.jpg"
+        best, imageRgb, canniedImage = self.evaluateHoughEllipseFullSizePicture(fileName, accuracy=50)
         totalAlgorithmTime = time.time() - startTime
         print(totalAlgorithmTime)# 12.88 s
         self.plotEllipseResult(best, imageRgb, canniedImage)
@@ -176,81 +171,33 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     @envtest.skip("Skip the plots and the calculating time.")
     def testAccuracyParameter75(self):
         # Default accuracy == 1. Let's try 75.
-        imageRgb = imread(self.testCannyDirectory+"/kenyaMedium.jpg")
-        grayImage = imread(self.testCannyDirectory+"/kenyaMedium.jpg", as_gray=True)
-        thresh = threshold_otsu(grayImage)
-        binaryImage = grayImage > thresh
-        canniedImage = canny(binaryImage)
-        xSize = grayImage.shape[0]
-        ySize = grayImage.shape[1]
-        minMajorAxis = int((1/6)*ySize)
-        maxMinorAxis = int(0.5*xSize)
-        houghResult = hough_ellipse(canniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=75)
-        houghResult.sort(order='accumulator')
-        # Estimated parameters for the ellipse
-        best = list(houghResult[-1])
+        fileName = "/kenyaMedium.jpg"
+        best, imageRgb, canniedImage = self.evaluateHoughEllipseFullSizePicture(fileName, accuracy=75)
         self.plotEllipseResult(best, imageRgb, canniedImage)
         # Looks like a circle.
 
     @envtest.skip("Skip the plots and the calculating time.")
     def testAccuracyParameter85(self):
         # Trying to find the limit before it becomes a straight line.
-        imageRgb = imread(self.testCannyDirectory+"/kenyaMedium.jpg")
-        grayImage = imread(self.testCannyDirectory+"/kenyaMedium.jpg", as_gray=True)
-        thresh = threshold_otsu(grayImage)
-        binaryImage = grayImage > thresh
-        canniedImage = canny(binaryImage)
-        xSize = grayImage.shape[0]
-        ySize = grayImage.shape[1]
-        minMajorAxis = int((1/6)*ySize)
-        maxMinorAxis = int(0.5*xSize)
-        houghResult = hough_ellipse(canniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=85)
-        houghResult.sort(order='accumulator')
-        # Estimated parameters for the ellipse
-        best = list(houghResult[-1])
+        fileName = "/kenyaMedium.jpg"
+        best, imageRgb, canniedImage = self.evaluateHoughEllipseFullSizePicture(fileName, accuracy=85)
         self.plotEllipseResult(best, imageRgb, canniedImage)
-        # Looks like a circle.
+        # Looks like a broken straight line.
 
     @envtest.skip("Skip the plots and the calculating time.")
     def testAccuracyParameter90(self):
-        # Trying to find the limit before it becomes a straight line.
-        imageRgb = imread(self.testCannyDirectory+"/kenyaMedium.jpg")
-        grayImage = imread(self.testCannyDirectory+"/kenyaMedium.jpg", as_gray=True)
-        thresh = threshold_otsu(grayImage)
-        binaryImage = grayImage > thresh
-        canniedImage = canny(binaryImage)
-        xSize = grayImage.shape[0]
-        ySize = grayImage.shape[1]
-        minMajorAxis = int((1/6)*ySize)
-        maxMinorAxis = int(0.5*xSize)
-        houghResult = hough_ellipse(canniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=90)
-        houghResult.sort(order='accumulator')
-        # Estimated parameters for the ellipse
-        best = list(houghResult[-1])
+        # Trying to look beyond the limits.
+        fileName = "/kenyaMedium.jpg"
+        best, imageRgb, canniedImage = self.evaluateHoughEllipseFullSizePicture(fileName, accuracy=90)
         self.plotEllipseResult(best, imageRgb, canniedImage)
-        # Looks like a line, beurk.
+        # Looks like a perfect line, beurk.
 
     @envtest.skip("Skip the plots and the calculating time.")
     def testAccuracyParameter60(self):
         # Test lower limits to the algorithm
         startTime = time.time()
-        imageRgb = imread(self.testCannyDirectory+"/kenyaMedium.jpg")
-        grayImage = imread(self.testCannyDirectory+"/kenyaMedium.jpg", as_gray=True)
-        thresh = threshold_otsu(grayImage)
-        binaryImage = grayImage > thresh
-        canniedImage = canny(binaryImage)
-        xSize = grayImage.shape[0]
-        ySize = grayImage.shape[1]
-        minMajorAxis = int((1/6)*ySize)
-        maxMinorAxis = int(0.5*xSize)
-        houghResult = hough_ellipse(canniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=60)
-        houghResult.sort(order='accumulator')
-        # Estimated parameters for the ellipse
-        best = list(houghResult[-1])
+        fileName = "/kenyaMedium.jpg"
+        best, imageRgb, canniedImage = self.evaluateHoughEllipseFullSizePicture(fileName, accuracy=60)
         totalAlgorithmTime = time.time() - startTime
         print(totalAlgorithmTime) # 12.9 s
         self.plotEllipseResult(best, imageRgb, canniedImage)
@@ -260,20 +207,8 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     def testAccuracyParameter40(self):
         # Test lower limits to the algorithm
         startTime = time.time()
-        imageRgb = imread(self.testCannyDirectory+"/kenyaMedium.jpg")
-        grayImage = imread(self.testCannyDirectory+"/kenyaMedium.jpg", as_gray=True)
-        thresh = threshold_otsu(grayImage)
-        binaryImage = grayImage > thresh
-        canniedImage = canny(binaryImage)
-        xSize = grayImage.shape[0]
-        ySize = grayImage.shape[1]
-        minMajorAxis = int((1/6)*ySize)
-        maxMinorAxis = int(0.5*xSize)
-        houghResult = hough_ellipse(canniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=40)
-        houghResult.sort(order='accumulator')
-        # Estimated parameters for the ellipse
-        best = list(houghResult[-1])
+        fileName = "/kenyaMedium.jpg"
+        best, imageRgb, canniedImage = self.evaluateHoughEllipseFullSizePicture(fileName, accuracy=40)
         totalAlgorithmTime = time.time() - startTime
         print(totalAlgorithmTime) # 12.97 s
         self.plotEllipseResult(best, imageRgb, canniedImage)
@@ -283,20 +218,8 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     def testAccuracyParameter30(self):
         # Test lower limits to the algorithm
         startTime = time.time()
-        imageRgb = imread(self.testCannyDirectory+"/kenyaMedium.jpg")
-        grayImage = imread(self.testCannyDirectory+"/kenyaMedium.jpg", as_gray=True)
-        thresh = threshold_otsu(grayImage)
-        binaryImage = grayImage > thresh
-        canniedImage = canny(binaryImage)
-        xSize = grayImage.shape[0]
-        ySize = grayImage.shape[1]
-        minMajorAxis = int((1/6)*ySize)
-        maxMinorAxis = int(0.5*xSize)
-        houghResult = hough_ellipse(canniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=30)
-        houghResult.sort(order='accumulator')
-        # Estimated parameters for the ellipse
-        best = list(houghResult[-1])
+        fileName = "/kenyaMedium.jpg"
+        best, imageRgb, canniedImage = self.evaluateHoughEllipseFullSizePicture(fileName, accuracy=30)
         totalAlgorithmTime = time.time() - startTime
         print(totalAlgorithmTime)# 13.14 s
         self.plotEllipseResult(best, imageRgb, canniedImage)
@@ -306,20 +229,8 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     def testAccuracyParameter20(self):
         # Test lower limits to the algorithm
         startTime = time.time()
-        imageRgb = imread(self.testCannyDirectory+"/kenyaMedium.jpg")
-        grayImage = imread(self.testCannyDirectory+"/kenyaMedium.jpg", as_gray=True)
-        thresh = threshold_otsu(grayImage)
-        binaryImage = grayImage > thresh
-        canniedImage = canny(binaryImage)
-        xSize = grayImage.shape[0]
-        ySize = grayImage.shape[1]
-        minMajorAxis = int((1/6)*ySize)
-        maxMinorAxis = int(0.5*xSize)
-        houghResult = hough_ellipse(canniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=20)
-        houghResult.sort(order='accumulator')
-        # Estimated parameters for the ellipse
-        best = list(houghResult[-1])
+        fileName = "/kenyaMedium.jpg"
+        best, imageRgb, canniedImage = self.evaluateHoughEllipseFullSizePicture(fileName, accuracy=20)
         totalAlgorithmTime = time.time() - startTime
         print(totalAlgorithmTime)# 13.26 s
         self.plotEllipseResult(best, imageRgb, canniedImage)
@@ -329,20 +240,8 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     def testAccuracyParameter10(self):
         # Test lower limits to the algorithm
         startTime = time.time()
-        imageRgb = imread(self.testCannyDirectory+"/kenyaMedium.jpg")
-        grayImage = imread(self.testCannyDirectory+"/kenyaMedium.jpg", as_gray=True)
-        thresh = threshold_otsu(grayImage)
-        binaryImage = grayImage > thresh
-        canniedImage = canny(binaryImage)
-        xSize = grayImage.shape[0]
-        ySize = grayImage.shape[1]
-        minMajorAxis = int((1/6)*ySize)
-        maxMinorAxis = int(0.5*xSize)
-        houghResult = hough_ellipse(canniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=10)
-        houghResult.sort(order='accumulator')
-        # Estimated parameters for the ellipse
-        best = list(houghResult[-1])
+        fileName = "/kenyaMedium.jpg"
+        best, imageRgb, canniedImage = self.evaluateHoughEllipseFullSizePicture(fileName, accuracy=10)
         totalAlgorithmTime = time.time() - startTime
         print(totalAlgorithmTime)# 14.42 s
         self.plotEllipseResult(best, imageRgb, canniedImage)
@@ -352,20 +251,8 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     def testAccuracyParameter5(self):
         # Test lower limits to the algorithm
         startTime = time.time()
-        imageRgb = imread(self.testCannyDirectory+"/kenyaMedium.jpg")
-        grayImage = imread(self.testCannyDirectory+"/kenyaMedium.jpg", as_gray=True)
-        thresh = threshold_otsu(grayImage)
-        binaryImage = grayImage > thresh
-        canniedImage = canny(binaryImage)
-        xSize = grayImage.shape[0]
-        ySize = grayImage.shape[1]
-        minMajorAxis = int((1/6)*ySize)
-        maxMinorAxis = int(0.5*xSize)
-        houghResult = hough_ellipse(canniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=5)
-        houghResult.sort(order='accumulator')
-        # Estimated parameters for the ellipse
-        best = list(houghResult[-1])
+        fileName = "/kenyaMedium.jpg"
+        best, imageRgb, canniedImage = self.evaluateHoughEllipseFullSizePicture(fileName, accuracy=5)
         totalAlgorithmTime = time.time() - startTime
         print(totalAlgorithmTime)# 16.82 s
         self.plotEllipseResult(best, imageRgb, canniedImage)
@@ -375,20 +262,8 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     def testAccuracyParameter3(self):
         # Test lower limits to the algorithm
         startTime = time.time()
-        imageRgb = imread(self.testCannyDirectory+"/kenyaMedium.jpg")
-        grayImage = imread(self.testCannyDirectory+"/kenyaMedium.jpg", as_gray=True)
-        thresh = threshold_otsu(grayImage)
-        binaryImage = grayImage > thresh
-        canniedImage = canny(binaryImage)
-        xSize = grayImage.shape[0]
-        ySize = grayImage.shape[1]
-        minMajorAxis = int((1/6)*ySize)
-        maxMinorAxis = int(0.5*xSize)
-        houghResult = hough_ellipse(canniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=3)
-        houghResult.sort(order='accumulator')
-        # Estimated parameters for the ellipse
-        best = list(houghResult[-1])
+        fileName = "/kenyaMedium.jpg"
+        best, imageRgb, canniedImage = self.evaluateHoughEllipseFullSizePicture(fileName, accuracy=3)
         totalAlgorithmTime = time.time() - startTime
         print(totalAlgorithmTime)# 22.48 s
         self.plotEllipseResult(best, imageRgb, canniedImage)
@@ -398,67 +273,19 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     def testAccuracyParameter2(self):
         # Test lower limits to the algorithm
         startTime = time.time()
-        imageRgb = imread(self.testCannyDirectory+"/kenyaMedium.jpg")
-        grayImage = imread(self.testCannyDirectory+"/kenyaMedium.jpg", as_gray=True)
-        thresh = threshold_otsu(grayImage)
-        binaryImage = grayImage > thresh
-        canniedImage = canny(binaryImage)
-        xSize = grayImage.shape[0]
-        ySize = grayImage.shape[1]
-        minMajorAxis = int((1/6)*ySize)
-        maxMinorAxis = int(0.5*xSize)
-        houghResult = hough_ellipse(canniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=2)
-        houghResult.sort(order='accumulator')
-        # Estimated parameters for the ellipse
-        best = list(houghResult[-1])
+        fileName = "/kenyaMedium.jpg"
+        best, imageRgb, canniedImage = self.evaluateHoughEllipseFullSizePicture(fileName, accuracy=2)
         totalAlgorithmTime = time.time() - startTime
         print(totalAlgorithmTime)# 33.55 s
         self.plotEllipseResult(best, imageRgb, canniedImage)
         # Another ugly circle... ok... bad...
 
-    @envtest.skip("Skip the plots and the calculating time.")
-    def testAccuracyParameter1(self):
-        # This is supposed to be the default value.
-        startTime = time.time()
-        imageRgb = imread(self.testCannyDirectory+"/kenyaMedium.jpg")
-        grayImage = imread(self.testCannyDirectory+"/kenyaMedium.jpg", as_gray=True)
-        thresh = threshold_otsu(grayImage)
-        binaryImage = grayImage > thresh
-        canniedImage = canny(binaryImage)
-        xSize = grayImage.shape[0]
-        ySize = grayImage.shape[1]
-        minMajorAxis = int((1/6)*ySize)
-        maxMinorAxis = int(0.5*xSize)
-        houghResult = hough_ellipse(canniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=1)
-        houghResult.sort(order='accumulator')
-        # Estimated parameters for the ellipse
-        best = list(houghResult[-1])
-        totalAlgorithmTime = time.time() - startTime
-        print(totalAlgorithmTime)# 92.85 s
-        self.plotEllipseResult(best, imageRgb, canniedImage)
-        # Yup! Like default values, not faster at all!
-
-
     @envtest.skip("Wayyyyy too long, never finishes... longer than 15 minutes!!!")
     def testHighLightPictureRwandaHighDefaultThreshold(self):
         # Default accuracy == 1. Let's try 50.
         startTime = time.time()
-        imageRgb = imread(self.testCannyDirectory+"/rwandaHigh.jpg")
-        grayImage = imread(self.testCannyDirectory+"/rwandaHigh.jpg", as_gray=True)
-        thresh = threshold_otsu(grayImage)
-        binaryImage = grayImage > thresh
-        canniedImage = canny(binaryImage)
-        xSize = grayImage.shape[0]
-        ySize = grayImage.shape[1]
-        minMajorAxis = int((1/6)*ySize)
-        maxMinorAxis = int(0.5*xSize)
-        houghResult = hough_ellipse(canniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=100)
-        houghResult.sort(order='accumulator')
-        # Estimated parameters for the ellipse
-        best = list(houghResult[-1])
+        fileName = "/rwandaHigh.jpg"
+        best, imageRgb, canniedImage = self.evaluateHoughEllipseFullSizePicture(fileName, accuracy=50)
         totalAlgorithmTime = time.time() - startTime
         print(totalAlgorithmTime)# 12.88 s
         self.plotEllipseResult(best, imageRgb, canniedImage)
@@ -517,37 +344,35 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
         # Doesn't seem to make any difference... and computing time is almost
         # the same...
 
-    @envtest.skip("Skip plots")
-    def testHighLightPictureRwanda50Accuracy(self):
-        # Default accuracy == 1. Let's try 50.
-        startTime = time.time()
-        imageRgb = imread(self.testCannyDirectory+"/rwandaHigh.jpg")
-        grayImage = imread(self.testCannyDirectory+"/rwandaHigh.jpg", as_gray=True)
+    def evaluateHoughEllipseWithRescale(self, fileName, accuracy=1, minMajorAxisScale=1/6, maxMinorAxisScale=0.5, threshold=4, scaleFactor=5):
+        # To prevent repetition in subsequent tests.
+        imageRgb = imread(self.testCannyDirectory+"/"+fileName)
+        grayImage = imread(self.testCannyDirectory+"/"+fileName, as_gray=True)
         thresh = threshold_otsu(grayImage)
         binaryImage = grayImage > thresh
         canniedImage = canny(binaryImage)
 
-        smallGrayImage = resize(grayImage, (grayImage.shape[0]//5, grayImage.shape[1]//5))
+        smallGrayImage = resize(grayImage, (grayImage.shape[0]//scaleFactor, grayImage.shape[1]//scaleFactor))
         smallThresh = threshold_otsu(smallGrayImage)
         smallBinaryImage = smallGrayImage > smallThresh
         smallCanniedImage = canny(smallBinaryImage)
 
         xSize = smallGrayImage.shape[0]
         ySize = smallGrayImage.shape[1]
-        minMajorAxis = int((1/6)*ySize)
-        maxMinorAxis = int(0.5*xSize)
+        minMajorAxis = int(minMajorAxisScale*ySize)
+        maxMinorAxis = int(maxMinorAxisScale*xSize)
 
         houghResult = hough_ellipse(smallCanniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=50)
+            max_size=maxMinorAxis, accuracy=accuracy, threshold=threshold)
         houghResult.sort(order='accumulator')
         # Estimated parameters for the ellipse
-        best = list(houghResult[-1])
-        totalAlgorithmTime = time.time() - startTime
-        print(totalAlgorithmTime)# 9.97 s
-        # self.plotEllipseResult(best, imageRgb, canniedImage)
+        smallBest = list(houghResult[-1])
+        return smallBest, imageRgb, canniedImage
 
-        yc, xc, a, b = [int(round(x)*5) for x in best[1:5]]
-        orientation = best[5]
+    def plotHoughEllipseWithRescale(self, smallBest, imageRgb, canniedImage, scaleFactor=5):
+        # To prevent repetition in subsequent tests.
+        yc, xc, a, b = [int(round(x)*scaleFactor) for x in smallBest[1:5]]
+        orientation = smallBest[5]
         # Draw the ellipse on the original image
         cy, cx = ellipse_perimeter(yc, xc, a, b, orientation)
         imageRgb[cy, cx] = (0, 0, 255)
@@ -561,101 +386,40 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
         ax2.set_title('Edge (white) and result (red)')
         ax2.imshow(canniedImage)
         plt.show()
+
+    @envtest.skip("Skip plots")
+    def testHighLightPictureRwandaRescale50Accuracy(self):
+        # Default accuracy == 1. Let's try 50.
+        startTime = time.time()
+        fileName = "rwandaHigh.jpg"
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=50, scaleFactor=5)
+        totalAlgorithmTime = time.time() - startTime
+        print(totalAlgorithmTime)# 9.97 s
+        self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=5)
         # Way faster!!! But the accuracy has to be readjusted :)
 
     @envtest.skip("Skip plots")
-    def testHighLightPictureRwanda25Accuracy(self):
+    def testHighLightPictureRwandaRescale25Accuracy(self):
         # Default accuracy == 1. Let's try 50.
         startTime = time.time()
-        imageRgb = imread(self.testCannyDirectory+"/rwandaHigh.jpg")
-        grayImage = imread(self.testCannyDirectory+"/rwandaHigh.jpg", as_gray=True)
-        thresh = threshold_otsu(grayImage)
-        binaryImage = grayImage > thresh
-        canniedImage = canny(binaryImage)
-
-        smallGrayImage = resize(grayImage, (grayImage.shape[0]//5, grayImage.shape[1]//5))
-        smallThresh = threshold_otsu(smallGrayImage)
-        smallBinaryImage = smallGrayImage > smallThresh
-        smallCanniedImage = canny(smallBinaryImage)
-
-        xSize = smallGrayImage.shape[0]
-        ySize = smallGrayImage.shape[1]
-        minMajorAxis = int((1/6)*ySize)
-        maxMinorAxis = int(0.5*xSize)
-
-        houghResult = hough_ellipse(smallCanniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=25)
-        houghResult.sort(order='accumulator')
-        # Estimated parameters for the ellipse
-        best = list(houghResult[-1])
+        fileName = "rwandaHigh.jpg"
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=25, scaleFactor=5)
         totalAlgorithmTime = time.time() - startTime
-        print(totalAlgorithmTime)# 9.98 s
-        # self.plotEllipseResult(best, imageRgb, canniedImage)
-
-        yc, xc, a, b = [int(round(x)*5) for x in best[1:5]]
-        orientation = best[5]
-        # Draw the ellipse on the original image
-        cy, cx = ellipse_perimeter(yc, xc, a, b, orientation)
-        imageRgb[cy, cx] = (0, 0, 255)
-        # Draw the edge (white) and the resulting ellipse (red)
-        canniedImage = color.gray2rgb(img_as_ubyte(canniedImage))
-        canniedImage[cy, cx] = (250, 0, 0)
-        fig2, (ax1, ax2) = plt.subplots(ncols=2, nrows=1, figsize=(8, 4),
-                                        sharex=True, sharey=True)
-        ax1.set_title('Original picture')
-        ax1.imshow(imageRgb)
-        ax2.set_title('Edge (white) and result (red)')
-        ax2.imshow(canniedImage)
-        plt.show()
-        # Way faster!!! This accuracy is better, but not as good as I would
+        print(totalAlgorithmTime)# 9.97 s
+        self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=5)
+        # This accuracy is better, but not as good as I would
         # like it to be, so I'll try decreasing it even more.
 
     @envtest.skip("Skip plots")
-    def testHighLightPictureRwanda15Accuracy(self):
+    def testHighLightPictureRwandaRescale15Accuracy(self):
         # Default accuracy == 1. Let's try 50.
         startTime = time.time()
-        imageRgb = imread(self.testCannyDirectory+"/rwandaHigh.jpg")
-        grayImage = imread(self.testCannyDirectory+"/rwandaHigh.jpg", as_gray=True)
-        thresh = threshold_otsu(grayImage)
-        binaryImage = grayImage > thresh
-        canniedImage = canny(binaryImage)
-
-        smallGrayImage = resize(grayImage, (grayImage.shape[0]//5, grayImage.shape[1]//5))
-        smallThresh = threshold_otsu(smallGrayImage)
-        smallBinaryImage = smallGrayImage > smallThresh
-        smallCanniedImage = canny(smallBinaryImage)
-
-        xSize = smallGrayImage.shape[0]
-        ySize = smallGrayImage.shape[1]
-        minMajorAxis = int((1/6)*ySize)
-        maxMinorAxis = int(0.5*xSize)
-
-        houghResult = hough_ellipse(smallCanniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=15)
-        houghResult.sort(order='accumulator')
-        # Estimated parameters for the ellipse
-        best = list(houghResult[-1])
+        fileName = "rwandaHigh.jpg"
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=15, scaleFactor=5)
         totalAlgorithmTime = time.time() - startTime
-        print(totalAlgorithmTime)# 10.11 s
-        # self.plotEllipseResult(best, imageRgb, canniedImage)
-
-        yc, xc, a, b = [int(round(x)*5) for x in best[1:5]]
-        orientation = best[5]
-        # Draw the ellipse on the original image
-        cy, cx = ellipse_perimeter(yc, xc, a, b, orientation)
-        imageRgb[cy, cx] = (0, 0, 255)
-        # Draw the edge (white) and the resulting ellipse (red)
-        canniedImage = color.gray2rgb(img_as_ubyte(canniedImage))
-        canniedImage[cy, cx] = (250, 0, 0)
-        fig2, (ax1, ax2) = plt.subplots(ncols=2, nrows=1, figsize=(8, 4),
-                                        sharex=True, sharey=True)
-        ax1.set_title('Original picture')
-        ax1.imshow(imageRgb)
-        ax2.set_title('Edge (white) and result (red)')
-        ax2.imshow(canniedImage)
-        plt.show()
-        # Way faster!!! This accuracy is better, but not as good as I would
-        # like it to be, so I'll try decreasing it even more.
+        print(totalAlgorithmTime) # 10.37 s
+        self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=5)
+        # Better :)
 
 if __name__ == "__main__":
     envtest.main()
