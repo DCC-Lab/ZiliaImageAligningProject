@@ -301,7 +301,7 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
         plt.show()
 
     @envtest.skip("Skip plots")
-    def testSkimageResizeWithAntiAliasing(self):
+    def testSkimageResizeWithAntiAliasingScaleFactor5(self):
         startTime = time.time()
         grayImage = imread(self.testCannyDirectory+"/rwandaHigh.jpg", as_gray=True)
         thresh = threshold_otsu(grayImage)
@@ -322,7 +322,7 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
         plt.show()
 
     @envtest.skip("Skip plots")
-    def testSkimageResizeWithoutAntiAliasing(self):
+    def testSkimageResizeWithoutAntiAliasingScaleFactor5(self):
         startTime = time.time()
         grayImage = imread(self.testCannyDirectory+"/rwandaHigh.jpg", as_gray=True)
         thresh = threshold_otsu(grayImage)
@@ -344,7 +344,7 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
         # Doesn't seem to make any difference... and computing time is almost
         # the same...
 
-    def evaluateHoughEllipseWithRescale(self, fileName, accuracy=1, minMajorAxisScale=1/6, maxMinorAxisScale=0.5, threshold=4, scaleFactor=5):
+    def evaluateHoughEllipseWithRescale(self, fileName, accuracy=1, minMajorAxisScale=1/6, maxMinorAxisScale=0.5, threshold=4, scaleFactor=5, showSmallCanny=False):
         # To prevent repetition in subsequent tests.
         imageRgb = imread(self.testCannyDirectory+"/"+fileName)
         grayImage = imread(self.testCannyDirectory+"/"+fileName, as_gray=True)
@@ -356,6 +356,9 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
         smallThresh = threshold_otsu(smallGrayImage)
         smallBinaryImage = smallGrayImage > smallThresh
         smallCanniedImage = canny(smallBinaryImage)
+        if showSmallCanny:
+            plt.imshow(smallCanniedImage, cmap=plt.cm.gray)
+            plt.show()
 
         xSize = smallGrayImage.shape[0]
         ySize = smallGrayImage.shape[1]
@@ -389,37 +392,105 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
 
     @envtest.skip("Skip plots")
     def testHighLightPictureRwandaRescale50Accuracy(self):
-        # Default accuracy == 1. Let's try 50.
         startTime = time.time()
         fileName = "rwandaHigh.jpg"
-        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=50, scaleFactor=5)
+        scaleFactor = 5
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=50, scaleFactor=scaleFactor)
         totalAlgorithmTime = time.time() - startTime
         print(totalAlgorithmTime)# 9.97 s
-        self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=5)
+        self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
         # Way faster!!! But the accuracy has to be readjusted :)
 
     @envtest.skip("Skip plots")
     def testHighLightPictureRwandaRescale25Accuracy(self):
-        # Default accuracy == 1. Let's try 50.
         startTime = time.time()
         fileName = "rwandaHigh.jpg"
-        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=25, scaleFactor=5)
+        scaleFactor = 5
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=25, scaleFactor=scaleFactor)
         totalAlgorithmTime = time.time() - startTime
         print(totalAlgorithmTime)# 9.97 s
-        self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=5)
+        self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
         # This accuracy is better, but not as good as I would
         # like it to be, so I'll try decreasing it even more.
 
     @envtest.skip("Skip plots")
     def testHighLightPictureRwandaRescale15Accuracy(self):
-        # Default accuracy == 1. Let's try 50.
         startTime = time.time()
         fileName = "rwandaHigh.jpg"
-        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=15, scaleFactor=5)
+        scaleFactor = 5
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=15, scaleFactor=scaleFactor)
         totalAlgorithmTime = time.time() - startTime
         print(totalAlgorithmTime) # 10.37 s
-        self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=5)
+        self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
         # Better :)
+
+    @envtest.skip("Skip plots")
+    def testMidLightPictureBresilRescale15Accuracy(self):
+        startTime = time.time()
+        fileName = "bresilMedium.jpg"
+        scaleFactor = 5
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=15, scaleFactor=scaleFactor)
+        totalAlgorithmTime = time.time() - startTime
+        print(totalAlgorithmTime) # 4.15 s
+        self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
+        # Better :)
+
+    @envtest.skip("Skip plots")
+    def testMidLightPictureBresilRescaleAccuracy15ScaleFactor10(self):
+        startTime = time.time()
+        fileName = "bresilMedium.jpg"
+        scaleFactor = 10
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=15, scaleFactor=scaleFactor, showSmallCanny=True)
+        totalAlgorithmTime = time.time() - startTime
+        print(totalAlgorithmTime) # 2.85 s
+        self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
+        # Very good, and VERY FAAAAASSSTTTT
+
+    @envtest.skip("Skip plots")
+    def testHighLightPictureKenyaRescaleAccuracy15ScaleFactor10(self):
+        startTime = time.time()
+        fileName = "kenyaHigh.jpg"
+        scaleFactor = 10
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=15, scaleFactor=scaleFactor)
+        totalAlgorithmTime = time.time() - startTime
+        print(totalAlgorithmTime) # 2.70 s
+        self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
+        # Very bad, Otsu's threshold cannot stand it.
+
+    @envtest.skip("Skip plots")
+    def testHighLightPictureKenyaRescaleAccuracy15ScaleFactor5(self):
+        startTime = time.time()
+        fileName = "kenyaHigh.jpg"
+        scaleFactor = 5
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=15, scaleFactor=scaleFactor)
+        totalAlgorithmTime = time.time() - startTime
+        print(totalAlgorithmTime) # 16.25 s
+        self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
+        # Very bad, Otsu's threshold cannot stand it.
+
+    @envtest.skip("Skip plots")
+    def testLowLightPictureRwandaRescaleAccuracy15ScaleFactor10(self):
+        startTime = time.time()
+        fileName = "rwandaLow.jpg"
+        scaleFactor = 10
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=15, scaleFactor=scaleFactor)
+        totalAlgorithmTime = time.time() - startTime
+        print(totalAlgorithmTime) # 1.16 s
+        self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
+        # Looks like an offset circle even with multiple accuracies.
+        # The image is very dim, tough...
+
+    @envtest.skip("Skip plots")
+    def testMidLightPictureKenyaRescaleAccuracy15ScaleFactor5(self):
+        startTime = time.time()
+        fileName = "kenyaMedium.jpg"
+        scaleFactor = 5
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor)
+        totalAlgorithmTime = time.time() - startTime
+        print(totalAlgorithmTime) # 0.33 s
+        self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
+        # Accuracy 15 = baaaaadddd beurk!
+        # Accuracy 10 = very good :)
 
 if __name__ == "__main__":
     envtest.main()
