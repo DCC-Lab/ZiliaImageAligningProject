@@ -9,6 +9,7 @@ from skimage.draw import ellipse_perimeter
 from skimage.transform import hough_ellipse
 from skimage.feature import canny
 from skimage import color, img_as_ubyte
+from skimage.transform import resize
 import time
 
 class TestHoughEllipse(envtest.ZiliaTestCase):
@@ -440,7 +441,7 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
         # Yup! Like default values, not faster at all!
 
 
-    @envtest.skip("Wayyyyy too long, never finishes....")
+    @envtest.skip("Wayyyyy too long, never finishes... longer than 15 minutes!!!")
     def testHighLightPictureRwandaHighDefaultThreshold(self):
         # Default accuracy == 1. Let's try 50.
         startTime = time.time()
@@ -461,7 +462,200 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
         totalAlgorithmTime = time.time() - startTime
         print(totalAlgorithmTime)# 12.88 s
         self.plotEllipseResult(best, imageRgb, canniedImage)
-        # Way too long... I never got it to even finish...
+        # Way too long... I never got it to even finish... longer than 15 minutes!!!
+
+    @envtest.skip("Skip plots")
+    def testCannyHighResPic(self):
+        grayImage = imread(self.testCannyDirectory+"/rwandaHigh.jpg", as_gray=True)
+        thresh = threshold_otsu(grayImage)
+        binaryImage = grayImage > thresh
+        canniedImage = canny(binaryImage)
+        plt.imshow(canniedImage, cmap=plt.cm.gray)
+        plt.show()
+
+    @envtest.skip("Skip plots")
+    def testSkimageResizeWithAntiAliasing(self):
+        startTime = time.time()
+        grayImage = imread(self.testCannyDirectory+"/rwandaHigh.jpg", as_gray=True)
+        thresh = threshold_otsu(grayImage)
+        binaryImage = grayImage > thresh
+        canniedImage = canny(binaryImage)
+        smallGrayImage = resize(grayImage, (grayImage.shape[0]//5, grayImage.shape[1]//5), anti_aliasing=True)
+        smallThresh = threshold_otsu(smallGrayImage)
+        smallBinaryImage = smallGrayImage > smallThresh
+        smallCanny = canny(smallBinaryImage)
+        totalAlgorithmTime = time.time() - startTime
+        print(totalAlgorithmTime) # = 0.4966716766357422
+
+        fig2, (ax1, ax2) = plt.subplots(ncols=2, nrows=1, figsize=(8, 4))
+        ax1.set_title('Original size')
+        ax1.imshow(canniedImage, cmap=plt.cm.gray)
+        ax2.set_title('Small one')
+        ax2.imshow(smallCanny, cmap=plt.cm.gray)
+        plt.show()
+
+    @envtest.skip("Skip plots")
+    def testSkimageResizeWithoutAntiAliasing(self):
+        startTime = time.time()
+        grayImage = imread(self.testCannyDirectory+"/rwandaHigh.jpg", as_gray=True)
+        thresh = threshold_otsu(grayImage)
+        binaryImage = grayImage > thresh
+        canniedImage = canny(binaryImage)
+        smallGrayImage = resize(grayImage, (grayImage.shape[0]//5, grayImage.shape[1]//5))
+        smallThresh = threshold_otsu(smallGrayImage)
+        smallBinaryImage = smallGrayImage > smallThresh
+        smallCanny = canny(smallBinaryImage)
+        totalAlgorithmTime = time.time() - startTime
+        print(totalAlgorithmTime) # = 0.483705997467041
+
+        fig2, (ax1, ax2) = plt.subplots(ncols=2, nrows=1, figsize=(8, 4))
+        ax1.set_title('Original size')
+        ax1.imshow(canniedImage, cmap=plt.cm.gray)
+        ax2.set_title('Small one')
+        ax2.imshow(smallCanny, cmap=plt.cm.gray)
+        plt.show()
+        # Doesn't seem to make any difference... and computing time is almost
+        # the same...
+
+    @envtest.skip("Skip plots")
+    def testHighLightPictureRwanda50Accuracy(self):
+        # Default accuracy == 1. Let's try 50.
+        startTime = time.time()
+        imageRgb = imread(self.testCannyDirectory+"/rwandaHigh.jpg")
+        grayImage = imread(self.testCannyDirectory+"/rwandaHigh.jpg", as_gray=True)
+        thresh = threshold_otsu(grayImage)
+        binaryImage = grayImage > thresh
+        canniedImage = canny(binaryImage)
+
+        smallGrayImage = resize(grayImage, (grayImage.shape[0]//5, grayImage.shape[1]//5))
+        smallThresh = threshold_otsu(smallGrayImage)
+        smallBinaryImage = smallGrayImage > smallThresh
+        smallCanniedImage = canny(smallBinaryImage)
+
+        xSize = smallGrayImage.shape[0]
+        ySize = smallGrayImage.shape[1]
+        minMajorAxis = int((1/6)*ySize)
+        maxMinorAxis = int(0.5*xSize)
+
+        houghResult = hough_ellipse(smallCanniedImage, min_size=minMajorAxis,
+            max_size=maxMinorAxis, accuracy=50)
+        houghResult.sort(order='accumulator')
+        # Estimated parameters for the ellipse
+        best = list(houghResult[-1])
+        totalAlgorithmTime = time.time() - startTime
+        print(totalAlgorithmTime)# 9.97 s
+        # self.plotEllipseResult(best, imageRgb, canniedImage)
+
+        yc, xc, a, b = [int(round(x)*5) for x in best[1:5]]
+        orientation = best[5]
+        # Draw the ellipse on the original image
+        cy, cx = ellipse_perimeter(yc, xc, a, b, orientation)
+        imageRgb[cy, cx] = (0, 0, 255)
+        # Draw the edge (white) and the resulting ellipse (red)
+        canniedImage = color.gray2rgb(img_as_ubyte(canniedImage))
+        canniedImage[cy, cx] = (250, 0, 0)
+        fig2, (ax1, ax2) = plt.subplots(ncols=2, nrows=1, figsize=(8, 4),
+                                        sharex=True, sharey=True)
+        ax1.set_title('Original picture')
+        ax1.imshow(imageRgb)
+        ax2.set_title('Edge (white) and result (red)')
+        ax2.imshow(canniedImage)
+        plt.show()
+        # Way faster!!! But the accuracy has to be readjusted :)
+
+    @envtest.skip("Skip plots")
+    def testHighLightPictureRwanda25Accuracy(self):
+        # Default accuracy == 1. Let's try 50.
+        startTime = time.time()
+        imageRgb = imread(self.testCannyDirectory+"/rwandaHigh.jpg")
+        grayImage = imread(self.testCannyDirectory+"/rwandaHigh.jpg", as_gray=True)
+        thresh = threshold_otsu(grayImage)
+        binaryImage = grayImage > thresh
+        canniedImage = canny(binaryImage)
+
+        smallGrayImage = resize(grayImage, (grayImage.shape[0]//5, grayImage.shape[1]//5))
+        smallThresh = threshold_otsu(smallGrayImage)
+        smallBinaryImage = smallGrayImage > smallThresh
+        smallCanniedImage = canny(smallBinaryImage)
+
+        xSize = smallGrayImage.shape[0]
+        ySize = smallGrayImage.shape[1]
+        minMajorAxis = int((1/6)*ySize)
+        maxMinorAxis = int(0.5*xSize)
+
+        houghResult = hough_ellipse(smallCanniedImage, min_size=minMajorAxis,
+            max_size=maxMinorAxis, accuracy=25)
+        houghResult.sort(order='accumulator')
+        # Estimated parameters for the ellipse
+        best = list(houghResult[-1])
+        totalAlgorithmTime = time.time() - startTime
+        print(totalAlgorithmTime)# 9.98 s
+        # self.plotEllipseResult(best, imageRgb, canniedImage)
+
+        yc, xc, a, b = [int(round(x)*5) for x in best[1:5]]
+        orientation = best[5]
+        # Draw the ellipse on the original image
+        cy, cx = ellipse_perimeter(yc, xc, a, b, orientation)
+        imageRgb[cy, cx] = (0, 0, 255)
+        # Draw the edge (white) and the resulting ellipse (red)
+        canniedImage = color.gray2rgb(img_as_ubyte(canniedImage))
+        canniedImage[cy, cx] = (250, 0, 0)
+        fig2, (ax1, ax2) = plt.subplots(ncols=2, nrows=1, figsize=(8, 4),
+                                        sharex=True, sharey=True)
+        ax1.set_title('Original picture')
+        ax1.imshow(imageRgb)
+        ax2.set_title('Edge (white) and result (red)')
+        ax2.imshow(canniedImage)
+        plt.show()
+        # Way faster!!! This accuracy is better, but not as good as I would
+        # like it to be, so I'll try decreasing it even more.
+
+    @envtest.skip("Skip plots")
+    def testHighLightPictureRwanda15Accuracy(self):
+        # Default accuracy == 1. Let's try 50.
+        startTime = time.time()
+        imageRgb = imread(self.testCannyDirectory+"/rwandaHigh.jpg")
+        grayImage = imread(self.testCannyDirectory+"/rwandaHigh.jpg", as_gray=True)
+        thresh = threshold_otsu(grayImage)
+        binaryImage = grayImage > thresh
+        canniedImage = canny(binaryImage)
+
+        smallGrayImage = resize(grayImage, (grayImage.shape[0]//5, grayImage.shape[1]//5))
+        smallThresh = threshold_otsu(smallGrayImage)
+        smallBinaryImage = smallGrayImage > smallThresh
+        smallCanniedImage = canny(smallBinaryImage)
+
+        xSize = smallGrayImage.shape[0]
+        ySize = smallGrayImage.shape[1]
+        minMajorAxis = int((1/6)*ySize)
+        maxMinorAxis = int(0.5*xSize)
+
+        houghResult = hough_ellipse(smallCanniedImage, min_size=minMajorAxis,
+            max_size=maxMinorAxis, accuracy=15)
+        houghResult.sort(order='accumulator')
+        # Estimated parameters for the ellipse
+        best = list(houghResult[-1])
+        totalAlgorithmTime = time.time() - startTime
+        print(totalAlgorithmTime)# 10.11 s
+        # self.plotEllipseResult(best, imageRgb, canniedImage)
+
+        yc, xc, a, b = [int(round(x)*5) for x in best[1:5]]
+        orientation = best[5]
+        # Draw the ellipse on the original image
+        cy, cx = ellipse_perimeter(yc, xc, a, b, orientation)
+        imageRgb[cy, cx] = (0, 0, 255)
+        # Draw the edge (white) and the resulting ellipse (red)
+        canniedImage = color.gray2rgb(img_as_ubyte(canniedImage))
+        canniedImage[cy, cx] = (250, 0, 0)
+        fig2, (ax1, ax2) = plt.subplots(ncols=2, nrows=1, figsize=(8, 4),
+                                        sharex=True, sharey=True)
+        ax1.set_title('Original picture')
+        ax1.imshow(imageRgb)
+        ax2.set_title('Edge (white) and result (red)')
+        ax2.imshow(canniedImage)
+        plt.show()
+        # Way faster!!! This accuracy is better, but not as good as I would
+        # like it to be, so I'll try decreasing it even more.
 
 if __name__ == "__main__":
     envtest.main()

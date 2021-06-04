@@ -9,7 +9,9 @@ from skimage.draw import ellipse_perimeter
 from skimage.transform import hough_ellipse
 from skimage.feature import canny
 from skimage import color, img_as_ubyte
-import time
+
+from skimage.transform import resize
+
 
 class TestHoughEllipse(envtest.ZiliaTestCase):
 
@@ -31,12 +33,9 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
         ax2.imshow(edges)
         plt.show()
 
-    # @envtest.skip("Skip the plots and the calculating time.")
-    def testAccuracyParameter50(self):
-        # Default accuracy == 1. Let's try 50.
-        startTime = time.time()
-        imageRgb = imread(self.testCannyDirectory+"/kenyaMedium.jpg")
-        grayImage = imread(self.testCannyDirectory+"/kenyaMedium.jpg", as_gray=True)
+    def testHoughAccuracy50(self):
+        imageRgb = imread(self.testCannyDirectory+"/rwandaHighLowRes.jpg")
+        grayImage = imread(self.testCannyDirectory+"/rwandaHighLowRes.jpg", as_gray=True)
         thresh = threshold_otsu(grayImage)
         binaryImage = grayImage > thresh
         canniedImage = canny(binaryImage)
@@ -44,14 +43,15 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
         ySize = grayImage.shape[1]
         minMajorAxis = int((1/6)*ySize)
         maxMinorAxis = int(0.5*xSize)
-        houghResult = hough_ellipse(canniedImage, min_size=minMajorAxis,
-            max_size=maxMinorAxis, accuracy=50)
-        houghResult.sort(order='accumulator')
-        # Estimated parameters for the ellipse
-        best = list(houghResult[-1])
-        totalAlgorithmTime = time.time() - startTime
-        print(totalAlgorithmTime)# 12.88 s
-        self.plotEllipseResult(best, imageRgb, canniedImage)
+        plt.imshow(canniedImage, cmap=plt.cm.gray)
+        plt.show()
+        # houghResult = hough_ellipse(canniedImage, min_size=minMajorAxis,
+        #     max_size=maxMinorAxis, accuracy=50)
+        # houghResult.sort(order='accumulator')
+        # # Estimated parameters for the ellipse
+        # best = list(houghResult[-1])
+        # print(totalAlgorithmTime)# 12.88 s
+        # self.plotEllipseResult(best, imageRgb, canniedImage)
         # Was pretty fast, and result looks pretty good, but not as much as 
         # accuracy 1...
 
