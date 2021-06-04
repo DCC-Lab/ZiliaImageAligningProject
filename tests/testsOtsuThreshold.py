@@ -136,5 +136,15 @@ class TestThreshAndBinary(envtest.ZiliaTestCase):
         # plt.show()
         # Pretty good :)
 
+    @envtest.skip("Skip plots")
+    def testHighLightImageThresh4(self):
+        image = imread(self.testCannyDirectory+"/kenyaHigh.jpg")
+        grayImage = rgb2gray(image)
+        thresh = threshold_otsu(grayImage)
+        binaryImage = grayImage > thresh
+        plt.imshow(binaryImage, cmap=plt.cm.gray)
+        plt.show()
+        # Very bad, picture far from optimal, though...
+
 if __name__ == "__main__":
     envtest.main()
