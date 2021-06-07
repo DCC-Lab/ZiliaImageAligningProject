@@ -109,7 +109,7 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     def testKenyaHigh(self):
         fileName = "kenyaHigh.jpg"
         scaleFactor = 5
-        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True, gamma=2.5)
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True, gamma=3)
         self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
         # Works relatively well with gamma 2.5 or higher.
 
@@ -133,7 +133,7 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     def testRwandaHigh(self):
         fileName = "rwandaHigh.jpg"
         scaleFactor = 5
-        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True, gamma=2)
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True, gamma=3)
         self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
         # Not too bad with gamma = 1, works best with gamma 2
 
@@ -157,7 +157,7 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     def testSomalieHigh(self):
         fileName = "somalieHigh.jpg"
         scaleFactor = 5
-        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True, gamma=5)
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True, gamma=3)
         self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
         # Not too terrible with gamma=0, just ok with higher gammas, but never
         # great... probably best with gamma=5.
@@ -174,11 +174,9 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     def testSomalieMedium(self):
         fileName = "somalieMedium.jpg"
         scaleFactor = 5
-        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True, gamma=1.5)
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True, gamma=1)
         self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
-        # very good with gamme from 0-1. Disgusting with 
-
-
+        # very good with gamma from 0-1. Disgusting with anything higher.
 
 if __name__ == "__main__":
     envtest.main()
