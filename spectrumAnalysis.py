@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter.filedialog import askopenfilename
 from scipy.optimize import nnls
 from fnnls import fnnls
+import matplotlib.pyplot as plt
 
 # global variables for cropping wavelength
 lowerLimit=510
@@ -12,10 +13,6 @@ upperLimit=590
 class spectrum:
     data=np.array([])
     wavelength=np.array([])
-# spectrum = {
-#     "data": np.array([]),
-#     "wavelength": np.array([])
-# }
 
 def loadComponentesSpectra():
     '''load components spectrums for the analysis'''
@@ -67,7 +64,6 @@ def loadWhiteRef(referenceNameNothinInfront='int75_LEDON_nothingInFront.csv',
     RefCroppedNormalized=normalizeRef(croppedRef)
     return RefCroppedNormalized
 
-
 def loadDarkRef(skipRows=4):
     ''' returns cropped (between 500 to 600) dark reference and the wavelength'''
     filetypes = [("csv files", "*.csv")]
@@ -96,7 +92,7 @@ def normalizeSpectrum(spec,darkRef):
     SpectrumData=spec.data-dRefTile.T
     STDspectrum=np.std(SpectrumData,axis=1)
     SpectrumDataNormalized = spectrum()
-    SpectrumDataNormalized.data = SpectrumData.T/STDspectrum
+    SpectrumDataNormalized.data = SpectrumData/STDspectrum[:,None]
     SpectrumDataNormalized.wavelength = spec.wavelength
     return SpectrumDataNormalized
 
@@ -110,17 +106,38 @@ def absorbanceSpectrum(refSpec,normalizedSpec):
     """calculate the absorbance spectrum using white reference and normalized spectrum"""
     ModifiedData = np.zeros(normalizedSpec.data.shape)
     for i in range(normalizedSpec.wavelength.shape[0]):
-        ModifiedData[:, i] = refSpec.data[find_nearest(refSpec.wavelength, normalizedSpec.wavelength[i])]
+        ModifiedData[i,:] = refSpec.data[find_nearest(refSpec.wavelength, normalizedSpec.wavelength[i])]
     ModifiedSpec=spectrum()
-    ModifiedSpec.data = np.log(ModifiedData / normalizedSpec.data)
+    # print(normalizedSpec.data)
+    # print(ModifiedData.shape)
+    # print(normalizedSpec.data.shape)
+    # ModifiedSpec.data = np.log(ModifiedData / normalizedSpec.data)
+    # plt.imshow(normalizedSpec.data)
+    # plt.title('before')
+    # plt.show()
+    normalizedSpec.data[normalizedSpec.data==0]=0.0001
+    # plt.imshow(normalizedSpec.data)
+    # plt.title('after')
+    # plt.show()
+    # plt.imshow(ModifiedData)
+    # plt.title('ModifiedData Ref')
+    # plt.show()
+    ModifiedSpec.data=np.log(np.divide(ModifiedData, normalizedSpec.data, out=None, where=True, casting= 'same_kind',
+                                order = 'K', dtype = None))
+    plt.imshow(ModifiedSpec.data)
+    plt.show()
+    print(ModifiedSpec.data)
+
     ModifiedSpec.wavelength = normalizedSpec.wavelength
     return ModifiedSpec
+
+
 
 def scattering(spec,bValue=1.5):
     return (spec.wavelength / 500) ** (-1 * bValue)
 
 def reflection(spec):
-    return (-np.log(spec.wavelength.reshape(-1, 1))).T
+    return np.squeeze(-np.log(spec.wavelength.reshape(-1, 1)))
 
 
 
@@ -136,7 +153,7 @@ def cropComponents(absorbanceSpectrum):
     for i in range(absorbanceSpectrum.wavelength.shape[0]):
         oxyhemoglobin[i] = Components["oxyhemoglobin"][find_nearest(Components["wavelengths"],
                                                                     absorbanceSpectrum.wavelength[i])]
-        deoxyhemoglobin[i] = Components["oxyhemoglobin"][find_nearest(Components["wavelengths"],
+        deoxyhemoglobin[i] = Components["deoxyhemoglobin"][find_nearest(Components["wavelengths"],
                                                                       absorbanceSpectrum.wavelength[i])]
         melanin[i] = Components["eumelanin"][find_nearest(Components["wavelengths"],
                                                           absorbanceSpectrum.wavelength[i])]
@@ -153,8 +170,12 @@ def componentsToArray(components):
     variables = np.vstack([variables, components["oxyhemoglobin"]])
     variables = np.vstack([variables, components["deoxyhemoglobin"]])
     variables = np.vstack([variables, components["melanin"]])
+    print('mela', components["melanin"].shape)
     variables = np.vstack([variables, components["scattering"]])
+    print('scat', components["scattering"].shape)
+    print('ref', components["reflection"].shape)
     variables = np.vstack([variables, components["reflection"]])
+
     return variables
 
 from sklearn.linear_model import LinearRegression
@@ -165,16 +186,18 @@ from sklearn.linear_model import LinearRegression
 # print("NNLS R2 score", r2_score_nnls)
 
 def getCoef(absorbance,variables):
-    print(variables)
-    for i in range(absorbance.data.shape[0]):
-        coef=np.linalg.lstsq(variables.T,absorbance.data[i,:].T)
-        # coef=nnls(variables.T,absorbance.data[i,:].T,maxiter=200 )
-        # coef = fnnls(variables.T, absorbance.data[i, :].T)
-        # reg_nnls = LinearRegression(positive=True)
-        # y_pred_nnls = reg_nnls.fit(variables.T, absorbance.data[i, :].T)
-        # print(y_pred_nnls.coef_)
-        print(coef)
+    allCoef=np.zeros([absorbance.data.shape[1],variables.shape[0]])
+    print('variable', variables.shape)
+    for i in range(absorbance.data.shape[1]):
+        coef=nnls(variables.T,absorbance.data[:,i],maxiter=2000 )
+
+        allCoef[i,:]=coef[0]
+
+        print(allCoef)
+        print(allCoef.shape)
     return
+
+
 
 a=loadWhiteRef()
 b=loadDarkRef()
@@ -183,6 +206,7 @@ d=normalizeSpectrum(c,b)
 e=absorbanceSpectrum(a,d)
 f=cropComponents(e)
 h=componentsToArray(f)
+# getCoef(f["deoxyhemoglobin"],h)
 getCoef(e,h)
 print(h.shape)
 
