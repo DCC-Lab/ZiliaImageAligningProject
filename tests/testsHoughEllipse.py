@@ -10,6 +10,7 @@ from skimage.transform import hough_ellipse
 from skimage.feature import canny
 from skimage import color, img_as_ubyte
 from skimage.transform import resize
+from skimage.exposure import adjust_gamma
 import time
 
 class TestHoughEllipse(envtest.ZiliaTestCase):
@@ -344,15 +345,19 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
         # Doesn't seem to make any difference... and computing time is almost
         # the same...
 
-    def evaluateHoughEllipseWithRescale(self, fileName, accuracy=1, minMajorAxisScale=1/6, maxMinorAxisScale=0.5, threshold=4, scaleFactor=5, showSmallCanny=False):
+    def evaluateHoughEllipseWithRescale(self, fileName, accuracy=1, minMajorAxisScale=1/6, maxMinorAxisScale=0.5, threshold=4, scaleFactor=5, showSmallCanny=False, gamma=0):
         # To prevent repetition in subsequent tests.
         imageRgb = imread(self.testCannyDirectory+"/"+fileName)
         grayImage = imread(self.testCannyDirectory+"/"+fileName, as_gray=True)
+        if gamma != 0:
+            grayImage = adjust_gamma(grayImage, gamma=gamma)
         thresh = threshold_otsu(grayImage)
         binaryImage = grayImage > thresh
         canniedImage = canny(binaryImage)
 
         smallGrayImage = resize(grayImage, (grayImage.shape[0]//scaleFactor, grayImage.shape[1]//scaleFactor))
+        if gamma != 0:
+            smallGrayImage = adjust_gamma(smallGrayImage, gamma=gamma)
         smallThresh = threshold_otsu(smallGrayImage)
         smallBinaryImage = smallGrayImage > smallThresh
         smallCanniedImage = canny(smallBinaryImage)
@@ -477,7 +482,7 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
         totalAlgorithmTime = time.time() - startTime
         print(totalAlgorithmTime) # 1.16 s
         self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
-        # Looks like an offset circle even with multiple accuracies.
+        # Looks like a offset circle even with multiple accuracies.
         # The image is very dim, tough...
 
     @envtest.skip("Skip plots")
@@ -491,6 +496,28 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
         self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
         # Accuracy 15 = baaaaadddd beurk!
         # Accuracy 10 = very good :)
+
+    @envtest.skip("Skip plots")
+    def testLowLightPictureRwandaRescaleFactor5(self):
+        startTime = time.time()
+        fileName = "rwandaLow.jpg"
+        scaleFactor = 5
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True)
+        totalAlgorithmTime = time.time() - startTime
+        print(totalAlgorithmTime)
+        self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
+        # Good!
+
+    @envtest.skip("Skip plots")
+    def testHighLightPictureKenyaRescaleFactor5_withGamma5(self):
+        startTime = time.time()
+        fileName = "kenyaHigh.jpg"
+        scaleFactor = 5
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True, gamma=5)
+        totalAlgorithmTime = time.time() - startTime
+        print(totalAlgorithmTime)
+        self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
+        # Not perfect with accuracy 10, but not bad thanks to gamma 5!!!
 
 if __name__ == "__main__":
     envtest.main()

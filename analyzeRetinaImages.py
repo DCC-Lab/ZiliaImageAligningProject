@@ -9,6 +9,16 @@ first picture, and the shift for the subsequent pictures.
 
 
 
+# Import image as grayscale
+# Reduce image size by some factor
+# Apply gamma correction to accentuate contrasts
+# Apply Otsu's threshold
+# Turn the image into a binary image
+# Apply a canny filter
+# Apply an elliptical Hough transform
+# Get the best ellipse parameters for the small picture
+# Convert those parameters to make them work with the big picture
+# Return (or store) the ellipse parameters
 
 
 
