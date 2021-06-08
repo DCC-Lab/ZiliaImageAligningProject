@@ -309,9 +309,11 @@ def placeRosa(gridParameters, shiftParameters) -> list:
         ylabel[y*length:(y+1)*length] = yLabel[y]
     outputLabels = []
     for j in range(xRosa.shape[0]):
-        xTemporaryLabel = str(xlabel[ np.where(xGrid == xRosa[j] - xCenterGrid)[0] ][0])
+        # xTemporaryLabel = str(xlabel[ np.where(xGrid == xRosa[j] - xCenterGrid)[0] ][0])
+        xTemporaryLabel = str(xlabel[ np.where(xGrid == xRosa[j] - xCenterGrid)[0] ])
         # print("xTemporaryLabel", xTemporaryLabel)
-        yTemporaryLabel = str(ylabel[ np.where(yGrid == yRosa[j] - yCenterGrid)[0] ][0])# error with large set of data... because of yRosa
+        # yTemporaryLabel = str(ylabel[ np.where(yGrid == yRosa[j] - yCenterGrid)[0] ][0])# error with large set of data... because some elements are empty lists
+        yTemporaryLabel = str(ylabel[ np.where(yGrid == yRosa[j] - yCenterGrid)[0] ])
         # print("yTemporaryLabel", yTemporaryLabel)
         temporaryLabel = str(xTemporaryLabel + yTemporaryLabel)
         # probably can't find the shift cause too blurry...
