@@ -38,6 +38,7 @@ def loadComponentesSpectra():
     return components_spectra
 
 def cropFunction(Spec):
+    """crop the spectrum between lower limit and upper limit"""
     croppedSpectrum = spectrum()
     croppedSpectrum.wavelength = Spec.wavelength[
         np.where(np.logical_and(lowerLimit <= Spec.wavelength, Spec.wavelength <= upperLimit))]
@@ -46,6 +47,7 @@ def cropFunction(Spec):
     return croppedSpectrum
 
 def normalizeRef(Spec):
+    """divide the spectrum by its standard deviation"""
     Spec.data=Spec.data/np.std(Spec.data)
     return Spec
 
@@ -115,9 +117,11 @@ def absorbanceSpectrum(refSpec,normalizedSpec):
 
 
 def scattering(spec,bValue=1.5):
+    """calculate the scattering spectrum"""
     return (spec.wavelength / 500) ** (-1 * bValue)
 
 def reflection(spec):
+    """calculate the reflection spectrum"""
     return np.squeeze(-np.log(spec.wavelength.reshape(-1, 1)))
 
 
@@ -147,6 +151,7 @@ def cropComponents(absorbanceSpectrum):
     return componentsCrop
 
 def componentsToArray(components):
+    """make an n*m array of the components to use as input of the nnls"""
     variables = np.ones(components["oxyhemoglobin"].shape)
     variables = np.vstack([variables, components["oxyhemoglobin"]])
     variables = np.vstack([variables, components["deoxyhemoglobin"]])
@@ -157,6 +162,7 @@ def componentsToArray(components):
     return variables
 
 def getCoef(absorbance,variables):
+    """apply nnls and get coefs"""
     allCoef=np.zeros([absorbance.data.shape[1],variables.shape[0]])
     for i in range(absorbance.data.shape[1]):
         coef=nnls(variables.T,absorbance.data[:,i],maxiter=2000 )
@@ -164,8 +170,8 @@ def getCoef(absorbance,variables):
         allCoef[i,:]=coef[0]
     return allCoef
 
-
 def mainAnalysis ():
+    """load data, do all the analysis, get coefs as concentration"""
     whiteRef=loadWhiteRef()
     darkRef=loadDarkRef()
     spectrums=loadSpectrum()
