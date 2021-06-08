@@ -273,7 +273,8 @@ def applyShift(xLaser: np.ndarray, yLaser:np.ndarray, shift:np.ndarray) -> tuple
     """
     Apply the shift value on the x and y of the rosa
     """
-    return (xLaser - shift[:,1]), (yLaser - shift[:,0])
+    totalShift = (xLaser - shift[:,1]), (yLaser - shift[:,0])
+    return totalShift
 
 
 def crossImage(im1, im2) -> np.ndarray:
@@ -306,15 +307,19 @@ def placeRosa(gridParameters, shiftParameters) -> list:
     ylabel = np.array( ["" for x in range(yGrid.shape[0])])
     for y in range(yLabel.shape[0]):
         ylabel[y*length:(y+1)*length] = yLabel[y]
-    outputLabel = []
+    outputLabels = []
     for j in range(xRosa.shape[0]):
-        L = str(str(xlabel[(np.where(xGrid == xRosa[j] - xCenterGrid))[0]][0]) +
-                       str(ylabel[(np.where(yGrid == yRosa[j] - yCenterGrid))[0]][0])) # error with large set of data...
-        outputLabel.append(L)
-    return outputLabel
+        xTemporaryLabel = str(xlabel[ np.where(xGrid == xRosa[j] - xCenterGrid)[0] ][0])
+        # print("xTemporaryLabel", xTemporaryLabel)
+        yTemporaryLabel = str(ylabel[ np.where(yGrid == yRosa[j] - yCenterGrid)[0] ][0])# error with large set of data... because of yRosa
+        # print("yTemporaryLabel", yTemporaryLabel)
+        temporaryLabel = str(xTemporaryLabel + yTemporaryLabel)
+        # probably can't find the shift cause too blurry...
+        outputLabels.append(temporaryLabel)
+    return outputLabels
 
 
-def oldDefineGrid(Image) -> tuple:
+def defineGrid(Image) -> tuple:
     temp = np.zeros(Image.shape)
     temp[np.where(Image >= np.mean(Image)*1.9)] = 1
     kernel = np.ones((5,5), np.uint8)
@@ -326,21 +331,6 @@ def oldDefineGrid(Image) -> tuple:
     rightToLeftCenter = int((np.max(nonZero[1]) + np.min(nonZero[1]))/2)
     length = int((np.min([upToDown, rightToLeft]))/2)
     return rightToLeftCenter, upToDownCenter, length
-    # return xCenterGrid, yCenterGrid, length
-
-
-def defineGrid(Image) -> tuple:
-    temp = np.zeros(Image.shape)
-    temp[np.where(Image >= np.mean(Image)*1.9)] = 1
-    openingKernel = np.ones((5,5), np.uint8)
-    smoothedFirstImage = cv2.morphologyEx(temp[0,:,:], cv2.MORPH_OPEN, openingKernel) # to reduce noise
-    nonZeroIndexes = np.nonzero(smoothedFirstImage)
-    upToDown = np.max(nonZeroIndexes[0]) - np.min(nonZeroIndexes[0]) # height?
-    rightToLeft = np.max(nonZeroIndexes[1]) - np.min(nonZeroIndexes[1]) # width?
-    verticalCenterOfGrid = int(((np.max(nonZeroIndexes[0]) + np.min(nonZeroIndexes[0]))/2) - (upToDown-rightToLeft))
-    horizontalCenterOfGrid = int((np.max(nonZeroIndexes[1]) + np.min(nonZeroIndexes[1]))/2)
-    length = int((np.min([upToDown, rightToLeft]))/2)
-    return horizontalCenterOfGrid, verticalCenterOfGrid, length
     # return xCenterGrid, yCenterGrid, length
 
 

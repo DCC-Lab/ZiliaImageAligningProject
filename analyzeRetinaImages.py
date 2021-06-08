@@ -11,7 +11,7 @@ first picture, and the shift for the subsequent pictures.
 
 # Import image as grayscale
 # Reduce image size by some factor
-# Apply gamma correction to accentuate contrasts
+# Apply gamma correction to accentuate contrasts (handle IndexError!!!)
 # Apply Otsu's threshold
 # Turn the image into a binary image
 # Apply a canny filter

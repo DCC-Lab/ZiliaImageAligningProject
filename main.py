@@ -9,7 +9,7 @@ from processImages import *
 # collectionDir = r"./tests/TestImages/rightEyeSampleOldData"
 
 # New data:
-collectionDir = r"./tests/TestImages/miniTestSampleNewData"
+# collectionDir = r"./tests/TestImages/miniTestSampleNewData"
 
 # More new data that looks half decent...:
 # collectionDir = r"E:\Baseline3\Kenya\20210316-144549-kenya-os-onh-rlp6-20210525T141349Z-001\20210316-144549-kenya-os-onh-rlp6"
@@ -21,7 +21,10 @@ collectionDir = r"./tests/TestImages/miniTestSampleNewData"
 # collectionDir = r"C:\Users\elm77\OneDrive\Documents\ULaval\2021_2_Ete\CERVO\Projet\code\sampleFromBaseline3"
 
 # 521 files:
-# collectionDir = r"C:\Users\elm77\OneDrive\Documents\ULaval\2021_2_Ete\CERVO\Projet\code\20210316-144549-kenya-os-onh-rlp6"
+collectionDir = r"C:\Users\elm77\OneDrive\Documents\ULaval\2021_2_Ete\CERVO\Projet\code\20210316-144549-kenya-os-onh-rlp6"
+
+# Broken test dir:
+# collectionDir = r"C:\Users\elm77\OneDrive\Documents\ULaval\2021_2_Ete\CERVO\Projet\code\brokenTest"
 
 
 
@@ -55,7 +58,7 @@ shiftParameters = applyShift(xLaser, yLaser, indexShift)
 # xCenterGrid, yCenterGrid, length = defineGrid(image)
 gridParameters = defineGrid(image)
 
-# Label = placeRosa(gridParameters, shiftParameters)
+Label = placeRosa(gridParameters, shiftParameters)
 
 plotResult(image, shiftParameters, gridParameters)
 
