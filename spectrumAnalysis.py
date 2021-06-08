@@ -3,8 +3,6 @@ import numpy as np
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
 from scipy.optimize import nnls
-from fnnls import fnnls
-import matplotlib.pyplot as plt
 
 # global variables for cropping wavelength
 lowerLimit=510
@@ -108,26 +106,9 @@ def absorbanceSpectrum(refSpec,normalizedSpec):
     for i in range(normalizedSpec.wavelength.shape[0]):
         ModifiedData[i,:] = refSpec.data[find_nearest(refSpec.wavelength, normalizedSpec.wavelength[i])]
     ModifiedSpec=spectrum()
-    # print(normalizedSpec.data)
-    # print(ModifiedData.shape)
-    # print(normalizedSpec.data.shape)
-    # ModifiedSpec.data = np.log(ModifiedData / normalizedSpec.data)
-    # plt.imshow(normalizedSpec.data)
-    # plt.title('before')
-    # plt.show()
     normalizedSpec.data[normalizedSpec.data==0]=0.0001
-    # plt.imshow(normalizedSpec.data)
-    # plt.title('after')
-    # plt.show()
-    # plt.imshow(ModifiedData)
-    # plt.title('ModifiedData Ref')
-    # plt.show()
     ModifiedSpec.data=np.log(np.divide(ModifiedData, normalizedSpec.data, out=None, where=True, casting= 'same_kind',
                                 order = 'K', dtype = None))
-    plt.imshow(ModifiedSpec.data)
-    plt.show()
-    print(ModifiedSpec.data)
-
     ModifiedSpec.wavelength = normalizedSpec.wavelength
     return ModifiedSpec
 
@@ -170,75 +151,27 @@ def componentsToArray(components):
     variables = np.vstack([variables, components["oxyhemoglobin"]])
     variables = np.vstack([variables, components["deoxyhemoglobin"]])
     variables = np.vstack([variables, components["melanin"]])
-    print('mela', components["melanin"].shape)
     variables = np.vstack([variables, components["scattering"]])
-    print('scat', components["scattering"].shape)
-    print('ref', components["reflection"].shape)
     variables = np.vstack([variables, components["reflection"]])
 
     return variables
 
-from sklearn.linear_model import LinearRegression
-
-# reg_nnls = LinearRegression(positive=True)
-# y_pred_nnls = reg_nnls.fit(X_train, y_train).predict(X_test)
-# r2_score_nnls = r2_score(y_test, y_pred_nnls)
-# print("NNLS R2 score", r2_score_nnls)
-
 def getCoef(absorbance,variables):
     allCoef=np.zeros([absorbance.data.shape[1],variables.shape[0]])
-    print('variable', variables.shape)
     for i in range(absorbance.data.shape[1]):
         coef=nnls(variables.T,absorbance.data[:,i],maxiter=2000 )
 
         allCoef[i,:]=coef[0]
-
-        print(allCoef)
-        print(allCoef.shape)
-    return
+    return allCoef
 
 
-
-a=loadWhiteRef()
-b=loadDarkRef()
-c=loadSpectrum()
-d=normalizeSpectrum(c,b)
-e=absorbanceSpectrum(a,d)
-f=cropComponents(e)
-h=componentsToArray(f)
-# getCoef(f["deoxyhemoglobin"],h)
-getCoef(e,h)
-print(h.shape)
-
-
-
-# componentsCrop=cropComponents()
-# variables=componentsToArray(componentsCrop)
-# absorbance,wavelength=absorbanceSpectrum()
-# getCoef(absorbance,variables)
-
-
-# componentsWCropped=Components['wavelength'][np.where(np.logical_and(500<= wavelengthDark, wavelengthDark <= 600))]
-#
-#
-# darkRefCropped = dRef[np.where(np.logical_and(500<= wavelengthDark, wavelengthDark <= 600))]
-
-# components_spectra = {
-#             "wavelengths": wavelengths,
-#             "oxyhemoglobin": oxyhemoglobin,
-#             "deoxyhemoglobin": deoxyhemoglobin,
-#             "methemoglobi": methemoglobin,
-#             "carboxyhemoglobin": carboxyhemoglobin,
-#             "eumelanin": eumelanin,
-#             "yc1a": yc1a,
-#             "yc2a": yc2a
-
-
-# components=loadComponentesSpectra()
-# wRef, wRefWavelength=loadWhiteRef()
-# # print(wRef)
-# a,w=normalizeSpec()
-# print(a.shape)
-# print(a)
-# print(w.shape)
-
+def mainAnalysis ():
+    whiteRef=loadWhiteRef()
+    darkRef=loadDarkRef()
+    spectrums=loadSpectrum()
+    normalizedSpectrum=normalizeSpectrum(spectrums,darkRef)
+    absorbance=absorbanceSpectrum(whiteRef,normalizedSpectrum)
+    croppedComponent=cropComponents(absorbance)
+    features=componentsToArray(croppedComponent)
+    concentration=getCoef(absorbance,features)
+    return concentration
