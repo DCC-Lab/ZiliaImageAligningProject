@@ -308,12 +308,26 @@ def placeRosa(gridParameters, shiftParameters) -> list:
     for y in range(yLabel.shape[0]):
         ylabel[y*length:(y+1)*length] = yLabel[y]
     outputLabels = []
+    # Troubleshooting:
+    # print("xGridShape == ", xGrid.shape)
+    # print("xGrid == ", xGrid)
+    # print("xlabel == ", xlabel)
+    # print("yGridShape == ", yGrid.shape)
+    # print("yGrid == ", yGrid)
+    # print("ylabel == ", ylabel)
+    # print("xlabel.shape", xlabel.shape)
+    # print("ylabel.shape", ylabel.shape)
+
     for j in range(xRosa.shape[0]):
         # xTemporaryLabel = str(xlabel[ np.where(xGrid == xRosa[j] - xCenterGrid)[0] ][0])
         xTemporaryLabel = str(xlabel[ np.where(xGrid == xRosa[j] - xCenterGrid)[0] ])
+        # print("whereX == ", np.where(xGrid == xRosa[j] - xCenterGrid)[0])
+        # print("xRosa[j], xCenterGrid, xRosa[j] - xCenterGrid", xRosa[j], xCenterGrid, xRosa[j] - xCenterGrid)
         # print("xTemporaryLabel", xTemporaryLabel)
         # yTemporaryLabel = str(ylabel[ np.where(yGrid == yRosa[j] - yCenterGrid)[0] ][0])# error with large set of data... because some elements are empty lists
         yTemporaryLabel = str(ylabel[ np.where(yGrid == yRosa[j] - yCenterGrid)[0] ])
+        # print("whereY == ", np.where(yGrid == yRosa[j] - yCenterGrid)[0])
+        # print("yRosa[j], yCenterGrid, yRosa[j] - yCenterGrid", yRosa[j], yCenterGrid, yRosa[j] - yCenterGrid)
         # print("yTemporaryLabel", yTemporaryLabel)
         temporaryLabel = str(xTemporaryLabel + yTemporaryLabel)
         # probably can't find the shift cause too blurry...
