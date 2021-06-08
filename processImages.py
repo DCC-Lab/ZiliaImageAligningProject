@@ -320,17 +320,18 @@ def placeRosa(gridParameters, shiftParameters) -> list:
 
 
 def defineGrid(Image) -> tuple:
+    # onh = optic nerve head
     temp = np.zeros(Image.shape)
     temp[np.where(Image >= np.mean(Image)*1.9)] = 1
     kernel = np.ones((5,5), np.uint8)
     openingTemp = cv2.morphologyEx(temp[0,:,:], cv2.MORPH_OPEN, kernel) # to reduce noise
     nonZero = np.nonzero(openingTemp)
-    upToDown = np.max(nonZero[0]) - np.min(nonZero[0]) # height?
-    rightToLeft = np.max(nonZero[1]) - np.min(nonZero[1]) # width?
-    upToDownCenter = int(((np.max(nonZero[0]) + np.min(nonZero[0]))/2) - (upToDown-rightToLeft))
-    rightToLeftCenter = int((np.max(nonZero[1]) + np.min(nonZero[1]))/2)
-    length = int((np.min([upToDown, rightToLeft]))/2)
-    return rightToLeftCenter, upToDownCenter, length
+    onhHeight = np.max(nonZero[0]) - np.min(nonZero[0])
+    onhWidth = np.max(nonZero[1]) - np.min(nonZero[1])
+    onhCenterVerticalCoords = int(((np.max(nonZero[0]) + np.min(nonZero[0]))/2) - (onhHeight-onhWidth))
+    onhCenterHorizontalCoords = int((np.max(nonZero[1]) + np.min(nonZero[1]))/2)
+    length = int((np.min([onhHeight, onhWidth]))/2)
+    return onhCenterHorizontalCoords, onhCenterVerticalCoords, length
     # return xCenterGrid, yCenterGrid, length
 
 
