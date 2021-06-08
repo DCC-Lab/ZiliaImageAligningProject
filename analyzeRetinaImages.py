@@ -12,8 +12,8 @@ first picture, and the shift for the subsequent pictures.
 # Import image as grayscale
 # Reduce image size by some factor
 # Apply gamma correction to accentuate contrasts (handle IndexError!!!)
-# Apply Otsu's threshold
-# Turn the image into a binary image
+# Find Otsu's threshold
+# Turn the image into a binary image according to the threshold
 # Apply a canny filter
 # Apply an elliptical Hough transform
 # Get the best ellipse parameters for the small picture

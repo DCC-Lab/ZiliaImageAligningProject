@@ -265,8 +265,6 @@ def findImageShift(Image: np.ndarray, Margin=250, N=100) -> np.ndarray:
             indexShift = np.vstack((indexShift, np.array(ind) - np.array([a.shape[1]/2, a.shape[2]/2])))
             totalShift = np.vstack((totalShift, np.sum(indexShift, axis=0)))
     return totalShift
-    # return totalShift[1:,:]
-    # return totalShift[:-1,:]
 
 
 def applyShift(xLaser: np.ndarray, yLaser:np.ndarray, shift:np.ndarray) -> tuple:
