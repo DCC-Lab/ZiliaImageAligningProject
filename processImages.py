@@ -128,7 +128,7 @@ def seperateImages(grayImageCollection, collectionDir: str, extension="jpg"):
     return imageDataDictionary
 
 
-def listNameOfFiles(directory: str, extension="jpg") -> list:
+def listFileNames(directory: str, extension="jpg") -> list:
     foundFiles = []
     for file in os.listdir(directory):
         if fnmatch.fnmatch(file, f'*.{extension}'):
@@ -137,7 +137,7 @@ def listNameOfFiles(directory: str, extension="jpg") -> list:
 
 
 def getFilesToExclude(directory: str, extension="jpg") -> list:
-    listOfFiles = listNameOfFiles(directory, extension)
+    listOfFiles = listFileNames(directory, extension)
     filesToExclude = []
     for fileName in listOfFiles:
         name = fileName.lower()
@@ -148,7 +148,7 @@ def getFilesToExclude(directory: str, extension="jpg") -> list:
 
 
 def getFilesToInclude(directory: str, extension="jpg"):
-    setOfFiles = set(listNameOfFiles(directory, extension=extension))
+    setOfFiles = set(listFileNames(directory, extension=extension))
     setOfFilesToExclude = set(getFilesToExclude(directory, extension=extension))
     listOfFilesToInclude = list( setOfFiles - setOfFilesToExclude )
     return listOfFilesToInclude
@@ -159,6 +159,18 @@ def getFilePaths(directory: str, fileNames: list) -> list:
     for fileName in fileNames:
         filesWithFullPath.append(directory+"/"+fileName)
     return filesWithFullPath
+
+
+def getFiles(directory: str, extension="jpg") -> list:
+    sortedListOfFiles = np.sort(listFileNames(directory, extension))
+    filteredFiles = []
+    for fileIndex in range(len(sortedListOfFiles)):
+        if (fileIndex + 2) % 3 == 0:
+            # to exclude files with retina and rosa circle
+            continue
+        else:
+            filteredFiles.append(directory+"/"+sortedListOfFiles[fileIndex])
+    return filteredFiles
 
 
 def loadImages(collectionDir: str, leftEye=False, extension="jpg") -> np.ndarray:
