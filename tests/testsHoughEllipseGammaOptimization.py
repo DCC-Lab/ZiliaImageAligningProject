@@ -116,10 +116,11 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     @envtest.skip("Skip plots")
     def testKenyaLow(self):
         fileName = "kenyaLow.jpg"
-        scaleFactor = 5
+        scaleFactor = 3
         smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True)
         self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
         # Never works well (bad picture, really...), but best with 0 <= gamma <= 1.
+        # WAIITTTT works much better with a scale factor of 3!!!
 
     @envtest.skip("Skip plots")
     def testKenyaMedium(self):
