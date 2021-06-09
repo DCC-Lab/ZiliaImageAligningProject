@@ -92,7 +92,7 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     def testBresilMedium(self):
         fileName = "bresilMedium.jpg"
         scaleFactor = 5
-        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True, gamma=2)
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True, gamma=1)
         self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
         # Works only with gamma = 1 or 0, else it raises an error or gives
         # something disgusting!!!
@@ -119,7 +119,7 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
         scaleFactor = 5
         smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True)
         self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
-        # Never works well (bad picture, really...), but best with 0 <= gamme <= 1.
+        # Never works well (bad picture, really...), but best with 0 <= gamma <= 1.
 
     @envtest.skip("Skip plots")
     def testKenyaMedium(self):
@@ -127,7 +127,7 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
         scaleFactor = 5
         smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True, gamma=1)
         self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
-        # Works well with 0 <= gamme <= 1.
+        # Works well with 0 <= gamma <= 1.
 
     @envtest.skip("Skip plots")
     def testRwandaHigh(self):
