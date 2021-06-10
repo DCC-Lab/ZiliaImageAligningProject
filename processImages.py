@@ -128,7 +128,7 @@ def seperateImages(grayImageCollection, collectionDir: str, extension="jpg") -> 
     return imageDataDictionary
 
 
-def listNameOfFiles(directory: str, extension="jpg") -> list:
+def listFileNames(directory: str, extension="jpg") -> list:
     foundFiles = []
     for file in os.listdir(directory):
         if fnmatch.fnmatch(file, f'*.{extension}'):
@@ -136,15 +136,20 @@ def listNameOfFiles(directory: str, extension="jpg") -> list:
     return foundFiles
 
 
-def getFilesToExclude(directory: str, extension="jpg") -> list:
-    listOfFiles = listNameOfFiles(directory, extension)
-    filesToExclude = []
-    for fileName in listOfFiles:
-        name = fileName.lower()
-        if "eye" in name:
-            if "rosa" in name:
-                filesToExclude.append(fileName)
-    return filesToExclude
+def getFiles(directory: str, extension="jpg", newImages=True) -> list:
+    sortedListOfFiles = np.sort(listFileNames(directory, extension))
+    filteredFiles = []
+    for fileIndex in range(len(sortedListOfFiles)):
+        if (fileIndex + 3) % 3 == 0:
+            if newImages:
+                # to exclude files with retina and rosa circle at the same time
+                continue
+            else:
+                # no file has to be removed
+                filteredFiles.append(directory+"/"+sortedListOfFiles[fileIndex])
+        else:
+            filteredFiles.append(directory+"/"+sortedListOfFiles[fileIndex])
+    return filteredFiles
 
 
 def getFilesToInclude(directory: str, extension="jpg") -> list:
@@ -161,21 +166,20 @@ def getFilePaths(directory: str, fileNames: list) -> list:
     return filesWithFullPath
 
 
-def loadImages(collectionDir: str, leftEye=False, extension="jpg") -> np.ndarray:
+def loadImages(collectionDir: str, leftEye=False, extension="jpg", newImages=True) -> np.ndarray:
     """
     This function gets the directory of a series of images
     Blue channel of the image = 0
     Output is a series of grayscale images
     """
-    fileNamesToLoad = getFilesToInclude(collectionDir, extension=extension)
-    filePathsToLoad = getFilePaths(collectionDir, fileNamesToLoad)
-    imageCollection = imread_collection(filePathsToLoad)# imports as RGB image
+    files = getFiles(collectionDir, extension=extension, newImages=newImages)
+    imageCollection = imread_collection(files)# imports as RGB image
     if leftEye:
         temporaryCollection = []
         for image in imageCollection:
             temporaryCollection.append(mirrorImage(image))
         imageCollection = np.array(temporaryCollection)
-    grayImage = np.zeros((len(imageCollection), imageCollection[0].shape[0],imageCollection[0].shape[1]))
+    grayImage = np.zeros((len(imageCollection), imageCollection[0].shape[0], imageCollection[0].shape[1]))
     for i in range(len(imageCollection)):
         imageCollection[i][:,:,2] = 0
         grayImage[i,:,:] = rgb2gray(imageCollection[i])
@@ -201,14 +205,17 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg") 
     radius = np.array([])
     imageNumber = np.array([])
 
-    listOfImages = getFilesToInclude(collectionDir, extension=extension)
-    listOfImagePaths = getFilePaths(collectionDir, listOfImages)
-    sortedPaths = np.sort(listOfImagePaths)
-    sortedFileNames = np.sort(listOfImages)
+    files = getFiles(collectionDir, extension=extension, newImages=True)
+# =======
+#     listOfImages = getFilesToInclude(collectionDir, extension=extension)
+#     listOfImagePaths = getFilePaths(collectionDir, listOfImages)
+#     sortedPaths = np.sort(listOfImagePaths)
+#     sortedFileNames = np.sort(listOfImages)
+# >>>>>>> master
     # first pic = eye, 2nd pic = rosa, because sorted alphabetically
     for i in range(1, grayImageCollection.shape[0]):
-        if "eye" in sortedPaths[i-1]:
-            loadLaserImage = sortedPaths[i]
+        if "eye" in files[i-1]:
+            loadLaserImage = files[i]
             blob = analyzeRosa(loadLaserImage)
             if (blob['found'] == True):
                 numberOfRosaImages += 1
