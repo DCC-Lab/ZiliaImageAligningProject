@@ -8,7 +8,7 @@ from scipy.optimize import nnls
 lowerLimit=510
 upperLimit=590
 
-class spectrum:
+class Spectrum:
     data=np.array([])
     wavelength=np.array([])
 
@@ -39,7 +39,7 @@ def loadComponentesSpectra():
 
 def cropFunction(Spec):
     """crop the spectrum between lower limit and upper limit"""
-    croppedSpectrum = spectrum()
+    croppedSpectrum = Spectrum()
     croppedSpectrum.wavelength = Spec.wavelength[
         np.where(np.logical_and(lowerLimit <= Spec.wavelength, Spec.wavelength <= upperLimit))]
     croppedSpectrum.data = Spec.data[
@@ -55,21 +55,21 @@ def loadWhiteRef(referenceNameNothinInfront='int75_LEDON_nothingInFront.csv',
                  whiteReferenceName = 'int75_WHITEREFERENCE.csv',
                  skipRowsNothing=23, skipRowsWhite=23):
     ''' returns cropped (between 500 to 600) white reference and the wavelength'''
-    RefNothingInfront = pd.read_csv (referenceNameNothinInfront,sep=',',skiprows=skipRowsNothing).to_numpy()
-    RefWhite = pd.read_csv(whiteReferenceName,sep=',',skiprows=skipRowsWhite).to_numpy()
-    refSpectrum = spectrum()
-    refSpectrum.wavelength = RefWhite[:,1]
-    refSpectrum.data = np.mean(RefWhite[:,4:],axis=1)-np.mean(RefNothingInfront[:,4:],axis=1)
+    refNothingInfront = pd.read_csv (referenceNameNothinInfront,sep=',',skiprows=skipRowsNothing).to_numpy()
+    refWhite = pd.read_csv(whiteReferenceName,sep=',',skiprows=skipRowsWhite).to_numpy()
+    refSpectrum = Spectrum()
+    refSpectrum.wavelength = refWhite[:,1]
+    refSpectrum.data = np.mean(refWhite[:,4:],axis=1)-np.mean(refNothingInfront[:,4:],axis=1)
     croppedRef=cropFunction(refSpectrum)
-    RefCroppedNormalized=normalizeRef(croppedRef)
-    return RefCroppedNormalized
+    refCroppedNormalized=normalizeRef(croppedRef)
+    return refCroppedNormalized
 
 def loadDarkRef(skipRows=4):
     ''' returns cropped (between 500 to 600) dark reference and the wavelength'''
     filetypes = [("csv files", "*.csv")]
     csv_file_path = askopenfilename(title="select the dark reference .csv file",filetypes=filetypes)
     darkRef = pd.read_csv(csv_file_path, sep=',', skiprows=skipRows).to_numpy()
-    darkRefSpec=spectrum()
+    darkRefSpec=Spectrum()
     darkRefSpec.data = np.mean(darkRef[:,3:],axis=1)
     darkRefSpec.wavelength = darkRef[:,0]
     croppedDarkRef=cropFunction(darkRefSpec)
@@ -80,7 +80,7 @@ def loadSpectrum(skipRows=4):
     filetypes = [("csv files", "*.csv")]
     csv_file_path = askopenfilename(title="select the spectrum .csv file", filetypes=filetypes)
     spectrumData = pd.read_csv(csv_file_path, sep=',', skiprows=skipRows).to_numpy()
-    spec = spectrum()
+    spec = Spectrum()
     spec.data = spectrumData[:, 3:]
     spec.wavelength = spectrumData[:, 0]
     croppedSpectrum = cropFunction(spec)
@@ -89,12 +89,12 @@ def loadSpectrum(skipRows=4):
 def normalizeSpectrum(spec,darkRef):
     """returns the normalized spectrum for the data"""
     dRefTile = np.tile(darkRef.data, (spec.data.shape[1], 1))
-    SpectrumData=spec.data-dRefTile.T
-    STDspectrum=np.std(SpectrumData,axis=1)
-    SpectrumDataNormalized = spectrum()
-    SpectrumDataNormalized.data = SpectrumData/STDspectrum[:,None]
-    SpectrumDataNormalized.wavelength = spec.wavelength
-    return SpectrumDataNormalized
+    spectrumData=spec.data-dRefTile.T
+    STDspectrum=np.std(spectrumData,axis=1)
+    spectrumDataNormalized = Spectrum()
+    spectrumDataNormalized.data = spectrumData/STDspectrum[:,None]
+    spectrumDataNormalized.wavelength = spec.wavelength
+    return spectrumDataNormalized
 
 def find_nearest(array, value):
     """find the nearest value to a value in an array and returns the index"""
@@ -104,15 +104,15 @@ def find_nearest(array, value):
 
 def absorbanceSpectrum(refSpec,normalizedSpec):
     """calculate the absorbance spectrum using white reference and normalized spectrum"""
-    ModifiedData = np.zeros(normalizedSpec.data.shape)
+    modifiedData = np.zeros(normalizedSpec.data.shape)
     for i in range(normalizedSpec.wavelength.shape[0]):
-        ModifiedData[i,:] = refSpec.data[find_nearest(refSpec.wavelength, normalizedSpec.wavelength[i])]
-    ModifiedSpec=spectrum()
+        modifiedData[i,:] = refSpec.data[find_nearest(refSpec.wavelength, normalizedSpec.wavelength[i])]
+    modifiedSpec=Spectrum()
     normalizedSpec.data[normalizedSpec.data==0]=0.0001
-    ModifiedSpec.data=np.log(np.divide(ModifiedData, normalizedSpec.data, out=None, where=True, casting= 'same_kind',
+    modifiedSpec.data=np.log(np.divide(modifiedData, normalizedSpec.data, out=None, where=True, casting= 'same_kind',
                                 order = 'K', dtype = None))
-    ModifiedSpec.wavelength = normalizedSpec.wavelength
-    return ModifiedSpec
+    modifiedSpec.wavelength = normalizedSpec.wavelength
+    return modifiedSpec
 
 
 
