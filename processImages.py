@@ -136,31 +136,6 @@ def listFileNames(directory: str, extension="jpg") -> list:
     return foundFiles
 
 
-def getFilesToExclude(directory: str, extension="jpg") -> list:
-    listOfFiles = listFileNames(directory, extension)
-    filesToExclude = []
-    for fileName in listOfFiles:
-        name = fileName.lower()
-        if "eye" in name:
-            if "rosa" in name:
-                filesToExclude.append(fileName)
-    return filesToExclude
-
-
-def getFilesToInclude(directory: str, extension="jpg"):
-    setOfFiles = set(listFileNames(directory, extension=extension))
-    setOfFilesToExclude = set(getFilesToExclude(directory, extension=extension))
-    listOfFilesToInclude = list( setOfFiles - setOfFilesToExclude )
-    return listOfFilesToInclude
-
-
-def getFilePaths(directory: str, fileNames: list) -> list:
-    filesWithFullPath = []
-    for fileName in fileNames:
-        filesWithFullPath.append(directory+"/"+fileName)
-    return filesWithFullPath
-
-
 def getFiles(directory: str, extension="jpg", newImages=True) -> list:
     sortedListOfFiles = np.sort(listFileNames(directory, extension))
     filteredFiles = []
@@ -183,15 +158,14 @@ def loadImages(collectionDir: str, leftEye=False, extension="jpg", newImages=Tru
     Blue channel of the image = 0
     Output is a series of grayscale images
     """
-    fileNamesToLoad = getFilesToInclude(collectionDir, extension=extension)
-    filePathsToLoad = getFilePaths(collectionDir, fileNamesToLoad)
-    imageCollection = imread_collection(filePathsToLoad)# imports as RGB image
+    files = getFiles(collectionDir, extension=extension, newImages=newImages)
+    imageCollection = imread_collection(files)# imports as RGB image
     if leftEye:
         temporaryCollection = []
         for image in imageCollection:
             temporaryCollection.append(mirrorImage(image))
         imageCollection = np.array(temporaryCollection)
-    grayImage = np.zeros((len(imageCollection), imageCollection[0].shape[0],imageCollection[0].shape[1]))
+    grayImage = np.zeros((len(imageCollection), imageCollection[0].shape[0], imageCollection[0].shape[1]))
     for i in range(len(imageCollection)):
         imageCollection[i][:,:,2] = 0
         grayImage[i,:,:] = rgb2gray(imageCollection[i])
@@ -217,13 +191,11 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
     radius = np.array([])
     imageNumber = np.array([])
 
-    listOfImages = getFilesToInclude(collectionDir, extension=extension)
-    listOfImagePaths = getFilePaths(collectionDir, listOfImages)
-    sortedPaths = np.sort(listOfImagePaths)
+    files = getFiles(collectionDir, extension=extension, newImages=True)
     # first pic = eye, 2nd pic = rosa, because sorted alphabetically
     for i in range(1, grayImageCollection.shape[0]):
-        if "eye" in sortedPaths[i-1]:
-            loadLaserImage = sortedPaths[i]
+        if "eye" in files[i-1]:
+            loadLaserImage = files[i]
             blob = analyzeRosa(loadLaserImage)
             if (blob['found'] == True):
                 numberOfRosaImages += 1
