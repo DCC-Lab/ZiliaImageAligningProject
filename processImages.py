@@ -16,17 +16,17 @@ import fnmatch
 import os
 
 
-def getCollectionDirectory():
-    collectionDir = askdirectory(title="Select the folder containing data")
-    return collectionDir
+# def getCollectionDirectory() -> str:
+#     collectionDir = askdirectory(title="Select the folder containing data")
+#     return collectionDir
 
 
-def mirrorImage(image):
+def mirrorImage(image) -> np.ndarray:
     mirroredImage = image[:,::-1,:]
     return mirroredImage
 
 
-def removeBadImages(dataDictionary):
+def removeBadImages(dataDictionary) -> dict:
     """
     Purpose: remove images with low contrast or blurry
     1- use laplacian filter to remove blury images
@@ -70,7 +70,7 @@ def removeBadImages(dataDictionary):
     return dataDictionary
 
 
-def seperateImages(grayImageCollection, collectionDir: str, extension="jpg"):
+def seperateImages(grayImageCollection, collectionDir: str, extension="jpg") -> dict:
     """
     Purpose: seperate retina images from rosa images
     Load retina image - then load the corresponding rosa image 
@@ -147,7 +147,7 @@ def getFilesToExclude(directory: str, extension="jpg") -> list:
     return filesToExclude
 
 
-def getFilesToInclude(directory: str, extension="jpg"):
+def getFilesToInclude(directory: str, extension="jpg") -> list:
     setOfFiles = set(listNameOfFiles(directory, extension=extension))
     setOfFilesToExclude = set(getFilesToExclude(directory, extension=extension))
     listOfFilesToInclude = list( setOfFiles - setOfFilesToExclude )
@@ -182,7 +182,7 @@ def loadImages(collectionDir: str, leftEye=False, extension="jpg") -> np.ndarray
     return grayImage
 
 
-def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
+def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg") -> dict:
     """
     Purpose: seperate new retina images from new rosa images
     Load retina image - then load the corresponding rosa image 
@@ -204,6 +204,7 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
     listOfImages = getFilesToInclude(collectionDir, extension=extension)
     listOfImagePaths = getFilePaths(collectionDir, listOfImages)
     sortedPaths = np.sort(listOfImagePaths)
+    sortedFileNames = np.sort(listOfImages)
     # first pic = eye, 2nd pic = rosa, because sorted alphabetically
     for i in range(1, grayImageCollection.shape[0]):
         if "eye" in sortedPaths[i-1]:
@@ -211,6 +212,7 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
             blob = analyzeRosa(loadLaserImage)
             if (blob['found'] == True):
                 numberOfRosaImages += 1
+                currentImageNumber = int(sortedFileNames[i][:3].lstrip("0"))
                 temp[0,:,:] = grayImageCollection[i-1,:,:] # retina
                 image = np.vstack((image, temp)) # retina
                 temp[0,:,:] = grayImageCollection[i,:,:] # rosa
@@ -219,7 +221,7 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg"):
                 xCenter = np.hstack((xCenter, int(blob['center']['x']*image.shape[2]))) # for the center of the rosa
                 yCenter = np.hstack((yCenter, int(blob['center']['y']*image.shape[1]))) # for the center of the rosa
                 radius = np.hstack((radius, int(blob['radius']*image.shape[1]))) # for the center of the rosa
-                imageNumber = np.hstack((imageNumber, int(i-1))) # it's a 1D array
+                imageNumber = np.hstack((imageNumber, currentImageNumber)) # it's a 1D array
     if numberOfRosaImages == 0:
         raise ImportError("No laser spot was found. Try with different data.")
     image = np.delete(image, 0, axis=0) # remove the first initialized empty matrix
@@ -263,18 +265,17 @@ def findImageShift(Image: np.ndarray, Margin=250, N=100) -> np.ndarray:
             indexShift = np.vstack((indexShift, np.array(ind) - np.array([a.shape[1]/2, a.shape[2]/2])))
             totalShift = np.vstack((totalShift, np.sum(indexShift, axis=0)))
     return totalShift
-    # return totalShift[1:,:]
-    # return totalShift[:-1,:]
 
 
-def applyShift(xLaser: np.ndarray, yLaser:np.ndarray, shift:np.ndarray):
+def applyShift(xLaser: np.ndarray, yLaser:np.ndarray, shift:np.ndarray) -> tuple:
     """
     Apply the shift value on the x and y of the rosa
     """
-    return (xLaser - shift[:,1]), (yLaser - shift[:,0])
+    totalShift = (xLaser - shift[:,1]), (yLaser - shift[:,0])
+    return totalShift
 
 
-def crossImage(im1, im2):
+def crossImage(im1, im2) -> np.ndarray:
     """
     Calculate the cross correlation between two images
     Get rid of the averages, otherwise the results are not good
@@ -283,10 +284,11 @@ def crossImage(im1, im2):
     """
     im1 -= np.mean(im1)
     im2 -= np.mean(im2)
-    return scipy.signal.fftconvolve(im1, im2[::-1,::-1], mode='same')
+    cross = scipy.signal.fftconvolve(im1, im2[::-1,::-1], mode='same')
+    return cross
 
 
-def placeRosa(gridParameters, shiftParameters):
+def placeRosa(gridParameters, shiftParameters) -> list:
     xCenterGrid = gridParameters[0]
     yCenterGrid = gridParameters[1]
     length = gridParameters[2]
@@ -303,43 +305,67 @@ def placeRosa(gridParameters, shiftParameters):
     ylabel = np.array( ["" for x in range(yGrid.shape[0])])
     for y in range(yLabel.shape[0]):
         ylabel[y*length:(y+1)*length] = yLabel[y]
-    outputLabel = []
+    outputLabels = []
+    # Troubleshooting:
+    # print("xGridShape == ", xGrid.shape)
+    # print("xGrid == ", xGrid)
+    # print("xlabel == ", xlabel)
+    # print("yGridShape == ", yGrid.shape)
+    # print("yGrid == ", yGrid)
+    # print("ylabel == ", ylabel)
+    # print("xlabel.shape", xlabel.shape)
+    # print("ylabel.shape", ylabel.shape)
+
     for j in range(xRosa.shape[0]):
-        L = str(str(xlabel[(np.where(xGrid == xRosa[j] - xCenterGrid))[0]][0]) +
-                       str(ylabel[(np.where(yGrid == yRosa[j] - yCenterGrid))[0]][0]))
-        outputLabel.append(L)
-    return outputLabel
+        # xTemporaryLabel = str(xlabel[ np.where(xGrid == xRosa[j] - xCenterGrid)[0] ][0])
+        xTemporaryLabel = str(xlabel[ np.where(xGrid == xRosa[j] - xCenterGrid)[0] ])
+        # print("whereX == ", np.where(xGrid == xRosa[j] - xCenterGrid)[0])
+        # print("xRosa[j], xCenterGrid, xRosa[j] - xCenterGrid", xRosa[j], xCenterGrid, xRosa[j] - xCenterGrid)
+        # print("xTemporaryLabel", xTemporaryLabel)
+        # yTemporaryLabel = str(ylabel[ np.where(yGrid == yRosa[j] - yCenterGrid)[0] ][0])# error with large set of data... because some elements are empty lists
+        yTemporaryLabel = str(ylabel[ np.where(yGrid == yRosa[j] - yCenterGrid)[0] ])
+        # print("whereY == ", np.where(yGrid == yRosa[j] - yCenterGrid)[0])
+        # print("yRosa[j], yCenterGrid, yRosa[j] - yCenterGrid", yRosa[j], yCenterGrid, yRosa[j] - yCenterGrid)
+        # print("yTemporaryLabel", yTemporaryLabel)
+        temporaryLabel = str(xTemporaryLabel + yTemporaryLabel)
+        # probably can't find the shift cause too blurry...
+        outputLabels.append(temporaryLabel)
+    return outputLabels
 
 
-def defineGrid(Image):
+def defineGrid(Image) -> tuple:
+    # onh = optic nerve head
     temp = np.zeros(Image.shape)
     temp[np.where(Image >= np.mean(Image)*1.9)] = 1
     kernel = np.ones((5,5), np.uint8)
-    openingTemp = cv2.morphologyEx(temp[0,:,:], cv2.MORPH_OPEN, kernel)
+    openingTemp = cv2.morphologyEx(temp[0,:,:], cv2.MORPH_OPEN, kernel) # to reduce noise
     nonZero = np.nonzero(openingTemp)
-    upToDown = np.max(nonZero[0]) - np.min(nonZero[0])
-    rightToLeft = np.max(nonZero[1]) - np.min(nonZero[1])
-    upToDownCenter = int(((np.max(nonZero[0]) + np.min(nonZero[0]))/2) - (upToDown-rightToLeft))
-    rightToLeftCenter = int((np.max(nonZero[1]) + np.min(nonZero[1]))/2)
-    length = int((np.min([upToDown, rightToLeft]))/2)
-    return rightToLeftCenter, upToDownCenter, length
+    onhHeight = np.max(nonZero[0]) - np.min(nonZero[0])
+    onhWidth = np.max(nonZero[1]) - np.min(nonZero[1])
+    onhCenterVerticalCoords = int(((np.max(nonZero[0]) + np.min(nonZero[0]))/2) - (onhHeight-onhWidth))
+    onhCenterHorizontalCoords = int((np.max(nonZero[1]) + np.min(nonZero[1]))/2)
+    length = int((np.min([onhHeight, onhWidth]))/2)
+    return onhCenterHorizontalCoords, onhCenterVerticalCoords, length
+    # return xCenterGrid, yCenterGrid, length
 
 
-def plotResult (Image, shiftParameters, gridParameters):
+def oldPlotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None:
+    pyplot.imsave("preResult1.jpg", Image[0,:,:])
     xCenterGrid = gridParameters[0]
     yCenterGrid = gridParameters[1]
     length = gridParameters[2]
     xRosa = shiftParameters[0]
     yRosa = shiftParameters[1]
+
     for j in range(Image.shape[0]):
-        window_name = 'Image'
         centerCoordinates = (int(xRosa[j]), int(yRosa[j]))
-        radius = 30
         color = (0, 255, 0)
         thickness = 5
-        image = cv2.circle(Image[0,:,:], centerCoordinates, radius, color, thickness)
-        left = np.max([xCenterGrid - (length*5), 0])
+        image = cv2.circle(Image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
 
+    left = np.max([xCenterGrid - (length*5), 0])
+
+    pyplot.imsave("preResult2.jpg", image)
     up = np.max([yCenterGrid - (length*5), 0])
     right = np.min([(5*length), (Image.shape[1] - xCenterGrid)]) + xCenterGrid
     down = right = np.min([(5*length), (Image.shape[2] - yCenterGrid)]) + yCenterGrid
@@ -354,6 +380,7 @@ def plotResult (Image, shiftParameters, gridParameters):
     HIGH_SLICE_X = ((5*length) + (temp.shape[1] - xNewCenter))
     # Slicing:
     gridImage[LOW_SLICE_Y:HIGH_SLICE_Y, LOW_SLICE_X:HIGH_SLICE_X] = temp
+    pyplot.imsave("preResult3.jpg", gridImage)
 
     plt.figure()
     img = gridImage.copy()
@@ -364,5 +391,59 @@ def plotResult (Image, shiftParameters, gridParameters):
     img[:,::dy] = gridColor
     img[::dx,:] = gridColor
 
-    # plt.imshow(img)
     pyplot.imsave('Result.jpg', img)
+
+
+def plotResult(image, shiftParameters, gridParameters, rosaRadius=30, thickness=5) -> None:
+    # pyplot.imsave("preResult1.jpg", image[0,:,:])
+    # imageWithCircles = drawRosaCircles(image, shiftParameters, rosaRadius=rosaRadius, thickness=thickness)
+    drawRosaCircles(image, shiftParameters, rosaRadius=rosaRadius, thickness=thickness)
+    # pyplot.imsave("preResult2.jpg", imageWithCircles)
+    rescaledImage = rescaleImage(image, gridParameters)
+    # pyplot.imsave("preResult3.jpg", rescaledImage)
+    rescaledImageWithGrid = drawGrid(rescaledImage, gridParameters)
+    pyplot.imsave('Result.jpg', rescaledImageWithGrid)
+
+
+def drawRosaCircles(image, shiftParameters, rosaRadius=30, thickness=5, color=(0, 255, 0)):
+    xRosa = shiftParameters[0]
+    yRosa = shiftParameters[1]
+    for j in range(image.shape[0]):
+        centerCoordinates = (int(xRosa[j]), int(yRosa[j]))
+        cv2.circle(image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
+
+
+def rescaleImage(image, gridParameters):
+    xCenterGrid = gridParameters[0]# int
+    yCenterGrid = gridParameters[1]# int
+    length = gridParameters[2]# int
+
+    left = np.max([xCenterGrid - (length*5), 0])
+
+    up = np.max([yCenterGrid - (length*5), 0])
+    right = np.min([(5*length), (image.shape[1] - xCenterGrid)]) + xCenterGrid
+    down = right = np.min([(5*length), (image.shape[2] - yCenterGrid)]) + yCenterGrid
+    temp = image[0,up:down, left:right]
+    xNewCenter = xCenterGrid - left
+    yNewCenter = yCenterGrid - up
+    gridImage = np.zeros([length*10, length*10])
+    # Set slicing limits:
+    LOW_SLICE_Y = ((5*length) - yNewCenter)
+    HIGH_SLICE_Y = ((5*length) + (temp.shape[0] - yNewCenter))
+    LOW_SLICE_X = ((5*length) - xNewCenter)
+    HIGH_SLICE_X = ((5*length) + (temp.shape[1] - xNewCenter))
+    # Slicing:
+    gridImage[LOW_SLICE_Y:HIGH_SLICE_Y, LOW_SLICE_X:HIGH_SLICE_X] = temp
+
+    return gridImage
+
+
+def drawGrid(image, gridParameters):
+    length = gridParameters[2]
+    dx, dy = length, length
+    # Custom (rgb) grid color:
+    gridColor = 0
+    # Modify the image to include the grid
+    image[:,::dy] = gridColor
+    image[::dx,:] = gridColor
+    return image

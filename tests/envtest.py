@@ -28,8 +28,24 @@ class ZiliaTestCase(unittest.TestCase):
         return ZiliaTestCase.testFilesRootDirectory + r"/miniTestSampleNewData"
 
     @property
-    def testSmallFilesDirectory (self):
+    def testSmallFilesDirectory(self):
         return ZiliaTestCase.testFilesRootDirectory + r"/smallFiles"
+
+    @property
+    def testCV2CircleDirectory(self):
+        return ZiliaTestCase.testFilesRootDirectory + r"/testsCV2Circle"
+
+    @property
+    def testMirrorImageDirectory(self):
+        return ZiliaTestCase.testFilesRootDirectory + r"/testMirrorImage"
+
+    @property
+    def testAlignmentDirectory(self):
+        return ZiliaTestCase.testFilesRootDirectory + r"/testAlignment"
+
+    @property
+    def testCannyDirectory(self):
+        return ZiliaTestCase.testFilesRootDirectory + r"/testCanny"
 
     def __init__(self, tests=()):
         super(ZiliaTestCase, self).__init__(tests)

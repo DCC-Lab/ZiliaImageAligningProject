@@ -37,7 +37,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ConnectedComponents:
-    def __init__(self):
+    def __init__(self, binaryImage):
+        self.binaryImage = binaryImage
         self.centroidList = []
         self.radiusList = []
         self.areaList = []
@@ -45,8 +46,8 @@ class ConnectedComponents:
         self.minorAxisList = []
         self.contour = []
 
-    def getPropertiesConnectedComponent(self, binaryImage, minLength=4, minArea=15):
-        contours = self.getContoursConnectedComponent(binaryImage)
+    def getPropertiesConnectedComponent(self, minLength=4, minArea=15):
+        contours = self.getContoursConnectedComponent(self.binaryImage)
         self.filterConnectedComponents(contours, minLength, minArea)
 
     def getContoursConnectedComponent(self, binaryImage):
@@ -89,8 +90,8 @@ def extractGrayMapFromRedChannel(image):
 def analyzeBinaryImageForRosa(binaryImage, eccentricityCriteria=0.7, R_75_um=30/2048, R_300_um=100/2048):
     in_img_size = binaryImage.shape
 
-    cc = ConnectedComponents()
-    cc.getPropertiesConnectedComponent(binaryImage)
+    cc = ConnectedComponents(binaryImage)
+    cc.getPropertiesConnectedComponent()
     if len(cc.areaList) >= 15:
         return False, 0, 0, 0
 
