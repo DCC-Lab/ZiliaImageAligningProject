@@ -161,19 +161,23 @@ def getFilePaths(directory: str, fileNames: list) -> list:
     return filesWithFullPath
 
 
-def getFiles(directory: str, extension="jpg") -> list:
+def getFiles(directory: str, extension="jpg", newImages=True) -> list:
     sortedListOfFiles = np.sort(listFileNames(directory, extension))
     filteredFiles = []
     for fileIndex in range(len(sortedListOfFiles)):
-        if (fileIndex + 2) % 3 == 0:
-            # to exclude files with retina and rosa circle
-            continue
+        if (fileIndex + 3) % 3 == 0:
+            if newImages:
+                # to exclude files with retina and rosa circle at the same time
+                continue
+            else:
+                # no file has to be removed
+                filteredFiles.append(directory+"/"+sortedListOfFiles[fileIndex])
         else:
             filteredFiles.append(directory+"/"+sortedListOfFiles[fileIndex])
     return filteredFiles
 
 
-def loadImages(collectionDir: str, leftEye=False, extension="jpg") -> np.ndarray:
+def loadImages(collectionDir: str, leftEye=False, extension="jpg", newImages=True) -> np.ndarray:
     """
     This function gets the directory of a series of images
     Blue channel of the image = 0

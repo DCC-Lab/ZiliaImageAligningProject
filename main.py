@@ -12,6 +12,7 @@ from processImages import *
 collectionDir = r"./tests/TestImages/miniTestSampleNewData"
 
 leftEye = False
+newImages = True
 
 # To eventually implement with a tkinter interface.
 # while True:
@@ -24,7 +25,7 @@ leftEye = False
 #     else:
 #         print("The input is invalid.")
 
-grayImage = loadImages(collectionDir, leftEye=leftEye)
+grayImage = loadImages(collectionDir, leftEye=leftEye, newImages = newImages)
 # dataDictionary = seperateImages(grayImage, collectionDir)
 dataDictionary = seperateNewImages(grayImage, collectionDir)
 dataDictionary = removeBadImages(dataDictionary)
