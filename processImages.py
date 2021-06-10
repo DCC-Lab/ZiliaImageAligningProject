@@ -273,6 +273,12 @@ def findImageShift(Image: np.ndarray, Margin=250, N=100) -> np.ndarray:
             totalShift = np.vstack((totalShift, np.sum(indexShift, axis=0)))
     return totalShift
 
+def newFindImageShift():
+    """
+    Find the image shift with the new ellipse finding algorithm parameters.
+    """
+    pass
+
 
 def applyShift(xLaser: np.ndarray, yLaser:np.ndarray, shift:np.ndarray) -> tuple:
     """
