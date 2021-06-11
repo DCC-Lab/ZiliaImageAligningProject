@@ -193,7 +193,7 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg") 
 
     sortedFileNames = np.sort(listFileNames(collectionDir, extension))
     files = getFiles(collectionDir, extension, newImages=True)
-    # first pic = eye, 2nd pic = rosa, because sorted alphabetically
+    # first pic = eye, 2nd pic = rosa
     for i in range(1, grayImageCollection.shape[0]):
         if "eye" in files[i-1]:
             loadLaserImage = files[i]
