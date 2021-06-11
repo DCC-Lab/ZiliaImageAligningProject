@@ -36,18 +36,23 @@ class ONHDetection:
         self.minMajorAxisScale = minMajorAxisScale
         self.maxMinorAxisScale = maxMinorAxisScale
         self.accuracy = accuracy
-        self.smallGrayImage = np.array([])
+
         self.grayImage = rgb2gray(image)
-        self.threshold = 0
-        self.smallBinaryImage = np.array([])
-        self.contours = np.array([])
-        self.minMajorAxis = 0
-        self.maxMinorAxis = 0
-        self.houghResult = None
+        self.smallGrayImage = self.getRescaledImage()
+        self.threshold = self.getThreshold()
+        self.smallBinaryImage = self.binarizeImage()
+        self.contours = self.applyCannyFilter()
+        onhRelativeScale = self.defineONHRelativeScale()
+        self.minMajorAxis = onhRelativeScale[0]
+        self.maxMinorAxis = onhRelativeScale[1]
+        self.houghResult = self.applyHoughTransform()
+        self.bestSmallScaleEllipse = self.getBestEllipse()
+
+        self.bestEllipse = self.unpackAndUpscaleParameters()
 
     def getRescaledImage(self):
         outputSize = grayImage.shape[0]//self.scaleFactor, grayImage.shape[1]//self.scaleFactor
-        self.smallGrayImage = resize(self.grayImage, outputSize)
+        return resize(self.grayImage, outputSize)
 
     def detectGammaNecessity(self):
         # has to be coded
@@ -55,48 +60,52 @@ class ONHDetection:
 
     def adjustGamma(self):
         # only execute if gamma is not False
-        self.smallGrayImage = adjust_gamma(self.smallGrayImage, gamma=self.gamma)
+        return adjust_gamma(self.smallGrayImage, gamma=self.gamma)
 
     def getThreshold(self):
-        self.threshold = threshold_otsu(self.smallGrayImage)
+        return threshold_otsu(self.smallGrayImage)
 
     def binarizeImage(self):
-        self.smallBinaryImage = self.smallGrayImage > self.threshold
+        return self.smallGrayImage > self.threshold
 
     def applyCannyFilter(self):
-        self.contours = canny(self.smallBinaryImage)
+        return canny(self.smallBinaryImage)
 
     def defineONHRelativeScale(self):
         xSize = self.smallGrayImage.shape[0]
         ySize = self.smallGrayImage.shape[1]
-        self.minMajorAxis = int(minMajorAxisScale*ySize)
-        self.maxMinorAxis = int(maxMinorAxisScale*xSize)
+        minMajorAxis = int(minMajorAxisScale*ySize)
+        maxMinorAxis = int(maxMinorAxisScale*xSize)
+        return minMajorAxis, maxMinorAxis
 
     def applyHoughTransform(self):
-        self.houghResult = hough_ellipse(self.contours,
+        houghResult = hough_ellipse(self.contours,
                                     min_size=self.minMajorAxis,
                                     max_size=self.maxMinorAxis,
                                     accuracy=self.accuracy,
                                     threshold=self.threshold)
+        return houghResult
 
     def getBestEllipse(self):
         self.houghResult.sort(order='accumulator')
-        self.smallScaleBestEllipse = list(self.houghResult[-1])
+        return list(self.houghResult[-1])
 
     def unpackAndUpscaleParameters(self):
-        yc, xc, a, b = [int(round(x)*self.scaleFactor) for x in self.smallScaleBestEllipse[1:5]]
+        yc, xc, a, b = [int(round(x)*self.scaleFactor) for x in self.bestSmallScaleEllipse[1:5]]
         orientation = best[5]
-        self.yCenter = yc
-        self.xCenter = xc
-        self.minorAxis = a
-        self.majorAxis = b
-        self.orientation = orientation
+        yCenter = yc
+        xCenter = xc
+        minorAxis = a
+        majorAxis = b
+        orientation = orientation
+        return xCenter, yCenter, minorAxis, majorAxis, orientation
 
-    def returnBestEllipse(self):
-        return self.xCenter, self.yCenter, self.minorAxis, self.majorAxis, self.orientation
+
+
+
 
     # Use names under??? À regarder...
-
+    
 
 
     # def cleanRetinaImage(image, sigma=3):
