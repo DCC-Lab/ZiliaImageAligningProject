@@ -179,5 +179,13 @@ def mainAnalysis ():
     absorbance=absorbanceSpectrum(whiteRef,normalizedSpectrum)
     croppedComponent=cropComponents(absorbance)
     features=componentsToArray(croppedComponent)
-    concentration=getCoef(absorbance,features)
+    coef=getCoef(absorbance,features)
+    concentration = 100 * coef[:,1] /(coef[:,1]+coef[:,2])
+    concentration[np.isnan(concentration)]=0
+    print(np.mean(concentration))
+    print(np.std(concentration))
+    print(concentration)
+    print(concentration.shape)
     return concentration
+
+mainAnalysis()
