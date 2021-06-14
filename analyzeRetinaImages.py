@@ -29,7 +29,7 @@ from skimage.exposure import adjust_gamma
 
 class ONHDetection:
 
-    def __init__(self, image, scaleFactor=3, gamma=True, relativeMinMajorAxis=1/6, relativeMaxMinorAxis=0.5, accuracy=10):
+    def __init__(self, image, scaleFactor=3, gamma=True, relativeMinMajorAxis=1/6, relativeMaxMinorAxis=0.5, accuracy=10, highGamma=3):
         self.image = image
         self.scaleFactor = scaleFactor
         self.gamma = gamma
@@ -40,6 +40,8 @@ class ONHDetection:
         self.grayImage = rgb2gray(image)
         self.smallGrayImage = self.getGrayRescaledImage()
 
+        self.gamma = gamma
+        self.highGamma = highGamma
         if gamma is True:
             # Automatically check if gamma correction is needed
             self.gamma = self.detectGammaNecessity()
@@ -71,10 +73,11 @@ class ONHDetection:
 
     def detectGammaNecessity(self):
         # has to be coded
-        #some test goes here
-        # so gamma = something found with the test
-        # return gamma
-        gamma = 1
+        tempThresh = threshold_otsu(self.smallGrayImage)
+        if tempThresh > 0.5:
+            gamma = self.highGamma
+        else:
+            gamma = 1
         return gamma
 
     def adjustGamma(self):
@@ -130,7 +133,7 @@ class ONHDetection:
 
 
     # Use names under??? À regarder...
-    
+
 
 
     # def cleanRetinaImage(image, sigma=3):
@@ -149,8 +152,8 @@ class ONHDetection:
     #     probably returns a bool. Maybe use the ConnectedComponents class..."""
 
 
-    # def findClosestCircle():
-    #     """If the ONH was found, approximate it as a circle.
+    # def findClosestEllipse():
+    #     """If the ONH was found, approximate it as an ellipse.
     #     Probably returns the circle's center coordinates and radius."""
 
 

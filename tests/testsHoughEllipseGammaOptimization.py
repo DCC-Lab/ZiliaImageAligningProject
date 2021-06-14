@@ -86,17 +86,20 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     def testBresilHigh(self):
         fileName = "bresilHigh.jpg"
         scaleFactor = 5
-        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, gamma=2, tellThresh=True)
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, gamma=3, tellThresh=True)
         self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
+        # thresh = 0.5833196407833887
+        # gamma3Thresh = 0.4902343751110835
         # Very good!!! Can go down to gamma = 2 with pretty good results, but
         # higher values are better.
 
-    # @envtest.skip("Skip plots")
+    @envtest.skip("Skip plots")
     def testBresilMedium(self):
         fileName = "bresilMedium.jpg"
         scaleFactor = 5
         smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, gamma=1, tellThresh=True)
         self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
+        # thresh = 0.4698714712041806
         # Works only with gamma = 1 or 0, else it raises an error or gives
         # something disgusting!!!
 
@@ -104,24 +107,28 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     def testBresilMediumLow(self):
         fileName = "bresilMedium-Low.jpg"
         scaleFactor = 5
-        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True, gamma=1)
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True, gamma=1, tellThresh=True)
         self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
+        # thresh = 0.28459210192751555
         # Works ok with gamma 1, but not well with gamma 2.
 
     @envtest.skip("Skip plots")
     def testKenyaHigh(self):
         fileName = "kenyaHigh.jpg"
         scaleFactor = 5
-        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True, gamma=3)
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True, gamma=3, tellThresh=True)
         self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
+        # thresh = 0.5820767615854621
+        # gamma3Thresh = 0.4902343750831357
         # Works relatively well with gamma 2.5 or higher.
 
     @envtest.skip("Skip plots")
     def testKenyaLow(self):
         fileName = "kenyaLow.jpg"
         scaleFactor = 3
-        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True)
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True, tellThresh=True)
         self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
+        # thresh = 0.19683273442312746
         # Never works well (bad picture, really...), but best with 0 <= gamma <= 1.
         # WAIITTTT works much better with a scale factor of 3!!!
 
