@@ -29,16 +29,28 @@ from skimage.exposure import adjust_gamma
 
 class ONHDetection:
 
-    def __init__(self, image, scaleFactor=3, gamma=False, minMajorAxisScale=1/6, maxMinorAxisScale=0.5, accuracy=10):
+    def __init__(self, image, scaleFactor=3, gamma=True, relativeMinMajorAxis=1/6, relativeMaxMinorAxis=0.5, accuracy=10):
         self.image = image
         self.scaleFactor = scaleFactor
         self.gamma = gamma
-        self.minMajorAxisScale = minMajorAxisScale
-        self.maxMinorAxisScale = maxMinorAxisScale
+        self.relativeMinMajorAxis = relativeMinMajorAxis
+        self.relativeMaxMinorAxis = relativeMaxMinorAxis
         self.accuracy = accuracy
 
         self.grayImage = rgb2gray(image)
-        self.smallGrayImage = self.getRescaledImage()
+        self.smallGrayImage = self.getGrayRescaledImage()
+
+        if gamma is True:
+            # Automatically check if gamma correction is needed
+            self.gamma = self.detectGammaNecessity()
+            self.smallGrayImage = self.adjustGamma()
+        elif gamma is False:
+            # Don't apply gamma correction
+            pass
+        else:
+            # Apply gamma correction with the input gamma value
+            self.smallGrayImage = self.adjustGamma()
+
         self.threshold = self.getThreshold()
         self.smallBinaryImage = self.binarizeImage()
         self.contours = self.applyCannyFilter()
@@ -48,21 +60,29 @@ class ONHDetection:
         self.houghResult = self.applyHoughTransform()
         self.bestSmallScaleEllipse = self.getBestEllipse()
 
-        self.bestEllipse = self.unpackAndUpscaleParameters()
+        if self.bestSmallScaleEllipse is None:
+            self.bestEllipse = None
+        else:
+            self.bestEllipse = self.unpackAndUpscaleParameters()
 
-    def getRescaledImage(self):
+    def getGrayRescaledImage(self):
         outputSize = grayImage.shape[0]//self.scaleFactor, grayImage.shape[1]//self.scaleFactor
         return resize(self.grayImage, outputSize)
 
     def detectGammaNecessity(self):
         # has to be coded
-        pass
+        #some test goes here
+        # so gamma = something found with the test
+        # return gamma
+        gamma = 1
+        return gamma
 
     def adjustGamma(self):
         # only execute if gamma is not False
         return adjust_gamma(self.smallGrayImage, gamma=self.gamma)
 
     def getThreshold(self):
+        # between 0 and 1
         return threshold_otsu(self.smallGrayImage)
 
     def binarizeImage(self):
@@ -74,8 +94,8 @@ class ONHDetection:
     def defineONHRelativeScale(self):
         xSize = self.smallGrayImage.shape[0]
         ySize = self.smallGrayImage.shape[1]
-        minMajorAxis = int(minMajorAxisScale*ySize)
-        maxMinorAxis = int(maxMinorAxisScale*xSize)
+        minMajorAxis = int(relativeMinMajorAxis*ySize)
+        maxMinorAxis = int(relativeMaxMinorAxis*xSize)
         return minMajorAxis, maxMinorAxis
 
     def applyHoughTransform(self):
@@ -88,7 +108,12 @@ class ONHDetection:
 
     def getBestEllipse(self):
         self.houghResult.sort(order='accumulator')
-        return list(self.houghResult[-1])
+        try:
+            best = list(self.houghResult[-1])
+            return best
+        except IndexError:
+            # No ellipse corresponding to the input parameters was found
+            return None
 
     def unpackAndUpscaleParameters(self):
         yc, xc, a, b = [int(round(x)*self.scaleFactor) for x in self.bestSmallScaleEllipse[1:5]]

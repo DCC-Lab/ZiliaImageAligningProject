@@ -24,7 +24,8 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     def testInit(self):
         self.assertTrue(True)
 
-    def evaluateHoughEllipseWithRescale(self, fileName, accuracy=1, minMajorAxisScale=1/6, maxMinorAxisScale=0.5, threshold=4, scaleFactor=5, showSmallCanny=False, gamma=0):
+    def evaluateHoughEllipseWithRescale(self, fileName, accuracy=1, minMajorAxisScale=1/6, maxMinorAxisScale=0.5,
+                                        threshold=4, scaleFactor=5, showSmallCanny=False, gamma=0, tellThresh=False):
         # To prevent repetition in subsequent tests.
         imageRgb = imread(self.testCannyDirectory+"/"+fileName)
         grayImage = imread(self.testCannyDirectory+"/"+fileName, as_gray=True)
@@ -40,6 +41,8 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
             plt.imshow(smallGrayImage, cmap=plt.cm.gray)
             plt.show()
         smallThresh = threshold_otsu(smallGrayImage)
+        if tellThresh:
+            print(smallThresh)
         smallBinaryImage = smallGrayImage > smallThresh
         smallCanniedImage = canny(smallBinaryImage)
         if showSmallCanny:
@@ -83,16 +86,16 @@ class TestHoughEllipse(envtest.ZiliaTestCase):
     def testBresilHigh(self):
         fileName = "bresilHigh.jpg"
         scaleFactor = 5
-        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, gamma=3)
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, gamma=2, tellThresh=True)
         self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
         # Very good!!! Can go down to gamma = 2 with pretty good results, but
         # higher values are better.
 
-    @envtest.skip("Skip plots")
+    # @envtest.skip("Skip plots")
     def testBresilMedium(self):
         fileName = "bresilMedium.jpg"
         scaleFactor = 5
-        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, showSmallCanny=True, gamma=1)
+        smallBest, imageRgb, canniedImage = self.evaluateHoughEllipseWithRescale(fileName, accuracy=10, scaleFactor=scaleFactor, gamma=1, tellThresh=True)
         self.plotHoughEllipseWithRescale(smallBest, imageRgb, canniedImage, scaleFactor=scaleFactor)
         # Works only with gamma = 1 or 0, else it raises an error or gives
         # something disgusting!!!
