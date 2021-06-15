@@ -44,21 +44,6 @@ class ZiliaONHDetector(EllipseDetector):
         self.grayImage = rgb2gray(image)
         self.smallGrayImage = self.getGrayRescaledImage()
 
-        self.threshold = self.getThreshold()
-        self.smallBinaryImage = self.binarizeImage()
-        self.contours = self.applyCannyFilter()
-        onhRelativeScale = self.defineONHRelativeScale()
-        self.minMajorAxis = onhRelativeScale[0]
-        self.maxMinorAxis = onhRelativeScale[1]
-        self.houghResult = self.applyHoughTransform()
-        self.bestSmallScaleEllipse = self.getBestEllipse()
-
-        if self.bestSmallScaleEllipse is None:
-            self.bestEllipse = None
-        else:
-            self.bestEllipse = self.unpackAndUpscaleParameters()
-
-
     def getParamsCorrections(self, highGamma=3):
         """Find the required gamma correction (min=1, max=?)"""
         self.highGamma = highGamma
@@ -73,29 +58,35 @@ class ZiliaONHDetector(EllipseDetector):
             self.smallGrayImage = self.adjustGamma()
 
     def preProcessImage(self):
-        pass
-        # Resize image
-        # Apply the gamma correction when needed
-        # Get the (new) threshold
-        # Binarize image
-        # Apply the canny filter
         if self.gamma == 1:
-            doGammaCorrection = False
+            # No need to apply gamma correction
+            pass
+        else:
+            self.smallGrayImage = self.adjustGamma()
+
+        self.threshold = self.getThreshold()
+        self.smallBinaryImage = self.binarizeImage()
+        contours = self.applyCannyFilter()
+        self.preProcessedImage = self.contours
 
     def findOpticNerveHead(self):
-        pass
-        # apply the elliptical hough transform
-        # get the best ellipse approximation
-        # rescale
-
-
+        expectedONHSize = self.defineONHExpectedSize()
+        self.minMajorAxis = expectedONHSize[0]
+        self.maxMinorAxis = expectedONHSize[1]
+        self.houghResult = self.applyHoughTransform()
+        self.bestSmallScaleEllipse = self.getBestEllipse()
+        if self.bestSmallScaleEllipse is None:
+            self.bestEllipse = None
+        else:
+            self.bestEllipse = self.unpackAndUpscaleParameters()
+        return self.bestEllipse
 
     def getGrayRescaledImage(self):
         outputSize = grayImage.shape[0]//self.scaleFactor, grayImage.shape[1]//self.scaleFactor
         return resize(self.grayImage, outputSize)
 
     def detectGammaNecessity(self):
-        # has to be improved!!!
+        # Has to be improved with testing!!!
         tempThresh = self.getThreshold()
         if tempThresh > 0.5:
             gamma = self.highGamma
@@ -104,11 +95,11 @@ class ZiliaONHDetector(EllipseDetector):
         return gamma
 
     def adjustGamma(self):
-        # only execute if gamma is not False
+        # Only execute if gamma is not False
         return adjust_gamma(self.smallGrayImage, gamma=self.gamma)
 
     def getThreshold(self):
-        # between 0 and 1
+        # Between 0 and 1
         return threshold_otsu(self.smallGrayImage)
 
     def binarizeImage(self):
@@ -117,7 +108,7 @@ class ZiliaONHDetector(EllipseDetector):
     def applyCannyFilter(self):
         return canny(self.smallBinaryImage)
 
-    def defineONHRelativeScale(self):
+    def defineONHExpectedSize(self):
         xSize = self.smallGrayImage.shape[0]
         ySize = self.smallGrayImage.shape[1]
         minMajorAxis = int(relativeMinMajorAxis*ySize)
@@ -149,38 +140,4 @@ class ZiliaONHDetector(EllipseDetector):
         minorAxis = a
         majorAxis = b
         orientation = orientation
-        return xCenter, yCenter, minorAxis, majorAxis, orientation
-
-
-
-
-
-    # Use names under??? À regarder...
-
-
-
-    # def cleanRetinaImage(image, sigma=3):
-    #     """Apply a filter (canny filter?) to clean the image before
-    #     turning it into a binary image. Would have to find a good default
-    #     sigma."""
-
-
-    # def binarizeRetinaImage():
-    #     """Turn a clean image into a binary image before applying a Hough
-    #     transform."""
-
-
-    # def findOpticNerveHead():
-    #     """Tell if minimum brightness and circle size have been found,
-    #     probably returns a bool. Maybe use the ConnectedComponents class..."""
-
-
-    # def findClosestEllipse():
-    #     """If the ONH was found, approximate it as an ellipse.
-    #     Probably returns the circle's center coordinates and radius."""
-
-
-    # def determineShift():
-    #     """Use the position of the ONH circle approximation and find how
-    #     far it is from the center of the image, which will give us the shift
-    #     value to apply"""
+        return (xCenter, yCenter), minorAxis, majorAxis, orientation
