@@ -28,8 +28,56 @@ from skimage.exposure import adjust_gamma
 
 
 class EllipseDetector:
-    # To be coded later
-    pass
+
+    def __init__(self, image, grayImage=False, relativeMinMajorAxis=1/6, relativeMaxMinorAxis=0.5, accuracy=10):
+        self.image = image
+        self.relativeMinMajorAxis = relativeMinMajorAxis
+        self.relativeMaxMinorAxis = relativeMaxMinorAxis
+        self.accuracy = accuracy
+        if grayImage:
+            self.grayImage = image
+        else:
+            self.grayImage = rgb2gray(image)
+
+    def binarizeImage(self):
+        return self.grayImage > self.threshold
+
+    def applyCannyFilter(self):
+        return canny(self.binaryImage)
+
+    def defineEllipseExpectedSize(self):
+        xSize = self.smallGrayImage.shape[0]
+        ySize = self.smallGrayImage.shape[1]
+        minMajorAxis = int(relativeMinMajorAxis*ySize)
+        maxMinorAxis = int(relativeMaxMinorAxis*xSize)
+        return minMajorAxis, maxMinorAxis
+
+    def applyHoughTransform(self):
+        houghResult = hough_ellipse(self.contours,
+                                    min_size=self.minMajorAxis,
+                                    max_size=self.maxMinorAxis,
+                                    accuracy=self.accuracy,
+                                    threshold=self.threshold)
+        return houghResult
+
+    def getBestEllipse(self):
+        self.houghResult.sort(order='accumulator')
+        try:
+            best = list(self.houghResult[-1])
+            return best
+        except IndexError:
+            # No ellipse corresponding to the input parameters was found
+            return None
+
+    def unpackParameters(self):
+        yc, xc, a, b = [int(round(x)) for x in self.bestSmallScaleEllipse[1:5]]
+        orientation = best[5]
+        yCenter = yc
+        xCenter = xc
+        minorAxis = a
+        majorAxis = b
+        orientation = orientation
+        return (xCenter, yCenter), minorAxis, majorAxis, orientation
 
 
 class ZiliaONHDetector(EllipseDetector):
@@ -63,7 +111,6 @@ class ZiliaONHDetector(EllipseDetector):
             pass
         else:
             self.smallGrayImage = self.adjustGamma()
-
         self.threshold = self.getThreshold()
         self.smallBinaryImage = self.binarizeImage()
         contours = self.applyCannyFilter()
@@ -141,3 +188,4 @@ class ZiliaONHDetector(EllipseDetector):
         majorAxis = b
         orientation = orientation
         return (xCenter, yCenter), minorAxis, majorAxis, orientation
+
