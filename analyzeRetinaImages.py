@@ -72,7 +72,6 @@ class ONHDetection:
         return resize(self.grayImage, outputSize)
 
     def detectGammaNecessity(self):
-        # has to be coded
         tempThresh = threshold_otsu(self.smallGrayImage)
         if tempThresh > 0.5:
             gamma = self.highGamma
