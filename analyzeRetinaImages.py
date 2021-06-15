@@ -27,7 +27,12 @@ from skimage.feature import canny
 from skimage.exposure import adjust_gamma
 
 
-class ONHDetection:
+class EllipseDetector:
+    # To be coded later
+    pass
+
+
+class ZiliaONHDetector(EllipseDetector):
 
     def __init__(self, image, scaleFactor=3, gamma=True, relativeMinMajorAxis=1/6, relativeMaxMinorAxis=0.5, accuracy=10, highGamma=3):
         self.image = image
@@ -66,6 +71,30 @@ class ONHDetection:
             self.bestEllipse = None
         else:
             self.bestEllipse = self.unpackAndUpscaleParameters()
+
+
+    def getParamsCorrections(self):
+        pass
+        # Get the scale factor
+        # Test for gamma necessity:
+        # Look for the image threshold
+        # Find the required gamma (min=1, max=?)
+
+    def preProcessImage(self):
+        pass
+        # Resize image
+        # Apply the gamma correction when needed
+        # Get the (new) threshold
+        # Binarize image
+        # Apply the canny filter
+
+    def findOpticNerveHead(self):
+        pass
+        # apply the elliptical hough transform
+        # get the best ellipse approximation
+        # rescale
+
+
 
     def getGrayRescaledImage(self):
         outputSize = grayImage.shape[0]//self.scaleFactor, grayImage.shape[1]//self.scaleFactor
