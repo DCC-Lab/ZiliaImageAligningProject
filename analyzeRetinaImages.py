@@ -34,29 +34,15 @@ class EllipseDetector:
 
 class ZiliaONHDetector(EllipseDetector):
 
-    def __init__(self, image, scaleFactor=3, gamma=True, relativeMinMajorAxis=1/6, relativeMaxMinorAxis=0.5, accuracy=10, highGamma=3):
+    def __init__(self, image, scaleFactor=3, gamma=True, relativeMinMajorAxis=1/6, relativeMaxMinorAxis=0.5, accuracy=10):
         self.image = image
         self.scaleFactor = scaleFactor
         self.gamma = gamma
         self.relativeMinMajorAxis = relativeMinMajorAxis
         self.relativeMaxMinorAxis = relativeMaxMinorAxis
         self.accuracy = accuracy
-
         self.grayImage = rgb2gray(image)
         self.smallGrayImage = self.getGrayRescaledImage()
-
-        self.gamma = gamma
-        self.highGamma = highGamma
-        if gamma is True:
-            # Automatically check if gamma correction is needed
-            self.gamma = self.detectGammaNecessity()
-            self.smallGrayImage = self.adjustGamma()
-        elif gamma is False:
-            # Don't apply gamma correction
-            pass
-        else:
-            # Apply gamma correction with the input gamma value
-            self.smallGrayImage = self.adjustGamma()
 
         self.threshold = self.getThreshold()
         self.smallBinaryImage = self.binarizeImage()
@@ -73,12 +59,18 @@ class ZiliaONHDetector(EllipseDetector):
             self.bestEllipse = self.unpackAndUpscaleParameters()
 
 
-    def getParamsCorrections(self):
-        pass
-        # Get the scale factor
-        # Test for gamma necessity:
-        # Look for the image threshold
-        # Find the required gamma (min=1, max=?)
+    def getParamsCorrections(self, highGamma=3):
+        """Find the required gamma correction (min=1, max=?)"""
+        self.highGamma = highGamma
+        if self.gamma is True:
+            # Automatically check if gamma correction is needed
+            self.gamma = self.detectGammaNecessity()
+        elif gamma is False:
+            # Don't apply gamma correction
+            pass
+        else:
+            # Apply gamma correction with the input gamma value
+            self.smallGrayImage = self.adjustGamma()
 
     def preProcessImage(self):
         pass
@@ -87,6 +79,8 @@ class ZiliaONHDetector(EllipseDetector):
         # Get the (new) threshold
         # Binarize image
         # Apply the canny filter
+        if self.gamma == 1:
+            doGammaCorrection = False
 
     def findOpticNerveHead(self):
         pass
@@ -101,7 +95,8 @@ class ZiliaONHDetector(EllipseDetector):
         return resize(self.grayImage, outputSize)
 
     def detectGammaNecessity(self):
-        tempThresh = threshold_otsu(self.smallGrayImage)
+        # has to be improved!!!
+        tempThresh = self.getThreshold()
         if tempThresh > 0.5:
             gamma = self.highGamma
         else:
