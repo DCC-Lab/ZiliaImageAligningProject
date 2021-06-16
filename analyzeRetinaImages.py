@@ -97,6 +97,9 @@ class EllipseDetector:
 class ZiliaONHDetector(EllipseDetector):
 
     def __init__(self, image, scaleFactor=3, gamma=True, relativeMinMajorAxis=1/6, relativeMaxMinorAxis=0.5, accuracy=10):
+        super(ZiliaONHDetector, self).__init__(image, relativeMinMajorAxis, relativeMaxMinorAxis, accuracy)
+
+
         self.image = image
         self.scaleFactor = scaleFactor
         self.gamma = gamma
