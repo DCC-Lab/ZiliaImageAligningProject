@@ -29,21 +29,34 @@ from skimage.exposure import adjust_gamma
 
 class EllipseDetector:
 
-    def __init__(self, image, grayImage=False, relativeMinMajorAxis=1/6, relativeMaxMinorAxis=0.5, accuracy=10):
+    def __init__(self, image, relativeMinMajorAxis=1/6, relativeMaxMinorAxis=0.5, accuracy=10):
         self.image = image
         self.relativeMinMajorAxis = relativeMinMajorAxis
         self.relativeMaxMinorAxis = relativeMaxMinorAxis
         self.accuracy = accuracy
-        if grayImage:
+        if len(image.shape) == 2:
             self.grayImage = image
         else:
             self.grayImage = rgb2gray(image)
 
-    def binarizeImage(self):
-        return self.grayImage > self.threshold
+    def preProcessImage(self):
+        self.contours = self.applyCannyFilter()
+        ellipseExpectedSize = self.defineEllipseExpectedSize()
+        self.minMajorAxis = ellipseExpectedSize[0]
+        self.maxMinorAxis = ellipseExpectedSize[1]
+
+    def findBestEllipse(self):
+        """
+        If no ellipse is found, returns None.
+        Else, returns a tuple of the best ellipse parameters.
+        """
+        houghResult = self.applyHoughTransform()
+        bestHoughEllipse = self.sortBestHoughEllipse(houghResult)
+        bestEllipse = self.getBestEllipseParameters(bestHoughEllipse)
+        return bestEllipse
 
     def applyCannyFilter(self):
-        return canny(self.binaryImage)
+        return canny(self.grayImage)
 
     def defineEllipseExpectedSize(self):
         xSize = self.smallGrayImage.shape[0]
@@ -56,12 +69,11 @@ class EllipseDetector:
         houghResult = hough_ellipse(self.contours,
                                     min_size=self.minMajorAxis,
                                     max_size=self.maxMinorAxis,
-                                    accuracy=self.accuracy,
-                                    threshold=self.threshold)
+                                    accuracy=self.accuracy)
         return houghResult
 
-    def getBestEllipse(self):
-        self.houghResult.sort(order='accumulator')
+    def sortBestHoughEllipse(self, houghResult):
+        houghResult.sort(order='accumulator')
         try:
             best = list(self.houghResult[-1])
             return best
@@ -69,7 +81,9 @@ class EllipseDetector:
             # No ellipse corresponding to the input parameters was found
             return None
 
-    def unpackParameters(self):
+    def getBestEllipseParameters(self, bestHoughEllipse):
+        if bestHoughEllipse is None:
+            return None
         yc, xc, a, b = [int(round(x)) for x in self.bestSmallScaleEllipse[1:5]]
         orientation = best[5]
         yCenter = yc
@@ -166,8 +180,7 @@ class ZiliaONHDetector(EllipseDetector):
         houghResult = hough_ellipse(self.contours,
                                     min_size=self.minMajorAxis,
                                     max_size=self.maxMinorAxis,
-                                    accuracy=self.accuracy,
-                                    threshold=self.threshold)
+                                    accuracy=self.accuracy)
         return houghResult
 
     def getBestEllipse(self):
