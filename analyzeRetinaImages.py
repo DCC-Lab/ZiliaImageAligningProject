@@ -21,7 +21,7 @@ first picture, and the shift for the subsequent pictures.
 
 import numpy as np
 from skimage.color import rgb2gray
-from skimage.transform import resize
+from skimage.transform import resize, hough_ellipse
 from skimage.filters import threshold_otsu
 from skimage.feature import canny
 from skimage.exposure import adjust_gamma
@@ -59,10 +59,10 @@ class EllipseDetector:
         return canny(self.grayImage)
 
     def defineEllipseExpectedSize(self):
-        xSize = self.smallGrayImage.shape[0]
-        ySize = self.smallGrayImage.shape[1]
-        minMajorAxis = int(relativeMinMajorAxis*ySize)
-        maxMinorAxis = int(relativeMaxMinorAxis*xSize)
+        xSize = self.grayImage.shape[0]
+        ySize = self.grayImage.shape[1]
+        minMajorAxis = int(self.relativeMinMajorAxis*ySize)
+        maxMinorAxis = int(self.relativeMaxMinorAxis*xSize)
         return minMajorAxis, maxMinorAxis
 
     def applyHoughTransform(self):
@@ -75,7 +75,7 @@ class EllipseDetector:
     def sortBestHoughEllipse(self, houghResult):
         houghResult.sort(order='accumulator')
         try:
-            best = list(self.houghResult[-1])
+            best = list(houghResult[-1])
             return best
         except IndexError:
             # No ellipse corresponding to the input parameters was found
@@ -84,8 +84,8 @@ class EllipseDetector:
     def getBestEllipseParameters(self, bestHoughEllipse):
         if bestHoughEllipse is None:
             return None
-        yc, xc, a, b = [int(round(x)) for x in self.bestSmallScaleEllipse[1:5]]
-        orientation = best[5]
+        yc, xc, a, b = [int(round(x)) for x in bestHoughEllipse[1:5]]
+        orientation = bestHoughEllipse[5]
         yCenter = yc
         xCenter = xc
         minorAxis = a
@@ -201,4 +201,3 @@ class ZiliaONHDetector(EllipseDetector):
         majorAxis = b
         orientation = orientation
         return (xCenter, yCenter), minorAxis, majorAxis, orientation
-
