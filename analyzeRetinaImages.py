@@ -28,6 +28,13 @@ from skimage.exposure import adjust_gamma
 
 
 class EllipseDetector:
+    """
+    This is the order in which this should be used:
+        detector = EllipseDetector(image)
+        detector.preProcessImage()
+        bestEllipse = detector.findBestEllipse
+        (xCenter, yCenter), minorAxis, majorAxis, orientation = bestEllipse
+    """
 
     def __init__(self, image, relativeMinMajorAxis=1/6, relativeMaxMinorAxis=0.5, accuracy=10):
         self.image = image
@@ -56,6 +63,7 @@ class EllipseDetector:
         return bestEllipse
 
     def applyCannyFilter(self):
+        print("If this prints, THIS IS WRONG!!!")
         return canny(self.grayImage)
 
     def defineEllipseExpectedSize(self):
@@ -95,19 +103,21 @@ class EllipseDetector:
 
 
 class ZiliaONHDetector(EllipseDetector):
+    """
+    This is the order in which this should be used:
+        onhDetector = ZiliaONHDetector(image)
+        detector.getParamsCorrections()
+        detector.preProcessImage()
+        bestEllipse = detector.findBestEllipse
+        (xCenter, yCenter), minorAxis, majorAxis, orientation = bestEllipse
+    """
 
     def __init__(self, image, scaleFactor=3, gamma=True, relativeMinMajorAxis=1/6, relativeMaxMinorAxis=0.5, accuracy=10):
+        self.fullSizeGrayImage = rgb2gray(image)
         super(ZiliaONHDetector, self).__init__(image, relativeMinMajorAxis, relativeMaxMinorAxis, accuracy)
-
-
-        self.image = image
         self.scaleFactor = scaleFactor
         self.gamma = gamma
-        self.relativeMinMajorAxis = relativeMinMajorAxis
-        self.relativeMaxMinorAxis = relativeMaxMinorAxis
-        self.accuracy = accuracy
-        self.grayImage = rgb2gray(image)
-        self.smallGrayImage = self.getGrayRescaledImage()
+        self.grayImage = self.getGrayRescaledImage()
 
     def getParamsCorrections(self, highGamma=3):
         """Find the required gamma correction (min=1, max=?)"""
@@ -115,39 +125,20 @@ class ZiliaONHDetector(EllipseDetector):
         if self.gamma is True:
             # Automatically check if gamma correction is needed
             self.gamma = self.detectGammaNecessity()
-        elif gamma is False:
+        elif self.gamma is False:
             # Don't apply gamma correction
             pass
+        elif int(self.gamma) == 1:
+            # No need to apply gamma correction
+            self.gamma = False
         else:
             # Apply gamma correction with the input gamma value
             self.smallGrayImage = self.adjustGamma()
 
     def preProcessImage(self):
-        if self.gamma == 1:
-            # No need to apply gamma correction
-            pass
-        else:
-            self.smallGrayImage = self.adjustGamma()
+        self.smallGrayImage = self.adjustGamma()
         self.threshold = self.getThreshold()
-        self.smallBinaryImage = self.binarizeImage()
-        contours = self.applyCannyFilter()
-        self.preProcessedImage = self.contours
-
-    def findOpticNerveHead(self):
-        expectedONHSize = self.defineONHExpectedSize()
-        self.minMajorAxis = expectedONHSize[0]
-        self.maxMinorAxis = expectedONHSize[1]
-        self.houghResult = self.applyHoughTransform()
-        self.bestSmallScaleEllipse = self.getBestEllipse()
-        if self.bestSmallScaleEllipse is None:
-            self.bestEllipse = None
-        else:
-            self.bestEllipse = self.unpackAndUpscaleParameters()
-        return self.bestEllipse
-
-    def getGrayRescaledImage(self):
-        outputSize = grayImage.shape[0]//self.scaleFactor, grayImage.shape[1]//self.scaleFactor
-        return resize(self.grayImage, outputSize)
+        super(ZiliaONHDetector, self).preProcessImage()
 
     def detectGammaNecessity(self):
         # Has to be improved with testing!!!
@@ -159,41 +150,35 @@ class ZiliaONHDetector(EllipseDetector):
         return gamma
 
     def adjustGamma(self):
-        # Only execute if gamma is not False
-        return adjust_gamma(self.smallGrayImage, gamma=self.gamma)
+        if self.gamma is False:
+            return self.smallGrayImage
+        else:
+            return adjust_gamma(self.smallGrayImage, gamma=self.gamma)
+
+    def findOpticNerveHead(self):
+        smallScaleResult = super(ZiliaONHDetector, self).findBestEllipse()
+        for coord in smallScaleResult:
+            if coord is None:
+                return smallScaleResult
+        
+        if self.bestSmallScaleEllipse is None:
+            self.bestEllipse = None
+        else:
+            self.bestEllipse = self.unpackAndUpscaleParameters()
+        return self.bestEllipse
+
+    def getGrayRescaledImage(self):
+        outputSize = fullSizeGrayImage.shape[0]//self.scaleFactor, fullSizeGrayImage.shape[1]//self.scaleFactor
+        return resize(self.fullSizeGrayImage, outputSize)
 
     def getThreshold(self):
         # Between 0 and 1
-        return threshold_otsu(self.smallGrayImage)
-
-    def binarizeImage(self):
-        return self.smallGrayImage > self.threshold
+        return threshold_otsu(self.grayImage)
 
     def applyCannyFilter(self):
-        return canny(self.smallBinaryImage)
-
-    def defineONHExpectedSize(self):
-        xSize = self.smallGrayImage.shape[0]
-        ySize = self.smallGrayImage.shape[1]
-        minMajorAxis = int(relativeMinMajorAxis*ySize)
-        maxMinorAxis = int(relativeMaxMinorAxis*xSize)
-        return minMajorAxis, maxMinorAxis
-
-    def applyHoughTransform(self):
-        houghResult = hough_ellipse(self.contours,
-                                    min_size=self.minMajorAxis,
-                                    max_size=self.maxMinorAxis,
-                                    accuracy=self.accuracy)
-        return houghResult
-
-    def getBestEllipse(self):
-        self.houghResult.sort(order='accumulator')
-        try:
-            best = list(self.houghResult[-1])
-            return best
-        except IndexError:
-            # No ellipse corresponding to the input parameters was found
-            return None
+        print("If this prints, THIS IS RIGHT!!!")
+        binaryImage = self.grayImage > self.threshold
+        return canny(binaryImage)
 
     def unpackAndUpscaleParameters(self):
         yc, xc, a, b = [int(round(x)*self.scaleFactor) for x in self.bestSmallScaleEllipse[1:5]]
