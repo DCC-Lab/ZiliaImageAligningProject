@@ -41,10 +41,13 @@ class EllipseDetector:
         self.relativeMinMajorAxis = relativeMinMajorAxis
         self.relativeMaxMinorAxis = relativeMaxMinorAxis
         self.accuracy = accuracy
-        if len(image.shape) == 2:
+        if self.imageIsGrayscale():
             self.grayImage = image
         else:
             self.grayImage = rgb2gray(image)
+
+    def imageIsGrayscale(self):
+        return len(self.image.shape) == 2
 
     def preProcessImage(self):
         self.contours = self.applyCannyFilter()
