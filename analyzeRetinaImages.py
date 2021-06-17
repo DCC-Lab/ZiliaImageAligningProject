@@ -1,24 +1,3 @@
-"""Here is what I need to do:
-1. Find the ONH in the picture (will most likely have a minimum brightness
-and size)
-2. Approximate it as an ellipse
-3. Use the middle of this ellipse to determine the reference point for the
-first picture, and the shift for the subsequent pictures.
-4. Discard images if the ONH is not found (retina AND related rosa images).
-"""
-
-# Import image as grayscale
-# Reduce image size by some factor
-# Apply gamma correction to accentuate contrasts (handle IndexError!!!)
-# Find Otsu's threshold
-# Turn the image into a binary image according to the threshold
-# Apply a canny filter
-# Apply an elliptical Hough transform
-# Get the best ellipse parameters for the small picture
-# Convert those parameters to make them work with the big picture
-# Return (or store) the ellipse parameters
-
-
 import numpy as np
 from skimage.color import rgb2gray
 from skimage.transform import resize, hough_ellipse
