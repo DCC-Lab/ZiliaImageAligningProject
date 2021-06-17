@@ -5,25 +5,25 @@ from tkinter.filedialog import askopenfilename
 from scipy.optimize import nnls
 
 # global variables for cropping wavelength
-lowerLimit=510
-upperLimit=590
+lowerLimit = 510
+upperLimit = 590
 
 class Spectrum:
-    data=np.array([])
-    wavelength=np.array([])
+    data = np.array([])
+    wavelength = np.array([])
 
 def loadComponentesSpectra():
     '''load components spectrums for the analysis'''
-    spectrumComponents = pd.read_csv (r'_components_spectra.csv')
-    npComponents=spectrumComponents.to_numpy()
-    wavelengths=npComponents[:,0]
-    oxyhemoglobin=npComponents[:,1]
-    deoxyhemoglobin=npComponents[:,2]
-    methemoglobin=npComponents[:,3]
-    carboxyhemoglobin=npComponents[:,4]
-    eumelanin=npComponents[:,5]
-    yc1a=npComponents[:,6]
-    yc2a=npComponents[:,7]
+    spectrumComponents = pd.read_csv(r'_components_spectra.csv')
+    npComponents = spectrumComponents.to_numpy()
+    wavelengths = npComponents[:,0]
+    oxyhemoglobin = npComponents[:,1]
+    deoxyhemoglobin = npComponents[:,2]
+    methemoglobin = npComponents[:,3]
+    carboxyhemoglobin = npComponents[:,4]
+    eumelanin = npComponents[:,5]
+    yc1a = npComponents[:,6]
+    yc2a = npComponents[:,7]
 
     components_spectra = {
             "wavelengths": wavelengths,
@@ -48,7 +48,7 @@ def cropFunction(Spec):
 
 def normalizeRef(Spec):
     """divide the spectrum by its standard deviation"""
-    Spec.data=Spec.data/np.std(Spec.data)
+    Spec.data = Spec.data/np.std(Spec.data)
     return Spec
 
 def loadWhiteRef(referenceNameNothinInfront='int75_LEDON_nothingInFront.csv',
@@ -60,8 +60,8 @@ def loadWhiteRef(referenceNameNothinInfront='int75_LEDON_nothingInFront.csv',
     refSpectrum = Spectrum()
     refSpectrum.wavelength = refWhite[:,wavelengthColumn]
     refSpectrum.data = np.mean(refWhite[:,firstSpecColumn:],axis=1)-np.mean(refNothingInfront[:,firstSpecColumn:],axis=1)
-    croppedRef=cropFunction(refSpectrum)
-    refCroppedNormalized=normalizeRef(croppedRef)
+    croppedRef = cropFunction(refSpectrum)
+    refCroppedNormalized = normalizeRef(croppedRef)
     return refCroppedNormalized
 
 def loadDarkRef(skipRows=4,wavelengthColumn=0,firstSpecColumn=3):
@@ -69,10 +69,10 @@ def loadDarkRef(skipRows=4,wavelengthColumn=0,firstSpecColumn=3):
     filetypes = [("csv files", "*.csv")]
     csv_file_path = askopenfilename(title="select the dark reference .csv file",filetypes=filetypes)
     darkRef = pd.read_csv(csv_file_path, sep=',', skiprows=skipRows).to_numpy()
-    darkRefSpec=Spectrum()
+    darkRefSpec = Spectrum()
     darkRefSpec.data = np.mean(darkRef[:,firstSpecColumn:],axis=1)
     darkRefSpec.wavelength = darkRef[:,wavelengthColumn]
-    croppedDarkRef=cropFunction(darkRefSpec)
+    croppedDarkRef = cropFunction(darkRefSpec)
     return croppedDarkRef
 
 def loadSpectrum(skipRows=4,wavelengthColumn=0,firstSpecColumn=3):
@@ -89,8 +89,8 @@ def loadSpectrum(skipRows=4,wavelengthColumn=0,firstSpecColumn=3):
 def normalizeSpectrum(spec,darkRef):
     """returns the normalized spectrum for the data"""
     dRefTile = np.tile(darkRef.data, (spec.data.shape[1], 1))
-    spectrumData=spec.data-dRefTile.T
-    STDspectrum=np.std(spectrumData,axis=1)
+    spectrumData = spec.data-dRefTile.T
+    STDspectrum = np.std(spectrumData,axis=1)
     spectrumDataNormalized = Spectrum()
     spectrumDataNormalized.data = spectrumData/STDspectrum[:,None]
     spectrumDataNormalized.wavelength = spec.wavelength
@@ -108,8 +108,8 @@ def absorbanceSpectrum(refSpec,normalizedSpec):
     for i in range(normalizedSpec.wavelength.shape[0]):
         modifiedData[i,:] = refSpec.data[find_nearest(refSpec.wavelength, normalizedSpec.wavelength[i])]
     modifiedSpec=Spectrum()
-    normalizedSpec.data[normalizedSpec.data==0]=0.0001
-    modifiedSpec.data=np.log(np.divide(modifiedData, normalizedSpec.data, out=None, where=True, casting= 'same_kind',
+    normalizedSpec.data[normalizedSpec.data==0] = 0.0001
+    modifiedSpec.data = np.log(np.divide(modifiedData, normalizedSpec.data, out=None, where=True, casting= 'same_kind',
                                 order = 'K', dtype = None))
     modifiedSpec.wavelength = normalizedSpec.wavelength
     return modifiedSpec
@@ -133,8 +133,8 @@ def cropComponents(absorbanceSpectrum):
     oxyhemoglobin = np.zeros(absorbanceSpectrum.wavelength.shape)
     deoxyhemoglobin = np.zeros(absorbanceSpectrum.wavelength.shape)
     melanin = np.zeros(absorbanceSpectrum.wavelength.shape)
-    scat=scattering(absorbanceSpectrum)
-    ref=reflection(absorbanceSpectrum)
+    scat = scattering(absorbanceSpectrum)
+    ref = reflection(absorbanceSpectrum)
     for i in range(absorbanceSpectrum.wavelength.shape[0]):
         oxyhemoglobin[i] = Components["oxyhemoglobin"][find_nearest(Components["wavelengths"],
                                                                     absorbanceSpectrum.wavelength[i])]
@@ -162,9 +162,9 @@ def componentsToArray(components):
 
 def getCoef(absorbance,variables):
     """apply nnls and get coefs"""
-    allCoef=np.zeros([absorbance.data.shape[1],variables.shape[0]])
+    allCoef = np.zeros([absorbance.data.shape[1],variables.shape[0]])
     for i in range(absorbance.data.shape[1]):
-        coef=nnls(variables.T,absorbance.data[:,i],maxiter=2000 )
+        coef = nnls(variables.T,absorbance.data[:,i],maxiter=2000 )
 
         allCoef[i,:]=coef[0]
     print('all coef shape : ',allCoef.shape)
@@ -173,13 +173,13 @@ def getCoef(absorbance,variables):
 
 def mainAnalysis ():
     """load data, do all the analysis, get coefs as concentration"""
-    whiteRef=loadWhiteRef()
-    darkRef=loadDarkRef()
-    spectrums=loadSpectrum()
-    normalizedSpectrum=normalizeSpectrum(spectrums,darkRef)
-    absorbance=absorbanceSpectrum(whiteRef,normalizedSpectrum)
-    croppedComponent=cropComponents(absorbance)
-    features=componentsToArray(croppedComponent)
+    whiteRef = loadWhiteRef()
+    darkRef = loadDarkRef()
+    spectrums = loadSpectrum()
+    normalizedSpectrum = normalizeSpectrum(spectrums,darkRef)
+    absorbance = absorbanceSpectrum(whiteRef,normalizedSpectrum)
+    croppedComponent = cropComponents(absorbance)
+    features = componentsToArray(croppedComponent)
     print(features.shape)
     # print('features shape :', features.shape)
     # coef=getCoef(absorbance,features)
