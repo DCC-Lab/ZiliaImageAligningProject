@@ -157,15 +157,13 @@ class ZiliaONHDetector(EllipseDetector):
 
     def findOpticNerveHead(self):
         smallScaleResult = super(ZiliaONHDetector, self).findBestEllipse()
-        for coord in smallScaleResult:
-            if coord is None:
-                return smallScaleResult
-        
-        if self.bestSmallScaleEllipse is None:
-            self.bestEllipse = None
+        if smallScaleResult is None:
+            self.result = smallScaleResult
+            return smallScaleResult
         else:
-            self.bestEllipse = self.unpackAndUpscaleParameters()
-        return self.bestEllipse
+            result = self.upscaleResult(smallScaleResult)
+            self.result = result
+            return result
 
     def getGrayRescaledImage(self):
         outputSize = fullSizeGrayImage.shape[0]//self.scaleFactor, fullSizeGrayImage.shape[1]//self.scaleFactor
@@ -180,12 +178,10 @@ class ZiliaONHDetector(EllipseDetector):
         binaryImage = self.grayImage > self.threshold
         return canny(binaryImage)
 
-    def unpackAndUpscaleParameters(self):
-        yc, xc, a, b = [int(round(x)*self.scaleFactor) for x in self.bestSmallScaleEllipse[1:5]]
-        orientation = best[5]
-        yCenter = yc
-        xCenter = xc
-        minorAxis = a
-        majorAxis = b
-        orientation = orientation
-        return (xCenter, yCenter), minorAxis, majorAxis, orientation
+    def upscaleResult(self, smallScaleResult):
+        (xCenter, yCenter), minAxis, majAxis, orientation = smallScaleResult
+        xCenter = self.scaleFactor*xCenter
+        yCenter = self.scaleFactor*yCenter
+        minAxis = self.scaleFactor*minAxis
+        majAxis = self.scaleFactor*majAxis
+        return (xCenter, yCenter), minAxis, majAxis, orientation
