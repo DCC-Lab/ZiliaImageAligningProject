@@ -8,11 +8,21 @@ from scipy.optimize import nnls
 lowerLimit = 510
 upperLimit = 590
 
+"""
+Test spectras relative path.
+Dark ref came from E:\Background\20210316-102946-bresil-dark-2
+Spectrum came from E:\Baseline3\Bresil 1511184\20210316-095955-bresil-od-onh-rlp2
+"""
+darkRefPath = r"./tests/TestSpectrums/background.csv"
+
+spectrumPath = r"./tests/TestSpectrums/spectrum.csv"
+
+
 class Spectrum:
     data = np.array([])
     wavelength = np.array([])
 
-def loadComponentesSpectra():
+def loadComponentsSpectra():
     '''load components spectrums for the analysis'''
     spectrumComponents = pd.read_csv(r'_components_spectra.csv')
     npComponents = spectrumComponents.to_numpy()
@@ -67,7 +77,8 @@ def loadWhiteRef(referenceNameNothinInfront='int75_LEDON_nothingInFront.csv',
 def loadDarkRef(skipRows=4,wavelengthColumn=0,firstSpecColumn=3):
     ''' returns cropped (between 500 to 600) dark reference and the wavelength'''
     filetypes = [("csv files", "*.csv")]
-    csv_file_path = askopenfilename(title="select the dark reference .csv file",filetypes=filetypes)
+    # csv_file_path = askopenfilename(title="select the dark reference .csv file",filetypes=filetypes)
+    csv_file_path = darkRefPath
     darkRef = pd.read_csv(csv_file_path, sep=',', skiprows=skipRows).to_numpy()
     darkRefSpec = Spectrum()
     darkRefSpec.data = np.mean(darkRef[:,firstSpecColumn:],axis=1)
@@ -78,7 +89,8 @@ def loadDarkRef(skipRows=4,wavelengthColumn=0,firstSpecColumn=3):
 def loadSpectrum(skipRows=4,wavelengthColumn=0,firstSpecColumn=3):
     ''' returns dark reference and the wavelength'''
     filetypes = [("csv files", "*.csv")]
-    csv_file_path = askopenfilename(title="select the spectrum .csv file", filetypes=filetypes)
+    # csv_file_path = askopenfilename(title="select the spectrum .csv file", filetypes=filetypes)
+    csv_file_path = spectrumPath
     spectrumData = pd.read_csv(csv_file_path, sep=',', skiprows=skipRows).to_numpy()
     spec = Spectrum()
     spec.data = spectrumData[:, firstSpecColumn:]
@@ -107,7 +119,7 @@ def absorbanceSpectrum(refSpec,normalizedSpec):
     modifiedData = np.zeros(normalizedSpec.data.shape)
     for i in range(normalizedSpec.wavelength.shape[0]):
         modifiedData[i,:] = refSpec.data[find_nearest(refSpec.wavelength, normalizedSpec.wavelength[i])]
-    modifiedSpec=Spectrum()
+    modifiedSpec = Spectrum()
     normalizedSpec.data[normalizedSpec.data==0] = 0.0001
     modifiedSpec.data = np.log(np.divide(modifiedData, normalizedSpec.data, out=None, where=True, casting= 'same_kind',
                                 order = 'K', dtype = None))
@@ -128,7 +140,7 @@ def reflection(spec):
 
 def cropComponents(absorbanceSpectrum):
     """crop the components regarding the upper limit and lower limit wavelengths"""
-    Components = loadComponentesSpectra()
+    Components = loadComponentsSpectra()
     # absorbance, spectrumWavelength = absorbanceSpectrum()
     oxyhemoglobin = np.zeros(absorbanceSpectrum.wavelength.shape)
     deoxyhemoglobin = np.zeros(absorbanceSpectrum.wavelength.shape)
@@ -180,7 +192,7 @@ def mainAnalysis ():
     absorbance = absorbanceSpectrum(whiteRef,normalizedSpectrum)
     croppedComponent = cropComponents(absorbance)
     features = componentsToArray(croppedComponent)
-    print(features.shape)
+    # print(features.shape)
     # print('features shape :', features.shape)
     # coef=getCoef(absorbance,features)
     #
