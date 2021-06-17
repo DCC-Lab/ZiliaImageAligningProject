@@ -152,20 +152,6 @@ def getFiles(directory: str, extension="jpg", newImages=True) -> list:
     return filteredFiles
 
 
-def getFilesToInclude(directory: str, extension="jpg") -> list:
-    setOfFiles = set(listNameOfFiles(directory, extension=extension))
-    setOfFilesToExclude = set(getFilesToExclude(directory, extension=extension))
-    listOfFilesToInclude = list( setOfFiles - setOfFilesToExclude )
-    return listOfFilesToInclude
-
-
-def getFilePaths(directory: str, fileNames: list) -> list:
-    filesWithFullPath = []
-    for fileName in fileNames:
-        filesWithFullPath.append(directory+"/"+fileName)
-    return filesWithFullPath
-
-
 def loadImages(collectionDir: str, leftEye=False, extension="jpg", newImages=True) -> np.ndarray:
     """
     This function gets the directory of a series of images
@@ -205,14 +191,9 @@ def seperateNewImages(grayImageCollection, collectionDir: str, extension="jpg") 
     radius = np.array([])
     imageNumber = np.array([])
 
-    files = getFiles(collectionDir, extension=extension, newImages=True)
-# =======
-#     listOfImages = getFilesToInclude(collectionDir, extension=extension)
-#     listOfImagePaths = getFilePaths(collectionDir, listOfImages)
-#     sortedPaths = np.sort(listOfImagePaths)
-#     sortedFileNames = np.sort(listOfImages)
-# >>>>>>> master
-    # first pic = eye, 2nd pic = rosa, because sorted alphabetically
+    sortedFileNames = np.sort(listFileNames(collectionDir, extension))
+    files = getFiles(collectionDir, extension, newImages=True)
+    # first pic = eye, 2nd pic = rosa
     for i in range(1, grayImageCollection.shape[0]):
         if "eye" in files[i-1]:
             loadLaserImage = files[i]
@@ -272,6 +253,12 @@ def findImageShift(Image: np.ndarray, Margin=250, N=100) -> np.ndarray:
             indexShift = np.vstack((indexShift, np.array(ind) - np.array([a.shape[1]/2, a.shape[2]/2])))
             totalShift = np.vstack((totalShift, np.sum(indexShift, axis=0)))
     return totalShift
+
+def newFindImageShift():
+    """
+    Find the image shift with the new ellipse finding algorithm parameters.
+    """
+    pass
 
 
 def applyShift(xLaser: np.ndarray, yLaser:np.ndarray, shift:np.ndarray) -> tuple:
