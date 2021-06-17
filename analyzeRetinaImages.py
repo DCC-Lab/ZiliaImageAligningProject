@@ -11,7 +11,7 @@ class EllipseDetector:
     This is the order in which this should be used:
         detector = EllipseDetector(image)
         detector.preProcessImage()
-        bestEllipse = detector.findBestEllipse
+        bestEllipse = detector.findBestEllipse()
         (xCenter, yCenter), minorAxis, majorAxis, orientation = bestEllipse
     """
 
