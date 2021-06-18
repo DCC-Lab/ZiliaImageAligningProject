@@ -13,17 +13,20 @@ Relative paths of test spectras
 Dark ref came from E:\Background\20210316-102946-bresil-dark-2
 Spectrum came from E:\Baseline3\Bresil 1511184\20210316-095955-bresil-od-onh-rlp2
 """
+componentsSpectra = r'./tests/TestSpectrums/_components_spectra.csv'
 darkRefPath = r"./tests/TestSpectrums/background.csv"
 spectrumPath = r"./tests/TestSpectrums/spectrum.csv"
+referenceNameNothinInfront=r"./int75_LEDON_nothingInFront.csv"
+whiteReferenceName = r"./int75_WHITEREFERENCE.csv"
 
 
 class Spectrum:
     data = np.array([])
     wavelength = np.array([])
 
-def loadComponentsSpectra():
+def loadComponentsSpectra(componentsSpectra):
     '''load components spectrums for the analysis'''
-    spectrumComponents = pd.read_csv(r'_components_spectra.csv')
+    spectrumComponents = pd.read_csv(componentsSpectra)
     npComponents = spectrumComponents.to_numpy()
     wavelengths = npComponents[:,0]
     oxyhemoglobin = npComponents[:,1]
@@ -73,7 +76,7 @@ def loadWhiteRef(referenceNameNothinInfront, whiteReferenceName,
     refCroppedNormalized = normalizeRef(croppedRef)
     return refCroppedNormalized
 
-def loadDarkRef(skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
+def loadDarkRef(darkRefPath, skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
     ''' returns cropped (between 500 to 600) dark reference and the wavelength'''
     filetypes = [("csv files", "*.csv")]
     # csv_file_path = askopenfilename(title="select the dark reference .csv file",filetypes=filetypes)
@@ -85,7 +88,7 @@ def loadDarkRef(skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
     croppedDarkRef = cropFunction(darkRefSpec)
     return croppedDarkRef
 
-def loadSpectrum(skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
+def loadSpectrum(spectrumPath, skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
     ''' returns dark reference and the wavelength'''
     filetypes = [("csv files", "*.csv")]
     # csv_file_path = askopenfilename(title="select the spectrum .csv file", filetypes=filetypes)
@@ -137,9 +140,9 @@ def reflection(spec):
 
 
 
-def cropComponents(absorbanceSpectrum):
+def cropComponents(absorbanceSpectrum, componentsSpectra):
     """crop the components regarding the upper limit and lower limit wavelengths"""
-    Components = loadComponentsSpectra()
+    Components = loadComponentsSpectra(componentsSpectra)
     # absorbance, spectrumWavelength = absorbanceSpectrum()
     oxyhemoglobin = np.zeros(absorbanceSpectrum.wavelength.shape)
     deoxyhemoglobin = np.zeros(absorbanceSpectrum.wavelength.shape)
@@ -182,14 +185,14 @@ def getCoef(absorbance, variables):
     print('all coefs :' , allCoef)
     return allCoef
 
-def mainAnalysis(referenceNameNothinInfront, whiteReferenceName):
+def mainAnalysis(referenceNameNothinInfront, whiteReferenceName, darkRefPath, spectrumPath, componentsSpectra):
     """load data, do all the analysis, get coefs as concentration"""
     whiteRef = loadWhiteRef(referenceNameNothinInfront, whiteReferenceName)
-    darkRef = loadDarkRef()
-    spectrums = loadSpectrum()
+    darkRef = loadDarkRef(darkRefPath)
+    spectrums = loadSpectrum(spectrumPath)
     normalizedSpectrum = normalizeSpectrum(spectrums,darkRef)
     absorbance = absorbanceSpectrum(whiteRef,normalizedSpectrum)
-    croppedComponent = cropComponents(absorbance)
+    croppedComponent = cropComponents(absorbance, componentsSpectra)
     features = componentsToArray(croppedComponent)
     # print(features.shape)
     # print('features shape :', features.shape)
@@ -202,7 +205,7 @@ def mainAnalysis(referenceNameNothinInfront, whiteReferenceName):
 
 
 
-# mainAnalysis(referenceNameNothinInfront=r"./int75_LEDON_nothingInFront.csv", whiteReferenceName = r"./int75_WHITEREFERENCE.csv")
+# mainAnalysis(referenceNameNothinInfront, whiteReferenceName)
 
 
 
