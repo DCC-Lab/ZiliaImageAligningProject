@@ -9,12 +9,11 @@ lowerLimit = 510
 upperLimit = 590
 
 """
-Test spectras relative path.
+Relative paths of test spectras
 Dark ref came from E:\Background\20210316-102946-bresil-dark-2
 Spectrum came from E:\Baseline3\Bresil 1511184\20210316-095955-bresil-od-onh-rlp2
 """
 darkRefPath = r"./tests/TestSpectrums/background.csv"
-
 spectrumPath = r"./tests/TestSpectrums/spectrum.csv"
 
 
@@ -61,12 +60,12 @@ def normalizeRef(Spec):
     Spec.data = Spec.data/np.std(Spec.data)
     return Spec
 
-def loadWhiteRef(referenceNameNothinInfront='int75_LEDON_nothingInFront.csv',
-                 whiteReferenceName = 'int75_WHITEREFERENCE.csv',
-                 skipRowsNothing=24, skipRowsWhite=24,wavelengthColumn=1,firstSpecColumn=4):
-    ''' returns cropped (between 500 to 600) white reference and the wavelength'''
-    refNothingInfront = pd.read_csv (referenceNameNothinInfront,sep=',',skiprows=skipRowsNothing).to_numpy()
-    refWhite = pd.read_csv(whiteReferenceName,sep=',',skiprows=skipRowsWhite).to_numpy()
+def loadWhiteRef(referenceNameNothinInfront, whiteReferenceName,
+                 skipRowsNothing=24, skipRowsWhite=24, wavelengthColumn=1,
+                 firstSpecColumn=4):
+    # returns cropped (between 500 to 600) white reference and the wavelength"
+    refNothingInfront = pd.read_csv(referenceNameNothinInfront, sep=',', skiprows=skipRowsNothing).to_numpy()
+    refWhite = pd.read_csv(whiteReferenceName, sep=',', skiprows=skipRowsWhite).to_numpy()
     refSpectrum = Spectrum()
     refSpectrum.wavelength = refWhite[:,wavelengthColumn]
     refSpectrum.data = np.mean(refWhite[:,firstSpecColumn:],axis=1)-np.mean(refNothingInfront[:,firstSpecColumn:],axis=1)
@@ -74,7 +73,7 @@ def loadWhiteRef(referenceNameNothinInfront='int75_LEDON_nothingInFront.csv',
     refCroppedNormalized = normalizeRef(croppedRef)
     return refCroppedNormalized
 
-def loadDarkRef(skipRows=4,wavelengthColumn=0,firstSpecColumn=3):
+def loadDarkRef(skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
     ''' returns cropped (between 500 to 600) dark reference and the wavelength'''
     filetypes = [("csv files", "*.csv")]
     # csv_file_path = askopenfilename(title="select the dark reference .csv file",filetypes=filetypes)
@@ -86,7 +85,7 @@ def loadDarkRef(skipRows=4,wavelengthColumn=0,firstSpecColumn=3):
     croppedDarkRef = cropFunction(darkRefSpec)
     return croppedDarkRef
 
-def loadSpectrum(skipRows=4,wavelengthColumn=0,firstSpecColumn=3):
+def loadSpectrum(skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
     ''' returns dark reference and the wavelength'''
     filetypes = [("csv files", "*.csv")]
     # csv_file_path = askopenfilename(title="select the spectrum .csv file", filetypes=filetypes)
@@ -98,7 +97,7 @@ def loadSpectrum(skipRows=4,wavelengthColumn=0,firstSpecColumn=3):
     croppedSpectrum = cropFunction(spec)
     return croppedSpectrum
 
-def normalizeSpectrum(spec,darkRef):
+def normalizeSpectrum(spec, darkRef):
     """returns the normalized spectrum for the data"""
     dRefTile = np.tile(darkRef.data, (spec.data.shape[1], 1))
     spectrumData = spec.data-dRefTile.T
@@ -114,7 +113,7 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     return idx
 
-def absorbanceSpectrum(refSpec,normalizedSpec):
+def absorbanceSpectrum(refSpec, normalizedSpec):
     """calculate the absorbance spectrum using white reference and normalized spectrum"""
     modifiedData = np.zeros(normalizedSpec.data.shape)
     for i in range(normalizedSpec.wavelength.shape[0]):
@@ -128,7 +127,7 @@ def absorbanceSpectrum(refSpec,normalizedSpec):
 
 
 
-def scattering(spec,bValue=1.5):
+def scattering(spec, bValue=1.5):
     """calculate the scattering spectrum"""
     return (spec.wavelength / 500) ** (-1 * bValue)
 
@@ -172,7 +171,7 @@ def componentsToArray(components):
     variables = np.vstack([variables, components["reflection"]])
     return variables
 
-def getCoef(absorbance,variables):
+def getCoef(absorbance, variables):
     """apply nnls and get coefs"""
     allCoef = np.zeros([absorbance.data.shape[1],variables.shape[0]])
     for i in range(absorbance.data.shape[1]):
@@ -183,9 +182,9 @@ def getCoef(absorbance,variables):
     print('all coefs :' , allCoef)
     return allCoef
 
-def mainAnalysis ():
+def mainAnalysis(referenceNameNothinInfront, whiteReferenceName):
     """load data, do all the analysis, get coefs as concentration"""
-    whiteRef = loadWhiteRef()
+    whiteRef = loadWhiteRef(referenceNameNothinInfront, whiteReferenceName)
     darkRef = loadDarkRef()
     spectrums = loadSpectrum()
     normalizedSpectrum = normalizeSpectrum(spectrums,darkRef)
@@ -201,7 +200,14 @@ def mainAnalysis ():
 
     return features
 
-mainAnalysis()
+
+
+# mainAnalysis(referenceNameNothinInfront=r"./int75_LEDON_nothingInFront.csv", whiteReferenceName = r"./int75_WHITEREFERENCE.csv")
+
+
+
+
+
 #### This is for test
 
 # def testAnalysis ():
