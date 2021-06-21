@@ -8,7 +8,7 @@ import numpy as np
 # Run tests in order they are written
 unittest.TestLoader.sortTestMethodsUsing = None
 
-# These 2 will always be the same for every test
+# These 3 will always be the same for every test
 whiteRefName = r"./TestSpectrums/int75_WHITEREFERENCE.csv"
 refNameNothinInfront = r"./TestSpectrums/int75_LEDON_nothingInFront.csv"
 componentsSpectra = r'./TestSpectrums/_components_spectra.csv'
