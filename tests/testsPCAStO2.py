@@ -18,6 +18,8 @@ darkRefPath2 = r"./TestSpectrums/bresilODrlp2/background.csv"
 spectrumPath2 = r"./TestSpectrums/bresilODrlp2/spectrum.csv"
 darkRefPath6 = r"./TestSpectrums/bresilODrlp6/background.csv"
 spectrumPath6 = r"./TestSpectrums/bresilODrlp6/spectrum.csv"
+darkRefPath14 = r"./TestSpectrums/bresilODrlp14/background.csv"
+spectrumPath14 = r"./TestSpectrums/bresilODrlp14/spectrum.csv"
 
 
 class TestPCAStO2(envtest.ZiliaTestCase):
@@ -69,7 +71,16 @@ class TestPCAStO2(envtest.ZiliaTestCase):
         pca = PCA()
         pca.fit(features)
         # print(pca.n_components_)
-        # We get 6 AGAIN components with default PCA parameters
+        # We get 6 components AGAIN with default PCA parameters
+
+    def testGetNumberOfComponentsOnRLP14(self):
+        features = mainAnalysis(darkRefPath14, spectrumPath14, whiteRefName=whiteRefName,
+                                refNameNothinInfront=refNameNothinInfront,
+                                componentsSpectra=componentsSpectra)
+        pca = PCA()
+        pca.fit(features)
+        # print(pca.n_components_)
+        # We get 6 components AGAIN AGAIN with default PCA parameters
 
 
 if __name__ == "__main__":
