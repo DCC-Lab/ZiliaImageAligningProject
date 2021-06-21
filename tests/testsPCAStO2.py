@@ -14,14 +14,16 @@ refNameNothinInfront = r"./TestSpectrums/int75_LEDON_nothingInFront.csv"
 componentsSpectra = r'./TestSpectrums/_components_spectra.csv'
 
 # These will be different for every test
-darkRefPath = r"./TestSpectrums/bresilODrlp2/background.csv"
-spectrumPath = r"./TestSpectrums/bresilODrlp2/spectrum.csv"
+darkRefPath2 = r"./TestSpectrums/bresilODrlp2/background.csv"
+spectrumPath2 = r"./TestSpectrums/bresilODrlp2/spectrum.csv"
+darkRefPath6 = r"./TestSpectrums/bresilODrlp6/background.csv"
+spectrumPath6 = r"./TestSpectrums/bresilODrlp6/spectrum.csv"
 
 
 class TestPCAStO2(envtest.ZiliaTestCase):
 
     def testImport(self):
-        features = mainAnalysis(darkRefPath, spectrumPath, whiteRefName=whiteRefName,
+        features = mainAnalysis(darkRefPath2, spectrumPath2, whiteRefName=whiteRefName,
                                 refNameNothinInfront=refNameNothinInfront,
                                 componentsSpectra=componentsSpectra)
         self.assertIsNotNone(features)
@@ -29,27 +31,46 @@ class TestPCAStO2(envtest.ZiliaTestCase):
     def setUp(self):
         # this will get executed before every test
         super().setUp()
-        self.features = mainAnalysis(darkRefPath, spectrumPath, whiteRefName=whiteRefName,
+        self.features = mainAnalysis(darkRefPath2, spectrumPath2, whiteRefName=whiteRefName,
                                 refNameNothinInfront=refNameNothinInfront,
                                 componentsSpectra=componentsSpectra)
 
     def testDataReturnTypeIsNumpyArray(self):
-        self.assertTrue(type(self.features) == np.ndarray)
+        features = mainAnalysis(darkRefPath2, spectrumPath2, whiteRefName=whiteRefName,
+                                refNameNothinInfront=refNameNothinInfront,
+                                componentsSpectra=componentsSpectra)
+        self.assertTrue(type(features) == np.ndarray)
 
     def testJustInitiatePCA(self):
         pca = PCA()
         self.assertTrue(True)
 
     def testFitPCAToTheData(self):
+        features = mainAnalysis(darkRefPath2, spectrumPath2, whiteRefName=whiteRefName,
+                                refNameNothinInfront=refNameNothinInfront,
+                                componentsSpectra=componentsSpectra)
         pca = PCA()
-        pca.fit(self.features)
+        pca.fit(features)
         self.assertTrue(True)
 
-    def testGetNumberOfComponents(self):
+    def testGetNumberOfComponentsOnRLP2(self):
+        features = mainAnalysis(darkRefPath2, spectrumPath2, whiteRefName=whiteRefName,
+                                refNameNothinInfront=refNameNothinInfront,
+                                componentsSpectra=componentsSpectra)
         pca = PCA()
-        pca.fit(self.features)
+        pca.fit(features)
         # print(pca.n_components_)
         # We get 6 components with default PCA parameters
+
+    def testGetNumberOfComponentsOnRLP4(self):
+        features = mainAnalysis(darkRefPath6, spectrumPath6, whiteRefName=whiteRefName,
+                                refNameNothinInfront=refNameNothinInfront,
+                                componentsSpectra=componentsSpectra)
+        pca = PCA()
+        pca.fit(features)
+        # print(pca.n_components_)
+        # We get 6 AGAIN components with default PCA parameters
+
 
 if __name__ == "__main__":
     envtest.main()
