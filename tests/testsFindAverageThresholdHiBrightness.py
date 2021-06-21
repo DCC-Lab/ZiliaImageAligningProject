@@ -3,6 +3,8 @@ from skimage.io import imread
 from skimage.color import rgb2gray
 from skimage.filters import threshold_otsu
 from processImages import getFiles
+import matplotlib.pyplot as plt
+import numpy as np
 
 """
 WARNING: this test file will use absolute paths for data, which are necessary
@@ -27,8 +29,6 @@ listOfFolderPaths.append(r"E:\Baseline3\Somalie 1508202\20210317-141139-somalie-
 # listOfFolderPaths.append(r"")
 
 
-
-
 # @envtest.skip("Will fail on other computers if path is not selected properly.")
 class TestFindAverageThresholdHiBrightness(envtest.ZiliaTestCase):
 
@@ -43,6 +43,20 @@ class TestFindAverageThresholdHiBrightness(envtest.ZiliaTestCase):
         eyesAndRosas = getFiles(listOfFolderPaths[0])
         # print(eyesAndRosas)
         self.assertTrue(len(eyesAndRosas) > 0)
+
+    @envtest.skip("skip plots")
+    def testPlotHistogram(self):
+        fakeData = [1,1,1,1,2,2,3,3,4,4,4,5,5,6,6,7,7,8,9,7,8,9]
+        plt.hist(fakeData, bins='auto')
+        plt.show()
+
+    def testGetMeanOfList(self):
+        fakeData = [1,1,1,1,2,2,3,3,4,4,4,5,5,6,6,7,7,8,9,7,8,9]
+        mean = np.mean(fakeData)
+        # print(mean) #4.681818181818182
+
+    def testGetMeanThresholdOfWholeFolder(self):
+        pass
 
 
 if __name__ == "__main__":
