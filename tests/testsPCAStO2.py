@@ -8,23 +8,30 @@ import numpy as np
 # Run tests in order they are written
 unittest.TestLoader.sortTestMethodsUsing = None
 
-componentsSpectra = r'./TestSpectrums/_components_spectra.csv'
-darkRefPath = r"./TestSpectrums/background.csv"
-spectrumPath = r"./TestSpectrums/spectrum.csv"
-refNameNothinInfront = r"./TestSpectrums/int75_LEDON_nothingInFront.csv"
+# These 2 will always be the same for every test
 whiteRefName = r"./TestSpectrums/int75_WHITEREFERENCE.csv"
+refNameNothinInfront = r"./TestSpectrums/int75_LEDON_nothingInFront.csv"
+componentsSpectra = r'./TestSpectrums/_components_spectra.csv'
+
+# These will be different for every test
+darkRefPath = r"./TestSpectrums/bresilODrlp2/background.csv"
+spectrumPath = r"./TestSpectrums/bresilODrlp2/spectrum.csv"
 
 
 class TestPCAStO2(envtest.ZiliaTestCase):
 
     def testImport(self):
-        features = mainAnalysis(refNameNothinInfront, whiteRefName, darkRefPath, spectrumPath, componentsSpectra)
+        features = mainAnalysis(darkRefPath, spectrumPath, whiteRefName=whiteRefName,
+                                refNameNothinInfront=refNameNothinInfront,
+                                componentsSpectra=componentsSpectra)
         self.assertIsNotNone(features)
 
     def setUp(self):
         # this will get executed before every test
-        super(TestPCAStO2, self).setUp()
-        self.features = mainAnalysis(refNameNothinInfront, whiteRefName, darkRefPath, spectrumPath, componentsSpectra)
+        super().setUp()
+        self.features = mainAnalysis(darkRefPath, spectrumPath, whiteRefName=whiteRefName,
+                                refNameNothinInfront=refNameNothinInfront,
+                                componentsSpectra=componentsSpectra)
 
     def testDataReturnTypeIsNumpyArray(self):
         self.assertTrue(type(self.features) == np.ndarray)

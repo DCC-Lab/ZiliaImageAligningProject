@@ -13,11 +13,10 @@ Relative paths of test spectras
 Dark ref came from E:\Background\20210316-102946-bresil-dark-2
 Spectrum came from E:\Baseline3\Bresil 1511184\20210316-095955-bresil-od-onh-rlp2
 """
+# These 2 will always be the same for every test
+whiteRefName = r"./tests/TestSpectrums/int75_WHITEREFERENCE.csv"
+refNameNothinInfront = r"./tests/TestSpectrums/int75_LEDON_nothingInFront.csv"
 componentsSpectra = r'./tests/TestSpectrums/_components_spectra.csv'
-darkRefPath = r"./tests/TestSpectrums/background.csv"
-spectrumPath = r"./tests/TestSpectrums/spectrum.csv"
-refNameNothinInfront = r"./int75_LEDON_nothingInFront.csv"
-whiteRefName = r"./int75_WHITEREFERENCE.csv"
 
 
 class Spectrum:
@@ -185,7 +184,8 @@ def getCoef(absorbance, variables):
     print('all coefs :' , allCoef)
     return allCoef
 
-def mainAnalysis(refNameNothinInfront, whiteRefName, darkRefPath, spectrumPath, componentsSpectra):
+def mainAnalysis(darkRefPath, spectrumPath, componentsSpectra=componentsSpectra,
+                whiteRefName=whiteRefName, refNameNothinInfront=refNameNothinInfront):
     """load data, do all the analysis, get coefs as concentration"""
     whiteRef = loadWhiteRef(refNameNothinInfront, whiteRefName)
     darkRef = loadDarkRef(darkRefPath)
@@ -202,6 +202,10 @@ def mainAnalysis(refNameNothinInfront, whiteRefName, darkRefPath, spectrumPath, 
     return features
 
 
+# darkRefPath = r"./tests/TestSpectrums/bresilODrlp2/background.csv"
+# spectrumPath = r"./tests/TestSpectrums/bresilODrlp2/spectrum.csv"
+
+# mainAnalysis(darkRefPath, spectrumPath)
 
 
 #### This is for test
