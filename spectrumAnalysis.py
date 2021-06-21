@@ -16,8 +16,8 @@ Spectrum came from E:\Baseline3\Bresil 1511184\20210316-095955-bresil-od-onh-rlp
 componentsSpectra = r'./tests/TestSpectrums/_components_spectra.csv'
 darkRefPath = r"./tests/TestSpectrums/background.csv"
 spectrumPath = r"./tests/TestSpectrums/spectrum.csv"
-referenceNameNothinInfront=r"./int75_LEDON_nothingInFront.csv"
-whiteReferenceName = r"./int75_WHITEREFERENCE.csv"
+refNameNothinInfront = r"./int75_LEDON_nothingInFront.csv"
+whiteRefName = r"./int75_WHITEREFERENCE.csv"
 
 
 class Spectrum:
@@ -63,12 +63,12 @@ def normalizeRef(Spec):
     Spec.data = Spec.data/np.std(Spec.data)
     return Spec
 
-def loadWhiteRef(referenceNameNothinInfront, whiteReferenceName,
+def loadWhiteRef(refNameNothinInfront, whiteRefName,
                  skipRowsNothing=24, skipRowsWhite=24, wavelengthColumn=1,
                  firstSpecColumn=4):
     # returns cropped (between 500 to 600) white reference and the wavelength"
-    refNothingInfront = pd.read_csv(referenceNameNothinInfront, sep=',', skiprows=skipRowsNothing).to_numpy()
-    refWhite = pd.read_csv(whiteReferenceName, sep=',', skiprows=skipRowsWhite).to_numpy()
+    refNothingInfront = pd.read_csv(refNameNothinInfront, sep=',', skiprows=skipRowsNothing).to_numpy()
+    refWhite = pd.read_csv(whiteRefName, sep=',', skiprows=skipRowsWhite).to_numpy()
     refSpectrum = Spectrum()
     refSpectrum.wavelength = refWhite[:,wavelengthColumn]
     refSpectrum.data = np.mean(refWhite[:,firstSpecColumn:],axis=1)-np.mean(refNothingInfront[:,firstSpecColumn:],axis=1)
@@ -185,28 +185,21 @@ def getCoef(absorbance, variables):
     print('all coefs :' , allCoef)
     return allCoef
 
-def mainAnalysis(referenceNameNothinInfront, whiteReferenceName, darkRefPath, spectrumPath, componentsSpectra):
+def mainAnalysis(refNameNothinInfront, whiteRefName, darkRefPath, spectrumPath, componentsSpectra):
     """load data, do all the analysis, get coefs as concentration"""
-    whiteRef = loadWhiteRef(referenceNameNothinInfront, whiteReferenceName)
+    whiteRef = loadWhiteRef(refNameNothinInfront, whiteRefName)
     darkRef = loadDarkRef(darkRefPath)
     spectrums = loadSpectrum(spectrumPath)
-    normalizedSpectrum = normalizeSpectrum(spectrums,darkRef)
-    absorbance = absorbanceSpectrum(whiteRef,normalizedSpectrum)
+    normalizedSpectrum = normalizeSpectrum(spectrums, darkRef)
+    absorbance = absorbanceSpectrum(whiteRef, normalizedSpectrum)
     croppedComponent = cropComponents(absorbance, componentsSpectra)
     features = componentsToArray(croppedComponent)
-    # print(features.shape)
     # print('features shape :', features.shape)
-    # coef=getCoef(absorbance,features)
-    #
+    # coef = getCoef(absorbance,features)
     # concentration = 100 * coef[:,1] /(coef[:,1]+coef[:,2])
-    # concentration[np.isnan(concentration)]=0
+    # concentration[np.isnan(concentration)] = 0
 
     return features
-
-
-
-# mainAnalysis(referenceNameNothinInfront, whiteReferenceName)
-
 
 
 
@@ -245,8 +238,8 @@ def mainAnalysis(referenceNameNothinInfront, whiteReferenceName, darkRefPath, sp
 
 # def bloodTest ():
 #     """load data, do all the analysis, get coefs as concentration"""
-#     whiteRef=loadWhiteRef(referenceNameNothinInfront='/Users/elahe/Documents/Bloodsamples/int75_LEDON_nothingInFront.csv',
-#                           whiteReferenceName='/Users/elahe/Documents/Bloodsamples/int75_WHITEREFERENCE.csv')
+#     whiteRef=loadWhiteRef(refNameNothinInfront='/Users/elahe/Documents/Bloodsamples/int75_LEDON_nothingInFront.csv',
+#                           whiteRefName='/Users/elahe/Documents/Bloodsamples/int75_WHITEREFERENCE.csv')
 #     darkRef=loadDarkRef(skipRows=24,wavelengthColumn=1,firstSpecColumn=4)
 #     darkRef.data[np.isnan(darkRef.data)] = 0
 #     spectrums=loadSpectrum(skipRows=24,wavelengthColumn=1,firstSpecColumn=4)
