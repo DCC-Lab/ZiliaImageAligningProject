@@ -8,21 +8,7 @@ import numpy as np
 # Run tests in order they are written
 unittest.TestLoader.sortTestMethodsUsing = None
 
-<<<<<<< HEAD
-# These 3 will always be the same for every test
-whiteRefName = r"./TestSpectrums/int75_WHITEREFERENCE.csv"
-refNameNothinInfront = r"./TestSpectrums/int75_LEDON_nothingInFront.csv"
-componentsSpectra = r'./TestSpectrums/_components_spectra.csv'
 
-# These will be different for every test
-darkRefPath2 = r"./TestSpectrums/bresilODrlp2/background.csv"
-spectrumPath2 = r"./TestSpectrums/bresilODrlp2/spectrum.csv"
-darkRefPath6 = r"./TestSpectrums/bresilODrlp6/background.csv"
-spectrumPath6 = r"./TestSpectrums/bresilODrlp6/spectrum.csv"
-darkRefPath14 = r"./TestSpectrums/bresilODrlp14/background.csv"
-spectrumPath14 = r"./TestSpectrums/bresilODrlp14/spectrum.csv"
-=======
-<<<<<<< HEAD
 # These 3 will always be the same for every test
 whiteRefName = r"../int75_WHITEREFERENCE.csv"
 refNameNothinInfront = r"../int75_LEDON_nothingInFront.csv"
@@ -35,14 +21,6 @@ darkRefPath6 = r"./TestSpectrums/bresilODrlp6/background.csv"
 spectrumPath6 = r"./TestSpectrums/bresilODrlp6/spectrum.csv"
 darkRefPath14 = r"./TestSpectrums/bresilODrlp14/background.csv"
 spectrumPath14 = r"./TestSpectrums/bresilODrlp14/spectrum.csv"
-=======
-componentsSpectra = r'./TestSpectrums/_components_spectra.csv'
-darkRefPath = r"./TestSpectrums/background.csv"
-spectrumPath = r"./TestSpectrums/spectrum.csv"
-refNameNothinInfront = r"./TestSpectrums/int75_LEDON_nothingInFront.csv"
-whiteRefName = r"./TestSpectrums/int75_WHITEREFERENCE.csv"
->>>>>>> 1b140f2c9db1f809a257ce0c64433233557399d9
->>>>>>> 98860cef0bf309b34454494e1fcf00e6ca908cf2
 
 
 class TestPCAStO2(envtest.ZiliaTestCase):
