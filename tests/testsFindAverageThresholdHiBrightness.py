@@ -122,7 +122,7 @@ class TestFindAverageThresholdHiBrightness(envtest.ZiliaTestCase):
         mean = np.mean(thresholds)
         # print(mean) # 0.5780243949142158
 
-    @envtest.skip("Long computing time")
+    @envtest.skip("Long computing time, and skip plots")
     def testGetMeanThresholdOfWholeFolder(self):
         testDir = listOfFolderPaths[0]
         retinaImages = self.getOnlyRetinaImages(testDir)
