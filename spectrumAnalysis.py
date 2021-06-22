@@ -13,11 +13,18 @@ Relative paths of test spectras
 Dark ref came from E:\Background\20210316-102946-bresil-dark-2
 Spectrum came from E:\Baseline3\Bresil 1511184\20210316-095955-bresil-od-onh-rlp2
 """
+<<<<<<< HEAD
+# These 3 will always be the same for every test
+whiteRefName = r"int75_WHITEREFERENCE.csv"
+refNameNothinInfront = r"int75_LEDON_nothingInFront.csv"
+componentsSpectra = r'_components_spectra.csv'
+=======
 componentsSpectra = r'./tests/TestSpectrums/_components_spectra.csv'
 darkRefPath = r"./tests/TestSpectrums/background.csv"
 spectrumPath = r"./tests/TestSpectrums/spectrum.csv"
 refNameNothinInfront = r"./int75_LEDON_nothingInFront.csv"
 whiteRefName = r"./int75_WHITEREFERENCE.csv"
+>>>>>>> 1b140f2c9db1f809a257ce0c64433233557399d9
 
 
 class Spectrum:
@@ -102,9 +109,15 @@ def loadSpectrum(skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
 
 def normalizeSpectrum(spec,darkRef):
     """returns the normalized spectrum for the data"""
+<<<<<<< HEAD
+    dRefTile = np.tile(darkRef.data, (spec.data.shape[1], 1))
+    spectrumData = spec.data - dRefTile.T
+    STDspectrum = np.std(spectrumData,axis=1)
+=======
     dRefTile = np.tile(darkRef.data, (spec.data.shape[1], 1)).T
     spectrumData=spec.data-dRefTile
     STDspectrum=np.std(spectrumData,axis=0)
+>>>>>>> 1b140f2c9db1f809a257ce0c64433233557399d9
     spectrumDataNormalized = Spectrum()
     spectrumDataNormalized.data = (spectrumData.T/STDspectrum[:,None]).T
     spectrumDataNormalized.wavelength = spec.wavelength
