@@ -202,7 +202,6 @@ def mainAnalysis(darkRefPath, spectrumPath, componentsSpectra=componentsSpectra,
     # concentration[np.isnan(concentration)] = 0
 
     return features
->>>>>>> 874c915b4cbcae47f19386ebf98c36706325234c
 
 
 # darkRefPath = r"./tests/TestSpectrums/bresilODrlp2/background.csv"
@@ -245,8 +244,8 @@ def mainAnalysis(darkRefPath, spectrumPath, componentsSpectra=componentsSpectra,
 
 def bloodTest ():
     """load data, do all the analysis, get coefs as concentration"""
-    whiteRef=loadWhiteRef(refNameNothinInfront='/Users/elahe/Documents/Bloodsamples/int75_LEDON_nothingInFront.csv',
-                          whiteRefName='/Users/elahe/Documents/Bloodsamples/int75_WHITEREFERENCE.csv')
+    whiteRef=loadWhiteRef(refNameNothinInfront='./tests/TestSpectrums/blood/int75_LEDON_nothingInFront.csv',
+                          whiteRefName='./tests/TestSpectrums/blood/int75_WHITEREFERENCE.csv')
     darkRef=loadDarkRef(skipRows=24,wavelengthColumn=1,firstSpecColumn=4)
     darkRef.data[np.isnan(darkRef.data)] = 0
     spectrums=loadSpectrum(skipRows=24,wavelengthColumn=1,firstSpecColumn=4)
