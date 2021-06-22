@@ -186,23 +186,29 @@ def getCoef(absorbance, variables):
     print('all coefs :' , allCoef)
     return allCoef
 
-# def mainAnalysis(refNameNothinInfront, whiteRefName, darkRefPath, spectrumPath, componentsSpectra):
-#     """load data, do all the analysis, get coefs as concentration"""
-#     whiteRef = loadWhiteRef(refNameNothinInfront, whiteRefName)
-#     darkRef = loadDarkRef(darkRefPath)
-#     spectrums = loadSpectrum(spectrumPath)
-#     normalizedSpectrum = normalizeSpectrum(spectrums, darkRef)
-#     absorbance = absorbanceSpectrum(whiteRef, normalizedSpectrum)
-#     croppedComponent = cropComponents(absorbance, componentsSpectra)
-#     features = componentsToArray(croppedComponent)
-#     # print('features shape :', features.shape)
-#     # coef = getCoef(absorbance,features)
-#     # concentration = 100 * coef[:,1] /(coef[:,1]+coef[:,2])
-#     # concentration[np.isnan(concentration)] = 0
-#
-#     return features
+def mainAnalysis(darkRefPath, spectrumPath, componentsSpectra=componentsSpectra,
+                whiteRefName=whiteRefName, refNameNothinInfront=refNameNothinInfront):
+    """load data, do all the analysis, get coefs as concentration"""
+    whiteRef = loadWhiteRef(refNameNothinInfront, whiteRefName)
+    darkRef = loadDarkRef(darkRefPath)
+    spectrums = loadSpectrum(spectrumPath)
+    normalizedSpectrum = normalizeSpectrum(spectrums, darkRef)
+    absorbance = absorbanceSpectrum(whiteRef, normalizedSpectrum)
+    croppedComponent = cropComponents(absorbance, componentsSpectra)
+    features = componentsToArray(croppedComponent)
+    # print('features shape :', features.shape)
+    # coef = getCoef(absorbance,features)
+    # concentration = 100 * coef[:,1] /(coef[:,1]+coef[:,2])
+    # concentration[np.isnan(concentration)] = 0
+
+    return features
+>>>>>>> 874c915b4cbcae47f19386ebf98c36706325234c
 
 
+# darkRefPath = r"./tests/TestSpectrums/bresilODrlp2/background.csv"
+# spectrumPath = r"./tests/TestSpectrums/bresilODrlp2/spectrum.csv"
+
+# mainAnalysis(darkRefPath, spectrumPath)
 
 
 #### This is for test
