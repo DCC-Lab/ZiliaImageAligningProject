@@ -1,7 +1,6 @@
 import envtest
 from skimage.io import imread
-from skimage.color import rgb2gray
-from skimage.filters import threshold_otsu
+from skimage.filters import threshold_otsu as otsu
 from processImages import getFiles
 import matplotlib.pyplot as plt
 import numpy as np
@@ -29,7 +28,7 @@ listOfFolderPaths.append(r"E:\Baseline3\Somalie 1508202\20210317-141139-somalie-
 # listOfFolderPaths.append(r"")
 
 
-# @envtest.skip("Will fail on other computers if path is not selected properly.")
+# @envtest.skip("Will fail on other computers if path is not changed.")
 class TestFindAverageThresholdHiBrightness(envtest.ZiliaTestCase):
 
     def testInit(self):
@@ -55,7 +54,94 @@ class TestFindAverageThresholdHiBrightness(envtest.ZiliaTestCase):
         mean = np.mean(fakeData)
         # print(mean) #4.681818181818182
 
+    def getOnlyRetinaImages(self, directory):
+        # I only need to analyze the threshold of retina images, not rosa.
+        images = getFiles(directory)
+        retinaImages = []
+        for image in images:
+            if "rosa" in image.lower():
+                # skip this image
+                continue
+            else:
+                # keep the retina images
+                retinaImages.append(image)
+        return retinaImages
+
+    def testGetOnlyEyeFiles(self):
+        testDir = listOfFolderPaths[0]
+        self.assertTrue(len(testDir) > 0)
+        retinaImages = self.getOnlyRetinaImages(testDir)
+        self.assertTrue(len(retinaImages) > 1)
+        # print(retinaImages)
+        for image in retinaImages:
+            if "rosa" in image:
+                self.assertFalse(True)
+            else:
+                self.assertTrue(True)
+
+    def testGetThresholdOfOneEyeFile(self):
+        testDir = listOfFolderPaths[0]
+        retinaImages = self.getOnlyRetinaImages(testDir)
+        image = imread(retinaImages[0], as_gray=True)
+        self.assertTrue(len(image.shape) == 2)
+        thresh = otsu(image)
+        # print(thresh) # 0.5726463051470588
+
+    def testGetMeanThresholdOfAFewFiles(self):
+        testDir = listOfFolderPaths[0]
+        retinaImages = self.getOnlyRetinaImages(testDir)
+        testImages = []
+        for image in retinaImages[:7]:
+            grayImage = imread(image, as_gray=True)
+            self.assertTrue(len(grayImage.shape) == 2)
+            testImages.append(grayImage)
+        self.assertTrue(len(testImages) == 7)
+
+    def testLoadAFewFiles(self):
+        testDir = listOfFolderPaths[0]
+        retinaImages = self.getOnlyRetinaImages(testDir)
+        testImages = []
+        for image in retinaImages[:7]:
+            grayImage = imread(image, as_gray=True)
+            self.assertTrue(len(grayImage.shape) == 2)
+            testImages.append(grayImage)
+        self.assertTrue(len(testImages) == 7)
+
+    def testGetMeanThresholdOfAFewFiles(self):
+        testDir = listOfFolderPaths[0]
+        retinaImages = self.getOnlyRetinaImages(testDir)
+        testImages = []
+        thresholds = []
+        for image in retinaImages[:7]:
+            grayImage = imread(image, as_gray=True)
+            thresh = otsu(grayImage)
+            testImages.append(grayImage)
+            thresholds.append(thresh)
+        self.assertTrue(len(thresholds) == len(testImages) == 7)
+        # print(thresholds)
+        mean = np.mean(thresholds)
+        # print(mean) # 0.5780243949142158
+
+    @envtest.skip("Long computing time")
     def testGetMeanThresholdOfWholeFolder(self):
+        testDir = listOfFolderPaths[0]
+        retinaImages = self.getOnlyRetinaImages(testDir)
+        testImages = []
+        thresholds = []
+        for image in retinaImages:
+            grayImage = imread(image, as_gray=True)
+            thresh = otsu(grayImage)
+            testImages.append(grayImage)
+            thresholds.append(thresh)
+        self.assertTrue(len(thresholds) == len(retinaImages) > 1)
+        # print(len(thresholds))
+        # print(thresholds)
+        mean = np.mean(thresholds)
+        # print(mean) # 0.5685028310973513
+        plt.hist(thresholds, bins='auto')
+        plt.show()
+
+    def testGetMeanThresholdOf2Folders(self):
         pass
 
 
