@@ -13,10 +13,18 @@ Relative paths of test spectras
 Dark ref came from E:\Background\20210316-102946-bresil-dark-2
 Spectrum came from E:\Baseline3\Bresil 1511184\20210316-095955-bresil-od-onh-rlp2
 """
+<<<<<<< HEAD
 # These 3 will always be the same for every test
 whiteRefName = r"int75_WHITEREFERENCE.csv"
 refNameNothinInfront = r"int75_LEDON_nothingInFront.csv"
 componentsSpectra = r'_components_spectra.csv'
+=======
+componentsSpectra = r'./tests/TestSpectrums/_components_spectra.csv'
+darkRefPath = r"./tests/TestSpectrums/background.csv"
+spectrumPath = r"./tests/TestSpectrums/spectrum.csv"
+refNameNothinInfront = r"./int75_LEDON_nothingInFront.csv"
+whiteRefName = r"./int75_WHITEREFERENCE.csv"
+>>>>>>> 1b140f2c9db1f809a257ce0c64433233557399d9
 
 
 class Spectrum:
@@ -75,11 +83,11 @@ def loadWhiteRef(refNameNothinInfront, whiteRefName,
     refCroppedNormalized = normalizeRef(croppedRef)
     return refCroppedNormalized
 
-def loadDarkRef(darkRefPath, skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
+def loadDarkRef( skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
     ''' returns cropped (between 500 to 600) dark reference and the wavelength'''
     filetypes = [("csv files", "*.csv")]
-    # csv_file_path = askopenfilename(title="select the dark reference .csv file",filetypes=filetypes)
-    csv_file_path = darkRefPath
+    csv_file_path = askopenfilename(title="select the dark reference .csv file",filetypes=filetypes)
+    # csv_file_path = darkRefPath
     darkRef = pd.read_csv(csv_file_path, sep=',', skiprows=skipRows).to_numpy()
     darkRefSpec = Spectrum()
     darkRefSpec.data = np.mean(darkRef[:,firstSpecColumn:],axis=1)
@@ -87,11 +95,11 @@ def loadDarkRef(darkRefPath, skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
     croppedDarkRef = cropFunction(darkRefSpec)
     return croppedDarkRef
 
-def loadSpectrum(spectrumPath, skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
+def loadSpectrum(skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
     ''' returns dark reference and the wavelength'''
     filetypes = [("csv files", "*.csv")]
-    # csv_file_path = askopenfilename(title="select the spectrum .csv file", filetypes=filetypes)
-    csv_file_path = spectrumPath
+    csv_file_path = askopenfilename(title="select the spectrum .csv file", filetypes=filetypes)
+    # csv_file_path = spectrumPath
     spectrumData = pd.read_csv(csv_file_path, sep=',', skiprows=skipRows).to_numpy()
     spec = Spectrum()
     spec.data = spectrumData[:, firstSpecColumn:]
@@ -99,15 +107,22 @@ def loadSpectrum(spectrumPath, skipRows=4, wavelengthColumn=0, firstSpecColumn=3
     croppedSpectrum = cropFunction(spec)
     return croppedSpectrum
 
-def normalizeSpectrum(spec, darkRef):
+def normalizeSpectrum(spec,darkRef):
     """returns the normalized spectrum for the data"""
+<<<<<<< HEAD
     dRefTile = np.tile(darkRef.data, (spec.data.shape[1], 1))
     spectrumData = spec.data - dRefTile.T
     STDspectrum = np.std(spectrumData,axis=1)
+=======
+    dRefTile = np.tile(darkRef.data, (spec.data.shape[1], 1)).T
+    spectrumData=spec.data-dRefTile
+    STDspectrum=np.std(spectrumData,axis=0)
+>>>>>>> 1b140f2c9db1f809a257ce0c64433233557399d9
     spectrumDataNormalized = Spectrum()
-    spectrumDataNormalized.data = spectrumData/STDspectrum[:,None]
+    spectrumDataNormalized.data = (spectrumData.T/STDspectrum[:,None]).T
     spectrumDataNormalized.wavelength = spec.wavelength
     return spectrumDataNormalized
+
 
 def find_nearest(array, value):
     """find the nearest value to a value in an array and returns the index"""
@@ -200,6 +215,7 @@ def mainAnalysis(darkRefPath, spectrumPath, componentsSpectra=componentsSpectra,
     # concentration[np.isnan(concentration)] = 0
 
     return features
+>>>>>>> 874c915b4cbcae47f19386ebf98c36706325234c
 
 
 # darkRefPath = r"./tests/TestSpectrums/bresilODrlp2/background.csv"
@@ -240,32 +256,32 @@ def mainAnalysis(darkRefPath, spectrumPath, componentsSpectra=componentsSpectra,
 
 ####### blood sample test
 
-# def bloodTest ():
-#     """load data, do all the analysis, get coefs as concentration"""
-#     whiteRef=loadWhiteRef(refNameNothinInfront='/Users/elahe/Documents/Bloodsamples/int75_LEDON_nothingInFront.csv',
-#                           whiteRefName='/Users/elahe/Documents/Bloodsamples/int75_WHITEREFERENCE.csv')
-#     darkRef=loadDarkRef(skipRows=24,wavelengthColumn=1,firstSpecColumn=4)
-#     darkRef.data[np.isnan(darkRef.data)] = 0
-#     spectrums=loadSpectrum(skipRows=24,wavelengthColumn=1,firstSpecColumn=4)
-#     spectrums.data[np.isnan(spectrums.data)] = 0
-#     print(spectrums.data.shape)
-#     normalizedSpectrum=normalizeSpectrum(spectrums,darkRef)
-#     normalizedSpectrum.data[np.isnan(normalizedSpectrum.data)] = 0
-#     absorbance=absorbanceSpectrum(whiteRef,normalizedSpectrum)
-#     absorbance.data[np.isnan(absorbance.data)] = 0
-#
-#
-#     croppedComponent=cropComponents(absorbance)
-#     features=componentsToArray(croppedComponent)
-#
-#
-#     coef=getCoef(absorbance,features)
-#     concentration = 100 * coef[:,1] /(coef[:,1]+coef[:,2])
-#     concentration[np.isnan(concentration)]=0
-#     print(np.mean(concentration))
-#     print(np.std(concentration))
-#     print(concentration)
-#     print(concentration.shape)
-#     return concentration
-#
-# bloodTest()
+def bloodTest ():
+    """load data, do all the analysis, get coefs as concentration"""
+    whiteRef=loadWhiteRef(refNameNothinInfront='/Users/elahe/Documents/Bloodsamples/int75_LEDON_nothingInFront.csv',
+                          whiteRefName='/Users/elahe/Documents/Bloodsamples/int75_WHITEREFERENCE.csv')
+    darkRef=loadDarkRef(skipRows=24,wavelengthColumn=1,firstSpecColumn=4)
+    darkRef.data[np.isnan(darkRef.data)] = 0
+    spectrums=loadSpectrum(skipRows=24,wavelengthColumn=1,firstSpecColumn=4)
+    spectrums.data[np.isnan(spectrums.data)] = 0
+    print(spectrums.data.shape)
+    normalizedSpectrum=normalizeSpectrum(spectrums,darkRef)
+    normalizedSpectrum.data[np.isnan(normalizedSpectrum.data)] = 0
+    absorbance=absorbanceSpectrum(whiteRef,normalizedSpectrum)
+    absorbance.data[np.isnan(absorbance.data)] = 0
+
+
+    croppedComponent=cropComponents(absorbance,componentsSpectra)
+    features=componentsToArray(croppedComponent)
+
+
+    coef=getCoef(absorbance,features)
+    concentration = 100 * coef[:,1] /(coef[:,1]+coef[:,2])
+    concentration[np.isnan(concentration)]=0
+    print('mean concentration :' , np.mean(concentration))
+    print(np.std(concentration))
+    print(concentration)
+    print(concentration.shape)
+    return concentration
+
+bloodTest()
