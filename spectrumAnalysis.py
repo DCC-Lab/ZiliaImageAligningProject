@@ -76,11 +76,13 @@ def loadWhiteRef(refNameNothinInfront, whiteRefName,
     refCroppedNormalized = normalizeRef(croppedRef)
     return refCroppedNormalized
 
-def loadDarkRef( skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
+def loadDarkRef(darkRefPath=None, skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
     ''' returns cropped (between 500 to 600) dark reference and the wavelength'''
     filetypes = [("csv files", "*.csv")]
-    csv_file_path = askopenfilename(title="select the dark reference .csv file",filetypes=filetypes)
-    # csv_file_path = darkRefPath
+    if darkRefPath is None:
+        csv_file_path = askopenfilename(title="select the dark reference .csv file",filetypes=filetypes)
+    else:
+        csv_file_path = darkRefPath
     darkRef = pd.read_csv(csv_file_path, sep=',', skiprows=skipRows).to_numpy()
     darkRefSpec = Spectrum()
     darkRefSpec.data = np.mean(darkRef[:,firstSpecColumn:],axis=1)
@@ -88,11 +90,13 @@ def loadDarkRef( skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
     croppedDarkRef = cropFunction(darkRefSpec)
     return croppedDarkRef
 
-def loadSpectrum(skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
+def loadSpectrum(spectrumPath=None, skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
     ''' returns dark reference and the wavelength'''
     filetypes = [("csv files", "*.csv")]
-    csv_file_path = askopenfilename(title="select the spectrum .csv file", filetypes=filetypes)
-    # csv_file_path = spectrumPath
+    if spectrumPath is None:
+        csv_file_path = askopenfilename(title="select the spectrum .csv file", filetypes=filetypes)
+    else:
+        csv_file_path = spectrumPath
     spectrumData = pd.read_csv(csv_file_path, sep=',', skiprows=skipRows).to_numpy()
     spec = Spectrum()
     spec.data = spectrumData[:, firstSpecColumn:]
@@ -186,8 +190,8 @@ def getCoef(absorbance, variables):
     print('all coefs :' , allCoef)
     return allCoef
 
-def mainAnalysis(darkRefPath, spectrumPath, componentsSpectra=componentsSpectra,
-                whiteRefName=whiteRefName, refNameNothinInfront=refNameNothinInfront):
+def mainAnalysis(darkRefPath, spectrumPath, componentsSpectra=None,
+                whiteRefName=None, refNameNothinInfront=None):
     """load data, do all the analysis, get coefs as concentration"""
     whiteRef = loadWhiteRef(refNameNothinInfront, whiteRefName)
     darkRef = loadDarkRef(darkRefPath)
@@ -242,28 +246,28 @@ def mainAnalysis(darkRefPath, spectrumPath, componentsSpectra=componentsSpectra,
 
 ####### blood sample test
 
-def bloodTest ():
+def bloodTest():
     """load data, do all the analysis, get coefs as concentration"""
-    whiteRef=loadWhiteRef(refNameNothinInfront='./tests/TestSpectrums/blood/int75_LEDON_nothingInFront.csv',
+    whiteRef = loadWhiteRef(refNameNothinInfront='./tests/TestSpectrums/blood/int75_LEDON_nothingInFront.csv',
                           whiteRefName='./tests/TestSpectrums/blood/int75_WHITEREFERENCE.csv')
-    darkRef=loadDarkRef(skipRows=24,wavelengthColumn=1,firstSpecColumn=4)
+    darkRef = loadDarkRef(skipRows=24,wavelengthColumn=1,firstSpecColumn=4)
     darkRef.data[np.isnan(darkRef.data)] = 0
-    spectrums=loadSpectrum(skipRows=24,wavelengthColumn=1,firstSpecColumn=4)
+    spectrums = loadSpectrum(skipRows=24,wavelengthColumn=1,firstSpecColumn=4)
     spectrums.data[np.isnan(spectrums.data)] = 0
     print(spectrums.data.shape)
-    normalizedSpectrum=normalizeSpectrum(spectrums,darkRef)
+    normalizedSpectrum = normalizeSpectrum(spectrums,darkRef)
     normalizedSpectrum.data[np.isnan(normalizedSpectrum.data)] = 0
-    absorbance=absorbanceSpectrum(whiteRef,normalizedSpectrum)
+    absorbance = absorbanceSpectrum(whiteRef,normalizedSpectrum)
     absorbance.data[np.isnan(absorbance.data)] = 0
 
 
-    croppedComponent=cropComponents(absorbance,componentsSpectra)
-    features=componentsToArray(croppedComponent)
+    croppedComponent = cropComponents(absorbance,componentsSpectra)
+    features = componentsToArray(croppedComponent)
 
 
-    coef=getCoef(absorbance,features)
+    coef = getCoef(absorbance,features)
     concentration = 100 * coef[:,1] /(coef[:,1]+coef[:,2])
-    concentration[np.isnan(concentration)]=0
+    concentration[np.isnan(concentration)] = 0
     print('mean concentration :' , np.mean(concentration))
     print(np.std(concentration))
     print(concentration)
