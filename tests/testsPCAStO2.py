@@ -9,9 +9,9 @@ import numpy as np
 unittest.TestLoader.sortTestMethodsUsing = None
 
 # These 3 will always be the same for every test
-whiteRefName = r"./TestSpectrums/int75_WHITEREFERENCE.csv"
-refNameNothinInfront = r"./TestSpectrums/int75_LEDON_nothingInFront.csv"
-componentsSpectra = r'./TestSpectrums/_components_spectra.csv'
+whiteRefName = r"../int75_WHITEREFERENCE.csv"
+refNameNothinInfront = r"../int75_LEDON_nothingInFront.csv"
+componentsSpectra = r'../_components_spectra.csv'
 
 # These will be different for every test
 darkRefPath2 = r"./TestSpectrums/bresilODrlp2/background.csv"
