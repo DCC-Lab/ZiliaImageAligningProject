@@ -249,8 +249,10 @@ def findImageShift(Image: np.ndarray, Margin=250, N=100) -> np.ndarray:
         a[j,:,:] = ndimage.binary_closing(skeletonImage[j,:,:], structure=np.ones((20,20))).astype(np.int)
         if (j > 0):
             out1 = crossImage(a[j-1,:,:], a[j,:,:])
-            ind = np.unravel_index(np.argmax(out1, axis=None), out1.shape)
-            indexShift = np.vstack((indexShift, np.array(ind) - np.array([a.shape[1]/2, a.shape[2]/2])))
+            maxFlatIndex = np.argmax(out1, axis=None)
+            maxIndex = np.unravel_index(maxFlatIndex, out1.shape)
+            halfImageSize = np.array([a.shape[1]/2, a.shape[2]/2])
+            indexShift = np.vstack((indexShift, np.array(maxIndex) - halfImageSize))
             totalShift = np.vstack((totalShift, np.sum(indexShift, axis=0)))
     return totalShift
 

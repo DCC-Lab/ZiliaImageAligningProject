@@ -13,7 +13,7 @@ to the correct paths if run on another copmuter.
 
 listOfFolderPaths = []
 
-# These ones are veryyyyy saturated
+# These ones are very saturated
 listOfFolderPaths.append(r"E:\Baseline3\Kenya 1512692\20210316-142504-kenya-od-onh-rlp24")
 listOfFolderPaths.append(r"E:\Baseline3\Kenya 1512692\20210316-145131-kenya-os-onh-rlp24")
 listOfFolderPaths.append(r"E:\Baseline3\Rwanda 1512436\20210317-092821-rwanda-od-onh-rlp24")
@@ -141,8 +141,25 @@ class TestFindAverageThresholdHiBrightness(envtest.ZiliaTestCase):
         plt.hist(thresholds, bins='auto')
         plt.show()
 
+    @envtest.skip("Long computing time, and skip plots")
     def testGetMeanThresholdOf2Folders(self):
-        pass
+        testDirs = listOfFolderPaths[:2]
+        self.assertTrue(len(testDirs) == 2)
+        thresholds = []
+        for directory in testDirs:
+            retinaImages = self.getOnlyRetinaImages(directory)
+            for image in retinaImages:
+                grayImage = imread(image, as_gray=True)
+                thresh = otsu(grayImage)
+                thresholds.append(thresh)
+        mean = np.mean(thresholds)
+        std = np.std(thresholds)
+        stdx2 = 2*std
+        print("mean = ", mean) # 0.5225092022756542
+        print("std = ", std) # 0.07512258531403286
+        print("stdx2 = ", stdx2) # 0.15024517062806572
+        plt.hist(thresholds, bins='auto')
+        plt.show()
 
 
 if __name__ == "__main__":
