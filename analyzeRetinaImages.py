@@ -132,7 +132,10 @@ class ZiliaONHDetector(EllipseDetector):
     def detectGammaNecessity(self):
         # Has to be improved with testing!!!
         tempThresh = self.getThreshold()
-        if tempThresh > 0.5:
+        meanMinSigma = 0.4481139843392332
+        meanMin2Sigma = 0.36610517454629693
+        # if tempThresh > meanMin2Sigma:
+        if tempThresh > meanMinSigma:
             gamma = self.highGamma
         else:
             gamma = 1

@@ -50,7 +50,8 @@ def removeBadImages(dataDictionary) -> dict:
         resLap = cv2.Laplacian(d1, cv2.CV_64F)
         score = resLap.var()
         ii = np.hstack((ii, score))
-    Threshold = np.mean(ii)
+    Threshold = np.mean(ii) # have to test if better than the next line
+    # Threshold = np.mean(ii) - np.std(ii) # have to test if better than the previous line
     index = np.where(ii > Threshold)
     image = np.delete(image, index, axis=0)
     laserImage = np.delete(laserImage, index, axis=0)
@@ -302,29 +303,15 @@ def placeRosa(gridParameters, shiftParameters) -> list:
     for y in range(yLabel.shape[0]):
         ylabel[y*length:(y+1)*length] = yLabel[y]
     outputLabels = []
-    # Troubleshooting:
-    # print("xGridShape == ", xGrid.shape)
-    # print("xGrid == ", xGrid)
-    # print("xlabel == ", xlabel)
-    # print("yGridShape == ", yGrid.shape)
-    # print("yGrid == ", yGrid)
-    # print("ylabel == ", ylabel)
-    # print("xlabel.shape", xlabel.shape)
-    # print("ylabel.shape", ylabel.shape)
 
     for j in range(xRosa.shape[0]):
-        # xTemporaryLabel = str(xlabel[ np.where(xGrid == xRosa[j] - xCenterGrid)[0] ][0])
-        xTemporaryLabel = str(xlabel[ np.where(xGrid == xRosa[j] - xCenterGrid)[0] ])
-        # print("whereX == ", np.where(xGrid == xRosa[j] - xCenterGrid)[0])
-        # print("xRosa[j], xCenterGrid, xRosa[j] - xCenterGrid", xRosa[j], xCenterGrid, xRosa[j] - xCenterGrid)
-        # print("xTemporaryLabel", xTemporaryLabel)
-        # yTemporaryLabel = str(ylabel[ np.where(yGrid == yRosa[j] - yCenterGrid)[0] ][0])# error with large set of data... because some elements are empty lists
-        yTemporaryLabel = str(ylabel[ np.where(yGrid == yRosa[j] - yCenterGrid)[0] ])
-        # print("whereY == ", np.where(yGrid == yRosa[j] - yCenterGrid)[0])
-        # print("yRosa[j], yCenterGrid, yRosa[j] - yCenterGrid", yRosa[j], yCenterGrid, yRosa[j] - yCenterGrid)
-        # print("yTemporaryLabel", yTemporaryLabel)
-        temporaryLabel = str(xTemporaryLabel + yTemporaryLabel)
-        # probably can't find the shift cause too blurry...
+        # xTemporaryLabel = xlabel[ np.where(xGrid == xRosa[j] - xCenterGrid)[0] ][0]
+        xTemporaryLabel = xlabel[ np.where(xGrid == xRosa[j] - xCenterGrid)[0] ]
+        # On the next line (yTemporaryLabel): error with large set of data... because some elements are empty lists
+        # This is due to the shift that goes out of the resulting image's boundaries...
+        # yTemporaryLabel = ylabel[ np.where(yGrid == yRosa[j] - yCenterGrid)[0] ][0]
+        yTemporaryLabel = ylabel[ np.where(yGrid == yRosa[j] - yCenterGrid)[0] ]
+        temporaryLabel = str(str(xTemporaryLabel) + str(yTemporaryLabel))
         outputLabels.append(temporaryLabel)
     return outputLabels
 
@@ -419,7 +406,7 @@ def rescaleImage(image, gridParameters):
     up = np.max([yCenterGrid - (length*5), 0])
     right = np.min([(5*length), (image.shape[1] - xCenterGrid)]) + xCenterGrid
     down = right = np.min([(5*length), (image.shape[2] - yCenterGrid)]) + yCenterGrid
-    temp = image[0,up:down, left:right]
+    temp = image[0, up:down, left:right]
     xNewCenter = xCenterGrid - left
     yNewCenter = yCenterGrid - up
     gridImage = np.zeros([length*10, length*10])
