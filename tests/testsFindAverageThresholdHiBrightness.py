@@ -28,7 +28,7 @@ listOfFolderPaths.append(r"E:\Baseline3\Somalie 1508202\20210317-141139-somalie-
 # listOfFolderPaths.append(r"")
 
 
-# @envtest.skip("Will fail on other computers if path is not changed.")
+@envtest.skip("Will fail on other computers if path is not changed.")
 class TestFindAverageThresholdHiBrightness(envtest.ZiliaTestCase):
 
     def testInit(self):
@@ -160,6 +160,26 @@ class TestFindAverageThresholdHiBrightness(envtest.ZiliaTestCase):
         print("stdx2 = ", stdx2) # 0.15024517062806572
         plt.hist(thresholds, bins='auto')
         plt.show()
+
+    @envtest.skip("Long computing time, and skip plots")
+    def testGetMeanThresholdOfAllFolders(self):
+        testDirs = listOfFolderPaths
+        thresholds = []
+        for directory in testDirs:
+            retinaImages = self.getOnlyRetinaImages(directory)
+            for image in retinaImages:
+                grayImage = imread(image, as_gray=True)
+                thresh = otsu(grayImage)
+                thresholds.append(thresh)
+        mean = np.mean(thresholds)
+        std = np.std(thresholds)
+        stdx2 = 2*std
+        print("mean = ", mean) # 0.5301227941321696
+        print("std = ", std) # 0.08200880979293632
+        print("stdx2 = ", stdx2) # 0.16401761958587263
+        plt.hist(thresholds, bins='auto')
+        plt.show()
+        # I think 1 std will be enough to catch the most saturated images...
 
 
 if __name__ == "__main__":
