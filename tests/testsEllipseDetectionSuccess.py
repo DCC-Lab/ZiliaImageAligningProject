@@ -4,7 +4,7 @@ import numpy as np
 from skimage.io import imread
 import matplotlib.pyplot as plt
 from processImages import listFileNames, getFiles
-from analyzeRetinaImages import ZilaONHDetector
+from analyzeRetinaImages import ZiliaONHDetector
 
 """
 WARNING: These tests will fail on another computer if the test files path
@@ -62,6 +62,7 @@ class testsEllipseDetectionSuccess(envtest.ZiliaTestCase):
         binaryImage = np.where(grayImage >= threshold, upper, lower)
         return binaryImage
 
+    @envtest.skip("skip plots")
     def testBinarizeImage(self):
         sortedInputs = getFiles(inputsPath, newImages=False)
         sortedOutputs = getFiles(outputsPath, newImages=False)
