@@ -87,9 +87,9 @@ class ZiliaONHDetector(EllipseDetector):
     """
     This is the order in which this should be used:
         onhDetector = ZiliaONHDetector(image)
-        detector.getParamsCorrections()
-        detector.preProcessImage()
-        bestEllipse = detector.findOpticNerveHead()
+        onhDetector.getParamsCorrections()
+        onhDetector.preProcessImage()
+        bestEllipse = onhDetector.findOpticNerveHead()
         (xCenter, yCenter), minorAxis, majorAxis, orientation = bestEllipse
     """
 
@@ -100,12 +100,12 @@ class ZiliaONHDetector(EllipseDetector):
         self.gamma = gamma
         self.grayImage = self.getGrayRescaledImage()
 
-    def getParamsCorrections(self, highGamma=3):
+    def getParamsCorrections(self, highGamma=3, gammaThresh=0.5):
         """Find the required gamma correction (min=1, max=?)"""
         self.highGamma = highGamma
         if self.gamma is True:
             # Automatically check if gamma correction is needed
-            self.gamma = self.detectGammaNecessity()
+            self.gamma = self.detectGammaNecessity(gammaThresh=gammaThresh)
         elif self.gamma is False:
             # Don't apply gamma correction
             pass
@@ -129,14 +129,12 @@ class ZiliaONHDetector(EllipseDetector):
             result = self.upscaleResult(smallScaleResult)
             return result
 
-    def detectGammaNecessity(self):
+    def detectGammaNecessity(self, gammaThresh=0.5):
         # Has to be improved with testing!!!
         tempThresh = self.getThreshold()
-        meanMinSigma = 0.4481139843392332
-        meanMin2Sigma = 0.36610517454629693
-        # if tempThresh > meanMin2Sigma:
-        if tempThresh > meanMinSigma:
+        if tempThresh > gammaThresh:
             gamma = self.highGamma
+            print("gamma done!")
         else:
             gamma = 1
         return gamma
