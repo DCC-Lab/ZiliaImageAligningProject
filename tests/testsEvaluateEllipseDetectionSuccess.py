@@ -7,6 +7,7 @@ from processImages import listFileNames, getFiles
 from analyzeRetinaImages import ZiliaONHDetector
 from skimage.draw import ellipse, ellipse_perimeter
 import math
+import json
 
 """
 WARNING: These tests will fail on another computer if the test files path
@@ -17,6 +18,13 @@ is not changed!
 # The outputs are the binary images that have been manually fitted
 inputsPath = r"E:\AAA_Reference images\ManuallySorted/inputs"
 outputsPath = r"E:\AAA_Reference images\ManuallySorted/outputs"
+
+# These values will be to find which one gives the best success rate when they
+# are used as thresholds to apply gamma correction
+mean = 0.5301227941321696
+meanMinHalfSigma = 0.4891183892357014
+meanMinSigma = 0.4481139843392332
+meanMin2Sigma = 0.36610517454629693
 
 # @envtest.skip("Will fail if path is not changed")
 class testsEllipseDetectionSuccess(envtest.ZiliaTestCase):
@@ -103,7 +111,7 @@ class testsEllipseDetectionSuccess(envtest.ZiliaTestCase):
 
     def getBestEllipse(self, image, highGamma=3, gammaThresh=0.5):
         onhDetector = ZiliaONHDetector(image)
-        onhDetector.getParamsCorrections(highGamma=highGamma, gammaThresh=thresh)
+        onhDetector.getParamsCorrections(highGamma=highGamma, gammaThresh=gammaThresh)
         onhDetector.preProcessImage()
         bestEllipse = onhDetector.findOpticNerveHead()
         return bestEllipse
@@ -191,19 +199,18 @@ class testsEllipseDetectionSuccess(envtest.ZiliaTestCase):
         result = ((numberOfValues - results[1])/numberOfValues)*100
         print("success % = ", result, "%") # 93.82956511054942 %
 
-
-
-
-    @envtest.skip("NOT FINISHED YET!!! Maybe save results to JSON file...")
-    def testFindSuccessRateOn4File(self):
+    @envtest.skip("skip computing time")
+    def testFindSuccessRateOn4FileWithGammaThreshEqualsMean(self):
         sortedInputs = getFiles(inputsPath, newImages=False)[:4]
         sortedOutputs = getFiles(outputsPath, newImages=False)[:4]
-        results = []
+        sortedFileNames = np.sort(listFileNames(inputsPath))
+        resultsList = []
+        resultsDict = {}
         for i in range(len(sortedInputs)):
             print(f"image index {i} being analyzed")
             testInput = imread(sortedInputs[i])
             testOutput = self.binarizeImage(sortedOutputs[i])
-            bestEllipse = self.getBestEllipse(testInput, highGamma=3, gammaThresh=meanMinSigma)
+            bestEllipse = self.getBestEllipse(testInput, highGamma=3, gammaThresh=globalMean)
             if bestEllipse is None:
                 self.assertFalse(True)
             imageWithEllipse = self.getImageWithFullEllipse(bestEllipse, testInput)
@@ -217,17 +224,27 @@ class testsEllipseDetectionSuccess(envtest.ZiliaTestCase):
             numberOfValues = imageShape[0]*imageShape[1]
 
             result = (numberOfValues - results[1])/numberOfValues
-            results.append(result)
+            resultsList.append(result)
 
-        mean = np.mean(results)
-        std = np.std(results)
+        mean = np.mean(resultsList)
+        std = np.std(resultsList)
 
-        print("success = ", results, "%")
+        print("resultsList = ", resultsList) # [0.9382956511054943, 0.966275084252451, 0.9911971746706495, 0.9869382771012051]
+        print("mean = ", mean) # 0.97067654678245
+        print("std = ", std) # 0.020937020556485244
 
-mean = 0.5301227941321696
+    def testSaveDictToJsonFile(self):
+        testDictionary = {0:51, 1:49, 2:72}
+        with open('dictionarySaveTest.json', 'w') as file:
+            json.dump(testDictionary, file,  indent=4)
+
+    
+
+
+globalMean = 0.5301227941321696
+meanMinHalfSigma = 0.4891183892357014
 meanMinSigma = 0.4481139843392332
 meanMin2Sigma = 0.36610517454629693
-
 
 if __name__ == "__main__":
     envtest.main()
