@@ -109,8 +109,8 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
         plt.imshow(imageWithEllipse, cmap="gray")
         plt.show()
 
-    def getBestEllipse(self, image, highGamma=3, gammaThresh=0.5):
-        onhDetector = ZiliaONHDetector(image)
+    def getBestEllipse(self, image, highGamma=3, gammaThresh=0.5, scaleFactor=3, accuracy=10):
+        onhDetector = ZiliaONHDetector(image, scaleFactor=scaleFactor, accuracy=accuracy)
         onhDetector.getParamsCorrections(highGamma=highGamma, gammaThresh=gammaThresh)
         onhDetector.preProcessImage()
         bestEllipse = onhDetector.findOpticNerveHead()
@@ -236,7 +236,7 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
     def testSaveDictToJsonFile(self):
         testDictionary = {0:51, 1:49, 2:72}
         with open('dictionarySaveTest.json', 'w') as file:
-            json.dump(testDictionary, file,  indent=4)
+            json.dump(testDictionary, file, indent=4)
 
     def testFindAverageAreaOf1ONH(self):
         sortedOutputs = getFiles(outputsPath, newImages=False)[0]
@@ -244,38 +244,122 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
 
         values, counts = np.unique(testOutput, return_counts=True)
         results = dict(zip(values, counts))
-        self.assertTrue(len(results) == 2)
+        self.assertTrue(len(results) == 2) # only zeros and ones
         imageShape = testOutput.shape
         numberOfValues = imageShape[0]*imageShape[1]
-
         areaFraction = results[1]/numberOfValues
-
         # print("areaFraction =", areaFraction) # 0.07803564133986927
 
     @envtest.skip("skip prints")
-    def testFindAverageAreaOfAllONH(self):
-        sortedOutputs = getFiles(outputsPath, newImages=False)
-        sortedFileNames = np.sort(listFileNames(outputsPath))
+    def testFindAverageAreaOf4ONH(self):
+        sortedOutputs = getFiles(outputsPath, newImages=False)[:4]
+        sortedFileNames = np.sort(listFileNames(outputsPath))[:4]
         areasList = []
         for i in range(len(sortedOutputs)):
             print(f"image index {i} being analyzed")
             testOutput = self.binarizeImage(sortedOutputs[i])
-
             values, counts = np.unique(testOutput, return_counts=True)
             results = dict(zip(values, counts))
-            self.assertTrue(len(results) == 2)
+            self.assertTrue(len(results) == 2) # only zeros and ones
             imageShape = testOutput.shape
             numberOfValues = imageShape[0]*imageShape[1]
-
             areaFraction = results[1]/numberOfValues
-            resultsList.append(areaFraction)
+            areasList.append(areaFraction)
+
+        mean = np.mean(areasList)
+        std = np.std(areasList)
+
+        print("resultsList = ", areasList) # [0.07803564133986927, 0.07774303162020016, 0.0934344522314134, 0.09696372038398693]
+        print("mean = ", mean) # 0.08654421139386743
+        print("std = ", std) # 0.008744971643275513
+
+    def findAreaOfONH(self, sortedOutputs):
+        areasList = []
+        for i in range(len(sortedOutputs)):
+            print(f"image index {i} being analyzed")
+            testOutput = self.binarizeImage(sortedOutputs[i])
+            values, counts = np.unique(testOutput, return_counts=True)
+            results = dict(zip(values, counts))
+            imageShape = testOutput.shape
+            numberOfValues = imageShape[0]*imageShape[1]
+            areaFraction = results[1]/numberOfValues
+            areasList.append(areaFraction)
+        mean = np.mean(areasList)
+        std = np.std(areasList)
+        return areasList, mean, std
+
+    @envtest.skip("skip prints")
+    def testFindAverageAreaOf4ONH(self):
+        sortedOutputs = getFiles(outputsPath, newImages=False)[:4]
+        sortedFileNames = np.sort(listFileNames(outputsPath))[:4]
+        areasList, mean, std = self.findAreaOfONH(sortedOutputs)
+        print("resultsList = ", areasList) # [0.07803564133986927, 0.07774303162020016, 0.0934344522314134, 0.09696372038398693]
+        print("mean = ", mean) # 0.08654421139386743
+        print("std = ", std) # 0.008744971643275513
+
+    @envtest.skip("skip file creation")
+    def testSaveAreasOf4ONHInJsonFile(self):
+        sortedOutputs = getFiles(outputsPath, newImages=False)[:4]
+        sortedFileNames = np.sort(listFileNames(outputsPath))[:4]
+        areasList, mean, std = self.findAreaOfONH(sortedOutputs)
+
+        imageData = dict(zip(sortedFileNames, areasList))
+        with open('areasSaveTest.json', 'w') as file:
+            json.dump(imageData, file, indent=4)
+
+    @envtest.skip("skip prints and file creation")
+    def testFindAverageAreaOfAllONHAndSaveToJson(self):
+        sortedOutputs = getFiles(outputsPath, newImages=False)
+        sortedFileNames = np.sort(listFileNames(outputsPath))
+        areasList, mean, std = self.findAreaOfONH(sortedOutputs)
+
+        imageData = dict(zip(sortedFileNames, areasList))
+        imageData["result"] = {"mean": mean, "std":std}
+        with open('resultsONHAreas.json', 'w') as file:
+            json.dump(imageData, file, indent=4)
+        print("mean = ", mean) # 0.06992786356834266
+        print("std = ", std) # 0.009001371815973887
+        # 7.0 \pm 0.9
+
+    def findSuccessRateOfONHDetection(self, sortedInputs, sortedOutputs, scaleFactor=3, accuracy=10):
+        resultsList = []
+        for i in range(len(sortedInputs)):
+            print(f"image index {i} being analyzed")
+            testInput = imread(sortedInputs[i])
+            testOutput = self.binarizeImage(sortedOutputs[i])
+            bestEllipse = self.getBestEllipse(testInput, highGamma=3, gammaThresh=globalMean, scaleFactor=scaleFactor, accuracy=accuracy)
+            if bestEllipse is None:
+                self.assertFalse(True)
+            imageWithEllipse = self.getImageWithFullEllipse(bestEllipse, testInput)
+            resultMatrix = imageWithEllipse + testOutput
+            # self.plotOriginalImageNextToFit(testInput, imageWithEllipse)
+
+            values, counts = np.unique(resultMatrix, return_counts=True)
+            results = dict(zip(values, counts))
+
+            imageShape = testInput.shape
+            numberOfValues = imageShape[0]*imageShape[1]
+
+            result = (numberOfValues - results[1])/numberOfValues
+            resultsList.append(result)
 
         mean = np.mean(resultsList)
         std = np.std(resultsList)
 
-        print("resultsList = ", resultsList)
-        print("mean = ", mean)
-        print("std = ", std)
+        return resultsList, mean, std
+
+    @envtest.skip("skip plots computing time")
+    def testFindSuccessRateOn4FileAndSaveToJson(self):
+        sortedInputs = getFiles(inputsPath, newImages=False)[:4]
+        sortedOutputs = getFiles(outputsPath, newImages=False)[:4]
+        sortedFileNames = np.sort(listFileNames(inputsPath))
+        resultsList, mean, std = self.findSuccessRateOfONHDetection(sortedInputs, sortedOutputs)
+        imageData = dict(zip(sortedFileNames, resultsList))
+        imageData["result"] = {"mean": mean, "std":std}
+        with open('onhDetectionSuccessRateSaveTest.json', 'w') as file:
+            json.dump(imageData, file, indent=4)
+        print("mean = ", mean) #0.97067654678245
+        print("std = ", std) #0.020937020556485244
 
 
 
