@@ -27,7 +27,7 @@ meanMinSigma = 0.4481139843392332
 meanMin2Sigma = 0.36610517454629693
 
 # @envtest.skip("Will fail if path is not changed")
-class testsEllipseDetectionSuccess(envtest.ZiliaTestCase):
+class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
 
     def testAccessData(self):
         listDirIn = os.listdir(inputsPath)
@@ -199,13 +199,13 @@ class testsEllipseDetectionSuccess(envtest.ZiliaTestCase):
         result = ((numberOfValues - results[1])/numberOfValues)*100
         print("success % = ", result, "%") # 93.82956511054942 %
 
-    @envtest.skip("skip computing time")
+    @envtest.skip("skip plots computing time")
     def testFindSuccessRateOn4FileWithGammaThreshEqualsMean(self):
         sortedInputs = getFiles(inputsPath, newImages=False)[:4]
         sortedOutputs = getFiles(outputsPath, newImages=False)[:4]
         sortedFileNames = np.sort(listFileNames(inputsPath))
         resultsList = []
-        resultsDict = {}
+        # resultsDict = {}
         for i in range(len(sortedInputs)):
             print(f"image index {i} being analyzed")
             testInput = imread(sortedInputs[i])
@@ -238,7 +238,48 @@ class testsEllipseDetectionSuccess(envtest.ZiliaTestCase):
         with open('dictionarySaveTest.json', 'w') as file:
             json.dump(testDictionary, file,  indent=4)
 
-    
+    def testFindAverageAreaOf1ONH(self):
+        sortedOutputs = getFiles(outputsPath, newImages=False)[0]
+        testOutput = self.binarizeImage(sortedOutputs)
+
+        values, counts = np.unique(testOutput, return_counts=True)
+        results = dict(zip(values, counts))
+        self.assertTrue(len(results) == 2)
+        imageShape = testOutput.shape
+        numberOfValues = imageShape[0]*imageShape[1]
+
+        areaFraction = results[1]/numberOfValues
+
+        # print("areaFraction =", areaFraction) # 0.07803564133986927
+
+    @envtest.skip("skip prints")
+    def testFindAverageAreaOfAllONH(self):
+        sortedOutputs = getFiles(outputsPath, newImages=False)
+        sortedFileNames = np.sort(listFileNames(outputsPath))
+        areasList = []
+        for i in range(len(sortedOutputs)):
+            print(f"image index {i} being analyzed")
+            testOutput = self.binarizeImage(sortedOutputs[i])
+
+            values, counts = np.unique(testOutput, return_counts=True)
+            results = dict(zip(values, counts))
+            self.assertTrue(len(results) == 2)
+            imageShape = testOutput.shape
+            numberOfValues = imageShape[0]*imageShape[1]
+
+            areaFraction = results[1]/numberOfValues
+            resultsList.append(areaFraction)
+
+        mean = np.mean(resultsList)
+        std = np.std(resultsList)
+
+        print("resultsList = ", resultsList)
+        print("mean = ", mean)
+        print("std = ", std)
+
+
+
+
 
 
 globalMean = 0.5301227941321696
