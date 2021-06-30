@@ -376,20 +376,21 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
         return resultsList, mean, std, errorsIndexes
 
     def saveBestEllipse(self, sortedFileNames, index, bestEllipse, parameters):
+        fileName = 'resultsEllipseData3.json'
         imageName = sortedFileNames[index]
         imageData = {"bestEllipse":bestEllipse}
         if index != 0:
-            with open('resultsEllipseData2.json', 'r') as file:
+            with open(fileName, 'r') as file:
                 data = json.load(file)
                 data["parameters"] = parameters
                 data[imageName] = imageData
-            with open('resultsEllipseData2.json', 'w') as file:
+            with open(fileName, 'w') as file:
                 json.dump(data, file, indent=4)
         else:
             data = {}
             data["parameters"] = parameters
             data[imageName] = imageData
-            with open('resultsEllipseData2.json', 'w') as file:
+            with open(fileName, 'w') as file:
                 json.dump(data, file, indent=4)
 
     @envtest.skip("skip file creation and computing time")
@@ -488,7 +489,7 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
         # deb12h08
         # fin13h27
 
-    # @envtest.skip("skip file creation and computing time")
+    @envtest.skip("skip file creation and computing time")
     def testFindSuccessRateOnAllFilesAndSaveToJson_2_threshMinSigma(self):
         # These parameters need to change in subsequent tests:
         scaleFactor = 10
@@ -530,10 +531,57 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
 
         with open(fileName, 'w') as file:
             json.dump(imageData, file, indent=4)
-        print("mean = ", mean) # 
-        print("std = ", std) # 
+        print("mean = ", mean) # 0.9021230440208527
+        print("std = ", std) # 0.10323497333112443
         # deb13h42
-        # fin
+        # fin14h58
+
+    @envtest.skip("skip file creation and computing time")
+    def testFindSuccessRateOnAllFilesAndSaveToJson_3_threshGlobalMean(self):
+        # These parameters need to change in subsequent tests:
+        scaleFactor = 10
+        accuracy = 50
+        highGamma = 2.5
+        gammaThresh = globalMean
+        fileName = 'resultsONHAccuracy3.json'
+
+        parameters = {"scaleFactor":scaleFactor,
+                                    "accuracy":accuracy,
+                                    "highGamma":highGamma,
+                                    "gammaThresh":gammaThresh}
+
+        sortedInputs = getFiles(inputsPath, newImages=False)
+        sortedOutputs = getFiles(outputsPath, newImages=False)
+        sortedFileNames = np.sort(listFileNames(inputsPath))
+
+        resultsList, mean, std, errorsIndexes = self.findSuccessRateOfONHDetection(sortedInputs, sortedOutputs, sortedFileNames, parameters,
+                                                                    scaleFactor=scaleFactor, accuracy=accuracy,
+                                                                    highGamma=highGamma, gammaThresh=gammaThresh)
+
+        if errorsIndexes is None:
+            filesNamesWithErrors = []
+            errorsIndexes = 0
+            unmatched = {"number":errorsIndexes,
+                                    "fileNames":filesNamesWithErrors}
+        else:
+            filesNamesWithErrors = np.array(sortedFileNames)[errorsIndexes]
+            sortedFileNames = np.delete(sortedFileNames, errorsIndexes)
+            unmatched = {"number":len(errorsIndexes),
+                                    "fileNames":filesNamesWithErrors}
+        imageData = dict(zip(sortedFileNames, resultsList))
+        imageData["results"] = {"mean": mean, "std":std}
+        imageData["parameters"] = {"scaleFactor":scaleFactor,
+                                    "accuracy":accuracy,
+                                    "highGamma":highGamma,
+                                    "gammaThresh":gammaThresh}
+        imageData["unmatched"] = unmatched
+
+        with open(fileName, 'w') as file:
+            json.dump(imageData, file, indent=4)
+        print("mean = ", mean) # 0.9021230440208527
+        print("std = ", std) # 0.10323497333112443
+        # deb15h10
+        # fin16h27
 
 # globalMean = 0.5301227941321696
 # meanMinHalfSigma = 0.4891183892357014
