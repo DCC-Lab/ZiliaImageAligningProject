@@ -60,7 +60,7 @@ gridParameters = defineGrid(image)
 
 # print(imageNumber)
 
-Label = placeRosa(gridParameters, shiftParameters)
+Label, dataDictionary = placeRosa(gridParameters, shiftParameters, dataDictionary)
 # print(Label)
 
 plotResult(image, shiftParameters, gridParameters)
