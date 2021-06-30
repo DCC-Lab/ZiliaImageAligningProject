@@ -288,14 +288,14 @@ def placeRosa(gridParameters, shiftParameters, dataDictionary) -> list:
 
     for j in range(xRosa.shape[0]):
         xTemporaryLabel = xlabel[ np.where(xGrid == xRosa[j] - xCenterGrid)[0] ]
-        if xTemporaryLabel == []:
+        if len(xTemporaryLabel) == 0:
             # no match was found, the rosa is out of the grid boudaries
             imageIndexesToRemove.append(j)
             continue
         else:
             xTemporaryLabel = str(xTemporaryLabel[0])
         yTemporaryLabel = ylabel[ np.where(yGrid == yRosa[j] - yCenterGrid)[0] ]
-        if yTemporaryLabel == []:
+        if len(yTemporaryLabel) == 0:
             # no match was found, the rosa is out of the grid boudaries
             imageIndexesToRemove.append(j)
             continue
@@ -311,7 +311,7 @@ def placeRosa(gridParameters, shiftParameters, dataDictionary) -> list:
 
 def removeImagesFromIndex(dataDictionary, indexes):
     image = dataDictionary["image"]
-    laser = dataDictionary["laserImage"]
+    laserImage = dataDictionary["laserImage"]
     xCenter = dataDictionary["xCenter"]
     yCenter = dataDictionary["yCenter"]
     radius = dataDictionary["radius"]
@@ -429,10 +429,10 @@ def rescaleImage(image, gridParameters):
     length = gridParameters[2]# int
 
     left = np.max([xCenterGrid - (length*5), 0])
-
     up = np.max([yCenterGrid - (length*5), 0])
     right = np.min([(5*length), (image.shape[1] - xCenterGrid)]) + xCenterGrid
     down = right = np.min([(5*length), (image.shape[2] - yCenterGrid)]) + yCenterGrid
+
     temp = image[0,up:down, left:right]
     xNewCenter = xCenterGrid - left
     yNewCenter = yCenterGrid - up
