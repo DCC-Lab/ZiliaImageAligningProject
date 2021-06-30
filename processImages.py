@@ -36,11 +36,6 @@ def removeBadImages(dataDictionary) -> dict:
     output: reduced data
     """
     image = dataDictionary["image"]
-    laserImage = dataDictionary["laserImage"]
-    xCenter = dataDictionary["xCenter"]
-    yCenter = dataDictionary["yCenter"]
-    radius = dataDictionary["radius"]
-    imageNumber = dataDictionary["imageNumber"]
 
     index = np.array([])
     ii = np.array([])
@@ -52,22 +47,10 @@ def removeBadImages(dataDictionary) -> dict:
         ii = np.hstack((ii, score))
     Threshold = np.mean(ii)
     index = np.where(ii > Threshold)
-    image = np.delete(image, index, axis=0)
-    laserImage = np.delete(laserImage, index, axis=0)
-    xCenter = np.delete(xCenter, index, axis=0)
-    yCenter = np.delete(yCenter, index, axis=0)
-    radius = np.delete(radius, index, axis=0)
-    imageNumber = np.delete(imageNumber, index, axis=0)
 
-    dataDictionary = {
-        "image": image,
-        "laserImage": laserImage,
-        "xCenter": xCenter,
-        "yCenter": yCenter,
-        "radius": radius,
-        "imageNumber": imageNumber
-    }
-    return dataDictionary
+    cleanDataDictionary = removeImagesFromIndex(dataDictionary, index)
+
+    return cleanDataDictionary
 
 
 def seperateImages(grayImageCollection, collectionDir: str, extension="jpg") -> dict:
