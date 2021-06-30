@@ -416,6 +416,7 @@ def plotResult(image, shiftParameters, gridParameters, rosaRadius=30, thickness=
 
 
 def drawRosaCircles(image, shiftParameters, rosaRadius=30, thickness=5, color=(0, 255, 0)):
+    image3D = np.stack((image[0,:,:],image[0,:,:],image[0,:,:]), axis=-1)
     xRosa = shiftParameters[0]
     yRosa = shiftParameters[1]
     for j in range(image.shape[0]):
