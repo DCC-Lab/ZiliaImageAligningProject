@@ -309,22 +309,35 @@ def placeRosa(gridParameters, shiftParameters) -> list:
     # print("ylabel == ", ylabel)
     # print("xlabel.shape", xlabel.shape)
     # print("ylabel.shape", ylabel.shape)
+    
+    imageIndexesToRemove = []
 
     for j in range(xRosa.shape[0]):
-        # xTemporaryLabel = str(xlabel[ np.where(xGrid == xRosa[j] - xCenterGrid)[0] ][0])
-        xTemporaryLabel = str(xlabel[ np.where(xGrid == xRosa[j] - xCenterGrid)[0] ])
-        # print("whereX == ", np.where(xGrid == xRosa[j] - xCenterGrid)[0])
-        # print("xRosa[j], xCenterGrid, xRosa[j] - xCenterGrid", xRosa[j], xCenterGrid, xRosa[j] - xCenterGrid)
-        # print("xTemporaryLabel", xTemporaryLabel)
-        # yTemporaryLabel = str(ylabel[ np.where(yGrid == yRosa[j] - yCenterGrid)[0] ][0])# error with large set of data... because some elements are empty lists
-        yTemporaryLabel = str(ylabel[ np.where(yGrid == yRosa[j] - yCenterGrid)[0] ])
-        # print("whereY == ", np.where(yGrid == yRosa[j] - yCenterGrid)[0])
-        # print("yRosa[j], yCenterGrid, yRosa[j] - yCenterGrid", yRosa[j], yCenterGrid, yRosa[j] - yCenterGrid)
-        # print("yTemporaryLabel", yTemporaryLabel)
+        xTemporaryLabel = xlabel[ np.where(xGrid == xRosa[j] - xCenterGrid)[0] ]
+        if xTemporaryLabel == []:
+            # no match was found, the rosa is out of the grid boudaries
+            imageIndexesToRemove.append(j)
+            continue
+        else:
+            xTemporaryLabel = str(xTemporaryLabel[0])
+        yTemporaryLabel = ylabel[ np.where(yGrid == yRosa[j] - yCenterGrid)[0] ]
+        if yTemporaryLabel == []:
+            # no match was found, the rosa is out of the grid boudaries
+            imageIndexesToRemove.append(j)
+            continue
+        else:
+            yTemporaryLabel = str(yTemporaryLabel[0])
         temporaryLabel = str(xTemporaryLabel + yTemporaryLabel)
-        # probably can't find the shift cause too blurry...
         outputLabels.append(temporaryLabel)
+    # will have to remove some images right here...
     return outputLabels
+
+# image = np.delete(image, index, axis=0)
+# laserImage = np.delete(laserImage, index, axis=0)
+# xCenter = np.delete(xCenter, index, axis=0)
+# yCenter = np.delete(yCenter, index, axis=0)
+# radius = np.delete(radius, index, axis=0)
+# imageNumber = np.delete(imageNumber, index, axis=0)
 
 
 def defineGrid(Image) -> tuple:
