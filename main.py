@@ -58,9 +58,10 @@ indexShift = findImageShift(image)
 shiftParameters = applyShift(xLaser, yLaser, indexShift)
 gridParameters = defineGrid(image)
 
-# print(imageNumber)
-
-Label, dataDictionary = placeRosa(gridParameters, shiftParameters, dataDictionary)
+Label, dataDictionary, indexesToRemove = placeRosa(gridParameters, shiftParameters, dataDictionary)
 # print(Label)
+# print(dataDictionary["imageNumber"])
+
+shiftParameters = cleanShiftParameters(shiftParameters, indexesToRemove)
 
 plotResult(image, shiftParameters, gridParameters)

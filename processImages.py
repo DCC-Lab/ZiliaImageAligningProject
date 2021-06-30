@@ -321,10 +321,10 @@ def placeRosa(gridParameters, shiftParameters, dataDictionary) -> list:
         temporaryLabel = str(xTemporaryLabel + yTemporaryLabel)
         outputLabels.append(temporaryLabel)
 
-    # RemoveImagesOutOfBoundaries...
+    # Remove images out of boundaries
     imageDataDictionary = removeImagesFromIndex(dataDictionary, imageIndexesToRemove)
 
-    return outputLabels, imageDataDictionary
+    return outputLabels, imageDataDictionary, imageIndexesToRemove
 
 def removeImagesFromIndex(dataDictionary, indexes):
     image = dataDictionary["image"]
@@ -351,6 +351,14 @@ def removeImagesFromIndex(dataDictionary, indexes):
     }
 
     return imageDataDictionary
+
+def cleanShiftParameters(shiftParameters, indexesToRemove):
+    xShift = shiftParameters[0]
+    yShift = shiftParameters[1]
+    xShift = np.delete(xShift, indexesToRemove)
+    yShift = np.delete(yShift, indexesToRemove)
+    return xShift, yShift
+
 
 def defineGrid(Image) -> tuple:
     # onh = optic nerve head
