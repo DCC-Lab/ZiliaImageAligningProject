@@ -282,7 +282,7 @@ def crossImage(im1, im2) -> np.ndarray:
     return cross
 
 
-def placeRosa(gridParameters, shiftParameters) -> list:
+def placeRosa(gridParameters, shiftParameters, dataDictionary) -> list:
     xCenterGrid = gridParameters[0]
     yCenterGrid = gridParameters[1]
     length = gridParameters[2]
@@ -300,16 +300,7 @@ def placeRosa(gridParameters, shiftParameters) -> list:
     for y in range(yLabel.shape[0]):
         ylabel[y*length:(y+1)*length] = yLabel[y]
     outputLabels = []
-    # Troubleshooting:
-    # print("xGridShape == ", xGrid.shape)
-    # print("xGrid == ", xGrid)
-    # print("xlabel == ", xlabel)
-    # print("yGridShape == ", yGrid.shape)
-    # print("yGrid == ", yGrid)
-    # print("ylabel == ", ylabel)
-    # print("xlabel.shape", xlabel.shape)
-    # print("ylabel.shape", ylabel.shape)
-    
+
     imageIndexesToRemove = []
 
     for j in range(xRosa.shape[0]):
@@ -329,16 +320,37 @@ def placeRosa(gridParameters, shiftParameters) -> list:
             yTemporaryLabel = str(yTemporaryLabel[0])
         temporaryLabel = str(xTemporaryLabel + yTemporaryLabel)
         outputLabels.append(temporaryLabel)
-    # will have to remove some images right here...
-    return outputLabels
 
-# image = np.delete(image, index, axis=0)
-# laserImage = np.delete(laserImage, index, axis=0)
-# xCenter = np.delete(xCenter, index, axis=0)
-# yCenter = np.delete(yCenter, index, axis=0)
-# radius = np.delete(radius, index, axis=0)
-# imageNumber = np.delete(imageNumber, index, axis=0)
+    # RemoveImagesOutOfBoundaries...
+    imageDataDictionary = removeImagesFromIndex(dataDictionary, imageIndexesToRemove)
 
+    return outputLabels, imageDataDictionary
+
+def removeImagesFromIndex(dataDictionary, indexes):
+    image = dataDictionary["image"]
+    laser = dataDictionary["laserImage"]
+    xCenter = dataDictionary["xCenter"]
+    yCenter = dataDictionary["yCenter"]
+    radius = dataDictionary["radius"]
+    imageNumber = dataDictionary["imageNumber"]
+
+    image = np.delete(image, indexes, axis=0)
+    laserImage = np.delete(laserImage, indexes, axis=0)
+    xCenter = np.delete(xCenter, indexes, axis=0)
+    yCenter = np.delete(yCenter, indexes, axis=0)
+    radius = np.delete(radius, indexes, axis=0)
+    imageNumber = np.delete(imageNumber, indexes, axis=0)
+
+    imageDataDictionary = {
+        "image": image,
+        "laserImage": laserImage,
+        "xCenter": xCenter,
+        "yCenter": yCenter,
+        "radius": radius,
+        "imageNumber": imageNumber
+    }
+
+    return imageDataDictionary
 
 def defineGrid(Image) -> tuple:
     # onh = optic nerve head
