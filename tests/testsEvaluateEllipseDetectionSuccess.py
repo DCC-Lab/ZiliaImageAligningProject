@@ -122,18 +122,21 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
             orientation -= 2*math.pi
         yPoints, xPoints = ellipse(yCenter, xCenter, minorAxis, majorAxis, rotation=-orientation)
 
+        indexesToRemove = []
         for i in range(len(yPoints)):
             if yPoints[i] > (originalImage.shape[0] - 1):
                 # The ellipse is out of the image's boundaries
-                yPoints = np.delete(yPoints, i)
-                xPoints = np.delete(xPoints, i)
+                indexesToRemove.append(i)
             elif xPoints[i] > (originalImage.shape[1] - 1):
                 # The ellipse is out of the image's boundaries
-                xPoints = np.delete(xPoints, i)
-                yPoints = np.delete(yPoints, i)
+                indexesToRemove.append(i)
             else:
                 # The ellipse is in the image's boudaries
                 continue
+
+        # remove elements out of the image's boudaries:
+        yPoints = np.delete(yPoints, indexesToRemove)
+        xPoints = np.delete(xPoints, indexesToRemove)
 
         imageWithEllipse = np.zeros((originalImage.shape[0], originalImage.shape[1]))
         imageWithEllipse[yPoints, xPoints] = 1
@@ -336,14 +339,17 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
         print("std = ", std) # 0.009001371815973887
         # 7.0 \pm 0.9
 
-    def findSuccessRateOfONHDetection(self, sortedInputs, sortedOutputs, scaleFactor=3, accuracy=10, highGamma=3, gammaThresh=0.5):
+    def findSuccessRateOfONHDetection(self, sortedInputs, sortedOutputs, sortedFileNames, parameters, scaleFactor=3, accuracy=10, highGamma=3, gammaThresh=0.5):
         resultsList = []
         errorsIndexes = []
         for i in range(len(sortedInputs)):
             print(f"image index {i} being analyzed")
             testInput = imread(sortedInputs[i])
             testOutput = self.binarizeImage(sortedOutputs[i])
-            bestEllipse = self.getBestEllipse(testInput, highGamma=highGamma, gammaThresh=gammaThresh, scaleFactor=scaleFactor, accuracy=accuracy)
+            bestEllipse = self.getBestEllipse(testInput, highGamma=highGamma, gammaThresh=gammaThresh,
+                                            scaleFactor=scaleFactor, accuracy=accuracy)
+            print(f"hough {i} done")
+            self.saveBestEllipse(sortedFileNames, i, bestEllipse, parameters)
             if bestEllipse is None:
                 # No ellipse has been found
                 errorsIndexes.append(i)
@@ -368,6 +374,23 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
             errorsIndexes = None
 
         return resultsList, mean, std, errorsIndexes
+
+    def saveBestEllipse(self, sortedFileNames, index, bestEllipse, parameters):
+        imageName = sortedFileNames[index]
+        imageData = {"bestEllipse":bestEllipse}
+        if index != 0:
+            with open('resultsEllipseData2.json', 'r') as file:
+                data = json.load(file)
+                data["parameters"] = parameters
+                data[imageName] = imageData
+            with open('resultsEllipseData2.json', 'w') as file:
+                json.dump(data, file, indent=4)
+        else:
+            data = {}
+            data["parameters"] = parameters
+            data[imageName] = imageData
+            with open('resultsEllipseData2.json', 'w') as file:
+                json.dump(data, file, indent=4)
 
     @envtest.skip("skip file creation and computing time")
     def testFindSuccessRateOn4FileAndSaveToJson(self):
@@ -401,43 +424,116 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
         with open('dictionaryWithNumpySaveTest.json', 'w') as file:
             json.dump(testDictionary, file, indent=4)
 
-    # @envtest.skip("skip file creation and computing time")
-    def testFindSuccessRateOnAllFilesAndSaveToJson_1_smallScaleFactor(self):
+    @envtest.skip("skip computing time")
+    def testWeirdIndexError(self):
         # These parameters need to change in subsequent tests:
         scaleFactor = 10
         accuracy = 15
         highGamma = 2.5
         gammaThresh = meanMin2Sigma
-        fileName = 'resultsONHAccuracy1.json'
+        fileName = 'resultsONHAccuracy1_.json'
+
+        sortedInputs = getFiles(inputsPath, newImages=False)[121:125]
+        sortedOutputs = getFiles(outputsPath, newImages=False)[121:125]
+        sortedFileNames = np.sort(listFileNames(inputsPath))[121:125]
+
+        resultsList, mean, std, errorsIndexes = self.findSuccessRateOfONHDetection(sortedInputs, sortedOutputs,
+                                                                    scaleFactor=scaleFactor, accuracy=accuracy,
+                                                                    highGamma=highGamma, gammaThresh=gammaThresh)
+
+    @envtest.skip("skip file creation and computing time")
+    def testFindSuccessRateOnAllFilesAndSaveToJson_1_smallScaleFactor(self):
+        # These parameters need to change in subsequent tests:
+        scaleFactor = 10
+        accuracy = 50
+        highGamma = 2.5
+        gammaThresh = meanMin2Sigma
+        fileName = 'resultsONHAccuracy1_.json'
+
+        parameters = {"scaleFactor":scaleFactor,
+                                    "accuracy":accuracy,
+                                    "highGamma":highGamma,
+                                    "gammaThresh":gammaThresh}
 
         sortedInputs = getFiles(inputsPath, newImages=False)
         sortedOutputs = getFiles(outputsPath, newImages=False)
         sortedFileNames = np.sort(listFileNames(inputsPath))
 
-        resultsList, mean, std, errorsIndexes = self.findSuccessRateOfONHDetection(sortedInputs, sortedOutputs,
+        resultsList, mean, std, errorsIndexes = self.findSuccessRateOfONHDetection(sortedInputs, sortedOutputs, sortedFileNames, parameters,
                                                                     scaleFactor=scaleFactor, accuracy=accuracy,
                                                                     highGamma=highGamma, gammaThresh=gammaThresh)
 
         if errorsIndexes is None:
             filesNamesWithErrors = []
             errorsIndexes = 0
+            unmatched = {"number":errorsIndexes,
+                                    "fileNames":filesNamesWithErrors}
         else:
             filesNamesWithErrors = np.array(sortedFileNames)[errorsIndexes]
             sortedFileNames = np.delete(sortedFileNames, errorsIndexes)
+            unmatched = {"number":len(errorsIndexes),
+                                    "fileNames":filesNamesWithErrors}
         imageData = dict(zip(sortedFileNames, resultsList))
         imageData["results"] = {"mean": mean, "std":std}
         imageData["parameters"] = {"scaleFactor":scaleFactor,
                                     "accuracy":accuracy,
                                     "highGamma":highGamma,
                                     "gammaThresh":gammaThresh}
-        imageData["unmatched"] = {"number":len(errorsIndexes),
-                                    "fileNames":filesNamesWithErrors}
+        imageData["unmatched"] = unmatched
 
         with open(fileName, 'w') as file:
             json.dump(imageData, file, indent=4)
-        print("mean = ", mean) #
-        print("std = ", std) #
+        print("mean = ", mean) # 0.9021230440208527
+        print("std = ", std) # 0.10323497333112443
+        # deb12h08
+        # fin13h27
 
+    # @envtest.skip("skip file creation and computing time")
+    def testFindSuccessRateOnAllFilesAndSaveToJson_2_threshMinSigma(self):
+        # These parameters need to change in subsequent tests:
+        scaleFactor = 10
+        accuracy = 50
+        highGamma = 2.5
+        gammaThresh = meanMinSigma
+        fileName = 'resultsONHAccuracy2.json'
+
+        parameters = {"scaleFactor":scaleFactor,
+                                    "accuracy":accuracy,
+                                    "highGamma":highGamma,
+                                    "gammaThresh":gammaThresh}
+
+        sortedInputs = getFiles(inputsPath, newImages=False)
+        sortedOutputs = getFiles(outputsPath, newImages=False)
+        sortedFileNames = np.sort(listFileNames(inputsPath))
+
+        resultsList, mean, std, errorsIndexes = self.findSuccessRateOfONHDetection(sortedInputs, sortedOutputs, sortedFileNames, parameters,
+                                                                    scaleFactor=scaleFactor, accuracy=accuracy,
+                                                                    highGamma=highGamma, gammaThresh=gammaThresh)
+
+        if errorsIndexes is None:
+            filesNamesWithErrors = []
+            errorsIndexes = 0
+            unmatched = {"number":errorsIndexes,
+                                    "fileNames":filesNamesWithErrors}
+        else:
+            filesNamesWithErrors = np.array(sortedFileNames)[errorsIndexes]
+            sortedFileNames = np.delete(sortedFileNames, errorsIndexes)
+            unmatched = {"number":len(errorsIndexes),
+                                    "fileNames":filesNamesWithErrors}
+        imageData = dict(zip(sortedFileNames, resultsList))
+        imageData["results"] = {"mean": mean, "std":std}
+        imageData["parameters"] = {"scaleFactor":scaleFactor,
+                                    "accuracy":accuracy,
+                                    "highGamma":highGamma,
+                                    "gammaThresh":gammaThresh}
+        imageData["unmatched"] = unmatched
+
+        with open(fileName, 'w') as file:
+            json.dump(imageData, file, indent=4)
+        print("mean = ", mean) # 
+        print("std = ", std) # 
+        # deb13h42
+        # fin
 
 # globalMean = 0.5301227941321696
 # meanMinHalfSigma = 0.4891183892357014
