@@ -9,7 +9,10 @@ from processImages import *
 # collectionDir = r"./tests/TestImages/rightEyeSampleOldData"
 
 # New data:
-collectionDir = r"./tests/TestImages/miniTestSampleNewData"
+#collectionDir = r"./tests/TestImages/miniTestSampleNewData"
+
+# Backup USB on Mac OS:
+collectionDir = r"/Volumes/DATA BACKUP/Baseline3/Bresil 1511184/20210316-100153-bresil-od-onh-rlp6"
 
 # More new data that looks half decent...:
 # collectionDir = r"E:\Baseline3\Kenya\20210316-144549-kenya-os-onh-rlp6-20210525T141349Z-001\20210316-144549-kenya-os-onh-rlp6"

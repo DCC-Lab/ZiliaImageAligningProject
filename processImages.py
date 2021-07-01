@@ -360,7 +360,6 @@ def defineGrid(Image) -> tuple:
 
 
 def oldPlotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None:
-    pyplot.imsave("preResult1.jpg", Image[0,:,:])
     xCenterGrid = gridParameters[0]
     yCenterGrid = gridParameters[1]
     length = gridParameters[2]
@@ -375,7 +374,6 @@ def oldPlotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None
 
     left = np.max([xCenterGrid - (length*5), 0])
 
-    pyplot.imsave("preResult2.jpg", image)
     up = np.max([yCenterGrid - (length*5), 0])
     right = np.min([(5*length), (Image.shape[1] - xCenterGrid)]) + xCenterGrid
     down = right = np.min([(5*length), (Image.shape[2] - yCenterGrid)]) + yCenterGrid
@@ -390,7 +388,6 @@ def oldPlotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None
     HIGH_SLICE_X = ((5*length) + (temp.shape[1] - xNewCenter))
     # Slicing:
     gridImage[LOW_SLICE_Y:HIGH_SLICE_Y, LOW_SLICE_X:HIGH_SLICE_X] = temp
-    pyplot.imsave("preResult3.jpg", gridImage)
 
     plt.figure()
     img = gridImage.copy()

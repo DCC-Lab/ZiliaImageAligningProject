@@ -42,7 +42,5 @@ class TestNumpyDStack(envtest.ZiliaTestCase):
 		self.assertTrue(finalImage[0,1,0] == 140)
 		# Ok, just how I thought, indexes are [vertical, horizontal, thinckness].
 
-
-
 if __name__ == "__main__":
 	envtest.main()
