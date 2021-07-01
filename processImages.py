@@ -371,7 +371,7 @@ def oldPlotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None
         color = (0, 255, 0)
         thickness = 5
         image = cv2.circle(Image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
-
+    #plt.imsave("preimage2D.jpg", image) # same for old and new
     left = np.max([xCenterGrid - (length*5), 0])
 
     up = np.max([yCenterGrid - (length*5), 0])
@@ -398,26 +398,27 @@ def oldPlotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None
     img[:,::dy] = gridColor
     img[::dx,:] = gridColor
 
-    pyplot.imsave('Result_old.jpg', img)
+    plt.imsave('Result_old.jpg', img)
 
 
 def plotResult(image, shiftParameters, gridParameters, rosaRadius=30, thickness=5) -> None:
     image3D = drawRosaCircles(image, shiftParameters, rosaRadius=rosaRadius, thickness=thickness)
     resultImage = prepareResultImage(image3D, gridParameters)
     resultImageWithGrid = drawGrid(resultImage, gridParameters)
-    pyplot.imsave('Result.jpg', resultImageWithGrid)
+    plt.imsave('Result.jpg', resultImageWithGrid)
 
 
 def drawRosaCircles(image, shiftParameters, rosaRadius=30, thickness=5, color=(0, 1, 0)):
     refImage = image[0,:,:]
     image3D = np.dstack((refImage, refImage, np.zeros(refImage.shape)))
-    print(image3D)
+    #print(image3D)
     xRosa = shiftParameters[0]
     yRosa = shiftParameters[1]
     for j in range(image.shape[0]):
         centerCoordinates = (int(xRosa[j]), int(yRosa[j]))
         #cv2.circle(image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
         cv2.circle(image3D, centerCoordinates, rosaRadius, color, thickness)
+    #plt.imsave("preimage3D.jpg", image3D) # same for old and new
     return image3D
 
 
