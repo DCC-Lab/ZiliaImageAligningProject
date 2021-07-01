@@ -65,3 +65,4 @@ Label, dataDictionary, indexesToRemove = placeRosa(gridParameters, shiftParamete
 shiftParameters = cleanShiftParameters(shiftParameters, indexesToRemove)
 
 plotResult(image, shiftParameters, gridParameters)
+oldPlotResult(image, shiftParameters, gridParameters)

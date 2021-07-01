@@ -401,60 +401,62 @@ def oldPlotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None
     img[:,::dy] = gridColor
     img[::dx,:] = gridColor
 
-    pyplot.imsave('Result.jpg', img)
+    pyplot.imsave('Result_old.jpg', img)
 
 
 def plotResult(image, shiftParameters, gridParameters, rosaRadius=30, thickness=5) -> None:
-    # pyplot.imsave("preResult1.jpg", image[0,:,:])
-    # imageWithCircles = drawRosaCircles(image, shiftParameters, rosaRadius=rosaRadius, thickness=thickness)
-    drawRosaCircles(image, shiftParameters, rosaRadius=rosaRadius, thickness=thickness)
-    # pyplot.imsave("preResult2.jpg", imageWithCircles)
-    rescaledImage = rescaleImage(image, gridParameters)
-    # pyplot.imsave("preResult3.jpg", rescaledImage)
-    rescaledImageWithGrid = drawGrid(rescaledImage, gridParameters)
-    pyplot.imsave('Result.jpg', rescaledImageWithGrid)
+    image3D = drawRosaCircles(image, shiftParameters, rosaRadius=rosaRadius, thickness=thickness)
+    resultImage = prepareResultImage(image3D, gridParameters)
+    resultImageWithGrid = drawGrid(resultImage, gridParameters)
+    pyplot.imsave('Result.jpg', resultImageWithGrid)
 
 
-def drawRosaCircles(image, shiftParameters, rosaRadius=30, thickness=5, color=(0, 255, 0)):
-    image3D = np.stack((image[0,:,:],image[0,:,:],image[0,:,:]), axis=-1)
+def drawRosaCircles(image, shiftParameters, rosaRadius=30, thickness=5, color=(0, 1, 0)):
+    refImage = image[0,:,:]
+    image3D = np.dstack((refImage, refImage, np.zeros(refImage.shape)))
+    print(image3D)
     xRosa = shiftParameters[0]
     yRosa = shiftParameters[1]
     for j in range(image.shape[0]):
         centerCoordinates = (int(xRosa[j]), int(yRosa[j]))
-        cv2.circle(image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
+        #cv2.circle(image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
+        cv2.circle(image3D, centerCoordinates, rosaRadius, color, thickness)
+    return image3D
 
 
-def rescaleImage(image, gridParameters):
+def prepareResultImage(image3D, gridParameters):
     xCenterGrid = gridParameters[0]# int
     yCenterGrid = gridParameters[1]# int
     length = gridParameters[2]# int
 
     left = np.max([xCenterGrid - (length*5), 0])
     up = np.max([yCenterGrid - (length*5), 0])
-    right = np.min([(5*length), (image.shape[1] - xCenterGrid)]) + xCenterGrid
-    down = right = np.min([(5*length), (image.shape[2] - yCenterGrid)]) + yCenterGrid
+    #right = np.min([(5*length), (image.shape[1] - xCenterGrid)]) + xCenterGrid
+    #down = right = np.min([(5*length), (image.shape[2] - yCenterGrid)]) + yCenterGrid
+    right = np.min([(5*length), (image3D.shape[1] - xCenterGrid)]) + xCenterGrid
+    down = right = np.min([(5*length), (image3D.shape[0] - yCenterGrid)]) + yCenterGrid
 
-    temp = image[0,up:down, left:right]
+    temp = image3D[up:down, left:right,:]
     xNewCenter = xCenterGrid - left
     yNewCenter = yCenterGrid - up
-    gridImage = np.zeros([length*10, length*10])
+    gridImage = np.zeros([length*10, length*10, 3])
     # Set slicing limits:
     LOW_SLICE_Y = ((5*length) - yNewCenter)
     HIGH_SLICE_Y = ((5*length) + (temp.shape[0] - yNewCenter))
     LOW_SLICE_X = ((5*length) - xNewCenter)
     HIGH_SLICE_X = ((5*length) + (temp.shape[1] - xNewCenter))
     # Slicing:
-    gridImage[LOW_SLICE_Y:HIGH_SLICE_Y, LOW_SLICE_X:HIGH_SLICE_X] = temp
+    gridImage[LOW_SLICE_Y:HIGH_SLICE_Y, LOW_SLICE_X:HIGH_SLICE_X, :] = temp
 
     return gridImage
 
 
-def drawGrid(image, gridParameters):
+def drawGrid(image3D, gridParameters):
     length = gridParameters[2]
     dx, dy = length, length
     # Custom (rgb) grid color:
-    gridColor = 0
+    gridColor = 1
     # Modify the image to include the grid
-    image[:,::dy] = gridColor
-    image[::dx,:] = gridColor
-    return image
+    image3D[:,::dx,:] = gridColor
+    image3D[::dy,:,:] = gridColor
+    return image3D
