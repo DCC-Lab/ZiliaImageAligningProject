@@ -237,10 +237,100 @@ class TestLsqEllipse(envtest.ZiliaTestCase):
     @envtest.skip("skip plots")
     def testLsqEllipse_bresilMedium(self):
         testImage = self.testCannyDirectory+"/bresilMedium.jpg"
+        colorImage = imread(testImage)
+        image = imread(testImage, as_gray=True)
+        thresh = threshold_otsu(image)
+        binaryImage = image > thresh
+        canniedImage = canny(binaryImage)
+
+        # Get index pairs of the contours:
+        X, Y = np.where(canniedImage == True)
+        indexes = np.array(list(zip(X, Y)))
+        # print(indexes)
+
+        reg = LsqEllipse().fit(indexes)
+        self.assertIsNotNone(reg)
+        center, normalHalfAx, parallelHalfAx, phi = reg.as_parameters()
+        [yCenter, xCenter] = center
+        print("center:", center) # [627.4181525824515, 422.9409439110012]
+        print("normalHalfAx:", normalHalfAx) # 221.492203402924
+        print("parallelHalfAx:", parallelHalfAx) # 185.90812860271694
+        print("phi:", phi) # -0.3855460868035675
+
+        cy, cx = ellipse(int(yCenter), int(xCenter), int(normalHalfAx), int(parallelHalfAx), rotation=phi)
+        canniedImage[cy, cx] = 130
+        image[cy, cx] = 255
+        plt.figure()
+        plt.subplot(1,2,1)
+        plt.imshow(canniedImage, cmap="gray")
+        plt.subplot(1,2,2)
+        plt.imshow(colorImage)
+        plt.show()
+        # Very good!!!
 
     @envtest.skip("skip plots")
     def testLsqEllipse_bresilHigh(self):
         testImage = self.testCannyDirectory+"/bresilHigh.jpg"
+        colorImage = imread(testImage)
+        image = imread(testImage, as_gray=True)
+        image = adjust_gamma(image, gamma=100)
+        thresh = threshold_otsu(image)
+        binaryImage = image > thresh
+        canniedImage = canny(binaryImage)
+
+        # Get index pairs of the contours:
+        X, Y = np.where(canniedImage == True)
+        indexes = np.array(list(zip(X, Y)))
+
+        reg = LsqEllipse().fit(indexes)
+        self.assertIsNotNone(reg)
+        center, normalHalfAx, parallelHalfAx, phi = reg.as_parameters()
+        [yCenter, xCenter] = center
+
+        cy, cx = ellipse(int(yCenter), int(xCenter), int(normalHalfAx), int(parallelHalfAx), rotation=phi)
+        canniedImage[cy, cx] = 130
+        image[cy, cx] = 255
+        plt.figure()
+        plt.subplot(1,2,1)
+        plt.imshow(canniedImage, cmap="gray")
+        plt.subplot(1,2,2)
+        plt.imshow(colorImage)
+        plt.show()
+        # Without gamma correction, TERRIBLE.
+        # Less bad with gamma==2.
+        # Better with gamma==3, but still too big.
+        # Really great with gamma==100!!!
+
+    @envtest.skip("skip plots")
+    def testLsqEllipse_kenyaLow(self):
+        testImage = self.testCannyDirectory+"/kenyaLow.jpg"
+        colorImage = imread(testImage)
+        image = imread(testImage, as_gray=True)
+        # image = adjust_gamma(image, gamma=50)
+        thresh = threshold_otsu(image)
+        binaryImage = image > thresh
+        canniedImage = canny(binaryImage)
+
+        # Get index pairs of the contours:
+        X, Y = np.where(canniedImage == True)
+        indexes = np.array(list(zip(X, Y)))
+
+        reg = LsqEllipse().fit(indexes)
+        self.assertIsNotNone(reg)
+        center, normalHalfAx, parallelHalfAx, phi = reg.as_parameters()
+        [yCenter, xCenter] = center
+
+        cy, cx = ellipse(int(yCenter), int(xCenter), int(normalHalfAx), int(parallelHalfAx), rotation=phi)
+        canniedImage[cy, cx] = 130
+        image[cy, cx] = 255
+        plt.figure()
+        plt.subplot(1,2,1)
+        plt.imshow(canniedImage, cmap="gray")
+        plt.subplot(1,2,2)
+        plt.imshow(colorImage)
+        plt.show()
+        # Without gamma correction, not too shaby!!!
+        # Not better with higher gamma.
 
 if __name__ == "__main__":
     envtest.main()
