@@ -49,7 +49,7 @@ class ZiliaTestCase(unittest.TestCase):
 
     @property
     def testStudentDirectory(self):
-        return ZiliaTestCase.testFilesRootDirectory + r"/testStudent"
+        return ZiliaTestCase.testFilesRootDirectory + r"/testEllipses"
 
     def __init__(self, tests=()):
         super(ZiliaTestCase, self).__init__(tests)
