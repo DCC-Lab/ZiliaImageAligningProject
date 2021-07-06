@@ -107,7 +107,7 @@ class ZiliaONHDetector(EllipseDetector):
             # Automatically check if gamma correction is needed
             self.gamma = self.detectGammaNecessity(gammaThresh=gammaThresh)
         elif self.gamma is False:
-            # Don't apply gamma correction
+            # Don't apply gamma correction whatsoever
             pass
         elif int(self.gamma) == 1:
             # No need to apply gamma correction
@@ -117,7 +117,7 @@ class ZiliaONHDetector(EllipseDetector):
             self.grayImage = self.adjustGamma()
 
     def preProcessImage(self):
-        self.smallGrayImage = self.adjustGamma()
+        self.grayImage = self.adjustGamma()
         self.threshold = self.getThreshold()
         super(ZiliaONHDetector, self).preProcessImage()
 
@@ -141,7 +141,7 @@ class ZiliaONHDetector(EllipseDetector):
 
     def adjustGamma(self):
         if self.gamma is False:
-            return self.smallGrayImage
+            return self.grayImage
         else:
             return adjust_gamma(self.grayImage, gamma=self.gamma)
 

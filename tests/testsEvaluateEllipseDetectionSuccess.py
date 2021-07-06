@@ -339,7 +339,8 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
         print("std = ", std) # 0.009001371815973887
         # 7.0 \pm 0.9
 
-    def findSuccessRateOfONHDetection(self, sortedInputs, sortedOutputs, sortedFileNames, parameters, scaleFactor=3, accuracy=10, highGamma=3, gammaThresh=0.5):
+    def findSuccessRateOfONHDetection(self, sortedInputs, sortedOutputs, sortedFileNames,
+                                        parameters, scaleFactor=3, accuracy=10, highGamma=3, gammaThresh=0.5, save=True):
         resultsList = []
         errorsIndexes = []
         for i in range(len(sortedInputs)):
@@ -349,7 +350,8 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
             bestEllipse = self.getBestEllipse(testInput, highGamma=highGamma, gammaThresh=gammaThresh,
                                             scaleFactor=scaleFactor, accuracy=accuracy)
             print(f"hough {i} done")
-            self.saveBestEllipse(sortedFileNames, i, bestEllipse, parameters)
+            if save:
+                self.saveBestEllipse(sortedFileNames, i, bestEllipse, parameters)
             if bestEllipse is None:
                 # No ellipse has been found
                 errorsIndexes.append(i)
@@ -452,9 +454,9 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
         fileName = 'resultsONHAccuracy1_.json'
 
         parameters = {"scaleFactor":scaleFactor,
-                                    "accuracy":accuracy,
-                                    "highGamma":highGamma,
-                                    "gammaThresh":gammaThresh}
+                        "accuracy":accuracy,
+                        "highGamma":highGamma,
+                        "gammaThresh":gammaThresh}
 
         sortedInputs = getFiles(inputsPath, newImages=False)
         sortedOutputs = getFiles(outputsPath, newImages=False)
@@ -499,9 +501,9 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
         fileName = 'resultsONHAccuracy2.json'
 
         parameters = {"scaleFactor":scaleFactor,
-                                    "accuracy":accuracy,
-                                    "highGamma":highGamma,
-                                    "gammaThresh":gammaThresh}
+                        "accuracy":accuracy,
+                        "highGamma":highGamma,
+                        "gammaThresh":gammaThresh}
 
         sortedInputs = getFiles(inputsPath, newImages=False)
         sortedOutputs = getFiles(outputsPath, newImages=False)
@@ -546,9 +548,9 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
         fileName = 'resultsONHAccuracy3.json'
 
         parameters = {"scaleFactor":scaleFactor,
-                                    "accuracy":accuracy,
-                                    "highGamma":highGamma,
-                                    "gammaThresh":gammaThresh}
+                        "accuracy":accuracy,
+                        "highGamma":highGamma,
+                        "gammaThresh":gammaThresh}
 
         sortedInputs = getFiles(inputsPath, newImages=False)
         sortedOutputs = getFiles(outputsPath, newImages=False)
@@ -582,6 +584,64 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
         print("std = ", std) # 0.10323497333112443
         # deb15h10
         # fin16h27
+
+    """
+    WARNING: test results before this are NOT VALID. An error has been found
+    in the ZiliaONHDetector class and has now been corrected. However, running
+    the code of the previous functions WILL give you the right results, but I
+    will not do it because I'm going to change things anyway.
+    """
+
+    @envtest.skip("skip computing time and prints")
+    def testFindSuccessRateOn7Files_threshGlobalMean(self):
+        # These parameters need to change in subsequent tests:
+        scaleFactor = 10
+        accuracy = 50
+        highGamma = 2.5
+        gammaThresh = globalMean
+
+        parameters = {"scaleFactor":scaleFactor,
+                        "accuracy":accuracy,
+                        "highGamma":highGamma,
+                        "gammaThresh":gammaThresh}
+
+        sortedInputs = getFiles(inputsPath, newImages=False)[:7]
+        sortedOutputs = getFiles(outputsPath, newImages=False)[:7]
+        sortedFileNames = np.sort(listFileNames(inputsPath))[:7]
+
+        resultsList, mean, std, errorsIndexes = self.findSuccessRateOfONHDetection(sortedInputs, sortedOutputs, sortedFileNames, parameters,
+                                                                    scaleFactor=scaleFactor, accuracy=accuracy,
+                                                                    highGamma=highGamma, gammaThresh=gammaThresh, save=False)
+
+        print("mean = ", mean) # 0.9190614274681226
+        print("std = ", std) # 0.017543006158192546
+        # indexes 4,5,6 have no gamma
+
+    @envtest.skip("skip computing time and prints")
+    def testFindSuccessRateOn7Files_threshMeanMinSigma(self):
+        # These parameters need to change in subsequent tests:
+        scaleFactor = 10
+        accuracy = 50
+        highGamma = 2.5
+        gammaThresh = meanMinSigma
+
+        parameters = {"scaleFactor":scaleFactor,
+                        "accuracy":accuracy,
+                        "highGamma":highGamma,
+                        "gammaThresh":gammaThresh}
+
+        sortedInputs = getFiles(inputsPath, newImages=False)[:7]
+        sortedOutputs = getFiles(outputsPath, newImages=False)[:7]
+        sortedFileNames = np.sort(listFileNames(inputsPath))[:7]
+
+        resultsList, mean, std, errorsIndexes = self.findSuccessRateOfONHDetection(sortedInputs, sortedOutputs, sortedFileNames, parameters,
+                                                                    scaleFactor=scaleFactor, accuracy=accuracy,
+                                                                    highGamma=highGamma, gammaThresh=gammaThresh, save=False)
+
+        print("mean = ", mean) # 0.9298124482540412
+        print("std = ", std) # 0.01628619385363592
+        # only index 6 has no gamma
+
 
 # globalMean = 0.5301227941321696
 # meanMinHalfSigma = 0.4891183892357014
