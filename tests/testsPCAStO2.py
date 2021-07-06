@@ -1,8 +1,9 @@
 import envtest
 import unittest
-from spectrumAnalysis import mainAnalysis
+from spectrumAnalysis import mainAnalysis, bloodTest
 from sklearn.decomposition import PCA
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 # Run tests in order they are written
@@ -25,19 +26,22 @@ spectrumPath14 = r"./TestSpectrums/bresilODrlp14/spectrum.csv"
 
 class TestPCAStO2(envtest.ZiliaTestCase):
 
+    @envtest.skip("not useful anymore")
     def testImport(self):
         features = mainAnalysis(darkRefPath2, spectrumPath2, whiteRefName=whiteRefName,
                                 refNameNothinInfront=refNameNothinInfront,
                                 componentsSpectra=componentsSpectra)
         self.assertIsNotNone(features)
 
-    def setUp(self):
-        # this will get executed before every test
-        super().setUp()
-        self.features = mainAnalysis(darkRefPath2, spectrumPath2, whiteRefName=whiteRefName,
-                                refNameNothinInfront=refNameNothinInfront,
-                                componentsSpectra=componentsSpectra)
+    # @envtest.skip("not useful anymore")
+    # def setUp(self):
+    #     # this will get executed before every test
+    #     super().setUp()
+    #     self.features = mainAnalysis(darkRefPath2, spectrumPath2, whiteRefName=whiteRefName,
+    #                             refNameNothinInfront=refNameNothinInfront,
+    #                             componentsSpectra=componentsSpectra)
 
+    @envtest.skip("not useful anymore")
     def testDataReturnTypeIsNumpyArray(self):
         features = mainAnalysis(darkRefPath2, spectrumPath2, whiteRefName=whiteRefName,
                                 refNameNothinInfront=refNameNothinInfront,
@@ -48,6 +52,7 @@ class TestPCAStO2(envtest.ZiliaTestCase):
         pca = PCA()
         self.assertTrue(True)
 
+    @envtest.skip("not useful anymore")
     def testFitPCAToTheData(self):
         features = mainAnalysis(darkRefPath2, spectrumPath2, whiteRefName=whiteRefName,
                                 refNameNothinInfront=refNameNothinInfront,
@@ -56,6 +61,7 @@ class TestPCAStO2(envtest.ZiliaTestCase):
         pca.fit(features)
         self.assertTrue(True)
 
+    @envtest.skip("not useful anymore")
     def testGetNumberOfComponentsOnRLP2(self):
         features = mainAnalysis(darkRefPath2, spectrumPath2, whiteRefName=whiteRefName,
                                 refNameNothinInfront=refNameNothinInfront,
@@ -65,6 +71,7 @@ class TestPCAStO2(envtest.ZiliaTestCase):
         # print(pca.n_components_)
         # We get 6 components with default PCA parameters
 
+    @envtest.skip("not useful anymore")
     def testGetNumberOfComponentsOnRLP4(self):
         features = mainAnalysis(darkRefPath6, spectrumPath6, whiteRefName=whiteRefName,
                                 refNameNothinInfront=refNameNothinInfront,
@@ -74,6 +81,7 @@ class TestPCAStO2(envtest.ZiliaTestCase):
         # print(pca.n_components_)
         # We get 6 components AGAIN with default PCA parameters
 
+    @envtest.skip("old code jams")
     def testGetNumberOfComponentsOnRLP14(self):
         features = mainAnalysis(darkRefPath14, spectrumPath14, whiteRefName=whiteRefName,
                                 refNameNothinInfront=refNameNothinInfront,
@@ -82,6 +90,58 @@ class TestPCAStO2(envtest.ZiliaTestCase):
         pca.fit(features)
         # print(pca.n_components_)
         # We get 6 components AGAIN AGAIN with default PCA parameters
+
+
+
+    def testFitPCA_BloodTest(self):
+        refNameNothinInfront = r"./TestSpectrums/blood/int75_LEDON_nothingInFront.csv"
+        whiteRefName = r"./TestSpectrums/blood/int75_WHITEREFERENCE.csv"
+        spectrumPath = r"./TestSpectrums/blood/so66_int300_avg1_1.csv"
+        darkRefPath = r"./TestSpectrums/blood/int300_LEDON_nothingInFront.csv"
+        componentsSpectra = r"../_components_spectra.csv"
+        _, absorbance = bloodTest(refNameNothinInfront=refNameNothinInfront,
+                                whiteRefName=whiteRefName, spectrumPath=spectrumPath,
+                                darkRefPath=darkRefPath, componentsSpectra=componentsSpectra)
+        data = absorbance.data
+        pca = PCA()
+        pca.fit(data)
+
+    def testGetPCAExplainedVarianceRatio_BloodTest(self):
+        refNameNothinInfront = r"./TestSpectrums/blood/int75_LEDON_nothingInFront.csv"
+        whiteRefName = r"./TestSpectrums/blood/int75_WHITEREFERENCE.csv"
+        spectrumPath = r"./TestSpectrums/blood/so66_int300_avg1_1.csv"
+        darkRefPath = r"./TestSpectrums/blood/int300_LEDON_nothingInFront.csv"
+        componentsSpectra = r"../_components_spectra.csv"
+        _, absorbance = bloodTest(refNameNothinInfront=refNameNothinInfront,
+                                whiteRefName=whiteRefName, spectrumPath=spectrumPath,
+                                darkRefPath=darkRefPath, componentsSpectra=componentsSpectra)
+        data = absorbance.data
+        pca = PCA()
+        pca.fit(data)
+        varianceRatio = pca.explained_variance_ratio_
+        self.assertIsNotNone(varianceRatio)
+
+    # @envtest.skip("skip plots")
+    def testPlotPCAExplainedVarianceRatio_BloodTest(self):
+        refNameNothinInfront = r"./TestSpectrums/blood/int75_LEDON_nothingInFront.csv"
+        whiteRefName = r"./TestSpectrums/blood/int75_WHITEREFERENCE.csv"
+        spectrumPath = r"./TestSpectrums/blood/so66_int300_avg1_1.csv"
+        darkRefPath = r"./TestSpectrums/blood/int300_LEDON_nothingInFront.csv"
+        componentsSpectra = r"../_components_spectra.csv"
+        _, absorbance = bloodTest(refNameNothinInfront=refNameNothinInfront,
+                                whiteRefName=whiteRefName, spectrumPath=spectrumPath,
+                                darkRefPath=darkRefPath, componentsSpectra=componentsSpectra)
+        data = absorbance.data.T
+        print(data.shape)
+        plt.plot(data.T)
+        plt.show()
+        pca = PCA(n_components=5)
+        pca.fit(data)
+        plt.plot(pca.components_.T)
+        plt.show()
+        varianceRatio = pca.explained_variance_ratio_
+        plt.plot(varianceRatio, "b.")
+        plt.show()
 
 
 if __name__ == "__main__":
