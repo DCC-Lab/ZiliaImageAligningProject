@@ -42,7 +42,7 @@ newImages = True
 #     else:
 #         print("The input is invalid.")
 
-grayImage = loadImages(collectionDir, leftEye=leftEye, newImages = newImages)
+grayImage = loadImages(collectionDir, leftEye=leftEye, newImages=newImages)
 # dataDictionary = seperateImages(grayImage, collectionDir)
 dataDictionary = seperateNewImages(grayImage, collectionDir)
 dataDictionary = removeBadImages(dataDictionary)

@@ -5,10 +5,12 @@ from skimage.filters import threshold_otsu
 from skimage.feature import canny
 from skimage.draw import ellipse
 from skimage.exposure import adjust_gamma
+from skimage.color import rgb2gray
 import matplotlib.pyplot as plt
 import numpy as np
 from ellipse import LsqEllipse
 from matplotlib.patches import Ellipse
+
 
 class TestLsqEllipse(envtest.ZiliaTestCase):
 
@@ -331,6 +333,107 @@ class TestLsqEllipse(envtest.ZiliaTestCase):
         plt.show()
         # Without gamma correction, not too shaby!!!
         # Not better with higher gamma.
+
+    @envtest.skip("skip plots")
+    def testLsqEllipse_partiallyCut(self):
+        testImage = self.testCannyDirectory+"/partiallyCut.jpg"
+        colorImage = imread(testImage)
+        image = imread(testImage, as_gray=True)
+        image = adjust_gamma(image, gamma=3.5)
+        thresh = threshold_otsu(image)
+        binaryImage = image > thresh
+        canniedImage = canny(binaryImage)
+
+        # Get index pairs of the contours:
+        X, Y = np.where(canniedImage == True)
+        indexes = np.array(list(zip(X, Y)))
+
+        reg = LsqEllipse().fit(indexes)
+        self.assertIsNotNone(reg)
+        center, normalHalfAx, parallelHalfAx, phi = reg.as_parameters()
+        [yCenter, xCenter] = center
+
+        cy, cx = ellipse(int(yCenter), int(xCenter), int(normalHalfAx), int(parallelHalfAx), rotation=phi)
+        canniedImage[cy, cx] = 130
+        image[cy, cx] = 255
+        plt.figure()
+        plt.subplot(1,2,1)
+        plt.imshow(canniedImage, cmap="gray")
+        plt.subplot(1,2,2)
+        plt.imshow(colorImage)
+        plt.show()
+        # Without gamma correction, BEURK!
+        # With gamma=3.5, less worse, but anything below that detects too much.
+
+    @envtest.skip("skip plots")
+    def testLsqEllipse_partiallyCut_NoBlueChannel(self):
+        # I'll try to remove the blue channel to see if it's better...
+        testImage = self.testCannyDirectory+"/partiallyCut.jpg"
+        colorImage = imread(testImage)
+        colorImageRed = colorImage[:,:,0]
+        colorImageGreen = colorImage[:,:,1]
+        self.assertTrue(len(colorImage[:,:,0].shape) == 2)
+        colorImageBlue = np.zeros(colorImage[:,:,0].shape)
+        colorImageNoBlue = np.dstack((colorImageRed, colorImageGreen, colorImageBlue))
+        image = rgb2gray(colorImageNoBlue)
+
+        image = adjust_gamma(image, gamma=4)
+        thresh = threshold_otsu(image)
+        binaryImage = image > thresh
+        canniedImage = canny(binaryImage)
+
+        # Get index pairs of the contours:
+        X, Y = np.where(canniedImage == True)
+        indexes = np.array(list(zip(X, Y)))
+
+        reg = LsqEllipse().fit(indexes)
+        self.assertIsNotNone(reg)
+        center, normalHalfAx, parallelHalfAx, phi = reg.as_parameters()
+        [yCenter, xCenter] = center
+
+        cy, cx = ellipse(int(yCenter), int(xCenter), int(normalHalfAx), int(parallelHalfAx), rotation=phi)
+        canniedImage[cy, cx] = 130
+        image[cy, cx] = 255
+        plt.figure()
+        plt.subplot(1,2,1)
+        plt.imshow(canniedImage, cmap="gray")
+        plt.subplot(1,2,2)
+        plt.imshow(colorImage)
+        plt.show()
+        # Without gamma correction, BEURK!
+        # With gamma from about 3.3 to 4, "usable"... kind of...
+
+    # @envtest.skip("skip plots")
+    def testLsqEllipse_noONH(self):
+        testImage = self.testCannyDirectory+"/noONH.jpg"
+        colorImage = imread(testImage)
+        image = imread(testImage, as_gray=True)
+        image = adjust_gamma(image, gamma=50)
+        thresh = threshold_otsu(image)
+        binaryImage = image > thresh
+        canniedImage = canny(binaryImage)
+
+        # Get index pairs of the contours:
+        X, Y = np.where(canniedImage == True)
+        indexes = np.array(list(zip(X, Y)))
+
+        reg = LsqEllipse().fit(indexes)
+        self.assertIsNotNone(reg)
+        center, normalHalfAx, parallelHalfAx, phi = reg.as_parameters()
+        [yCenter, xCenter] = center
+
+        cy, cx = ellipse(int(yCenter), int(xCenter), int(normalHalfAx), int(parallelHalfAx), rotation=phi)
+        canniedImage[cy, cx] = 130
+        image[cy, cx] = 255
+        plt.figure()
+        plt.subplot(1,2,1)
+        plt.imshow(canniedImage, cmap="gray")
+        plt.subplot(1,2,2)
+        plt.imshow(colorImage)
+        plt.show()
+        # Kind of finds an ONH that doesn't exist at high gammas...
+        # but there's an almost oval bright spot in the image, so it's not
+        # easy...
 
 if __name__ == "__main__":
     envtest.main()

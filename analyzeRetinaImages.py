@@ -166,3 +166,27 @@ class ZiliaONHDetector(EllipseDetector):
         minAxis = self.scaleFactor*minAxis
         majAxis = self.scaleFactor*majAxis
         return (xCenter, yCenter), minAxis, majAxis, orientation
+
+
+"""
+###############################
+Notes for new, faster algorithm
+###############################
+
+I will need to check the following:
+- Large axis size
+- Small axis size
+- Orientation (to see where are the biggest/smallest axis to see how to
+    determine which is the width and which is the height)
+
+I will thus have to put maximum and minimum sizes for both large and small
+axis.
+I will also need to apply the following corrections:
+- Delete out of range indexes for the found ellipses
+- If an ellipse of reasonable size has not been found, apply some gamma
+    correction. If still not good, apply more gamma correction. Do this maybe
+    starting with gamma==1.5 and raise the number 0.5 at each iteration, then
+    stop when a good size ellipse is found or when gamma==10, maybe. If still
+    no good match, try with the elliptical Hough transform. From there, just
+    go with the old algorithm.
+"""
