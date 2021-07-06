@@ -16,8 +16,10 @@ is not changed!
 
 # The inputs are original retina images with visible ONH
 # The outputs are the binary images that have been manually fitted
-inputsPath = r"E:\AAA_Reference images\ManuallySorted/inputs"
-outputsPath = r"E:\AAA_Reference images\ManuallySorted/outputs"
+#inputsPath = r"E:\AAA_Reference images\ManuallySorted/inputs"
+#outputsPath = r"E:\AAA_Reference images\ManuallySorted/outputs"
+inputsPath = r"/Volumes/Data/AAA_Reference images/ManuallySorted/inputs"
+outputsPath = r"/Volumes/Data/AAA_Reference images/ManuallySorted/outputs"
 
 # These values will be to find which one gives the best success rate when they
 # are used as thresholds to apply gamma correction
@@ -675,7 +677,7 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
             json.dump(imageData, file, indent=4)
         print("mean = ", mean) # 
         print("std = ", std) # 
-        # deb11h57
+        # deb
         # fin
         # ancien plus vite : 1h16min
 
