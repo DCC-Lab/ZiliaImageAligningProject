@@ -3,10 +3,13 @@ import numpy as np
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
 from scipy.optimize import nnls
+import matplotlib.pyplot as plt
 
 # global variables for cropping wavelength
-lowerLimit = 510
-upperLimit = 590
+lowerLimitNormalization = 510
+upperLimitNormalization = 590
+lowerLimitOximetry = 530
+upperLimitOximetry = 585
 
 """
 Relative paths of test spectras
@@ -49,7 +52,7 @@ def loadComponentsSpectra(componentsSpectra):
         }
     return components_spectra
 
-def cropFunction(Spec):
+def cropFunction(Spec,lowerLimit,upperLimit):
     """crop the spectrum between lower limit and upper limit"""
     croppedSpectrum = Spectrum()
     croppedSpectrum.wavelength = Spec.wavelength[
@@ -72,9 +75,10 @@ def loadWhiteRef(refNameNothinInfront, whiteRefName,
     refSpectrum = Spectrum()
     refSpectrum.wavelength = refWhite[:,wavelengthColumn]
     refSpectrum.data = np.mean(refWhite[:,firstSpecColumn:],axis=1)-np.mean(refNothingInfront[:,firstSpecColumn:],axis=1)
-    croppedRef = cropFunction(refSpectrum)
+    croppedRef = cropFunction(refSpectrum,lowerLimitNormalization,upperLimitNormalization)
     refCroppedNormalized = normalizeRef(croppedRef)
-    return refCroppedNormalized
+    refOximetry=cropFunction(refCroppedNormalized,lowerLimitOximetry,upperLimitOximetry)
+    return refOximetry
 
 def loadDarkRef(darkRefPath=None, skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
     ''' returns cropped (between 500 to 600) dark reference and the wavelength'''
@@ -87,7 +91,7 @@ def loadDarkRef(darkRefPath=None, skipRows=4, wavelengthColumn=0, firstSpecColum
     darkRefSpec = Spectrum()
     darkRefSpec.data = np.mean(darkRef[:,firstSpecColumn:],axis=1)
     darkRefSpec.wavelength = darkRef[:,wavelengthColumn]
-    croppedDarkRef = cropFunction(darkRefSpec)
+    croppedDarkRef = cropFunction(darkRefSpec,lowerLimitNormalization,upperLimitNormalization)
     return croppedDarkRef
 
 def loadSpectrum(spectrumPath=None, skipRows=4, wavelengthColumn=0, firstSpecColumn=3):
@@ -101,7 +105,7 @@ def loadSpectrum(spectrumPath=None, skipRows=4, wavelengthColumn=0, firstSpecCol
     spec = Spectrum()
     spec.data = spectrumData[:, firstSpecColumn:]
     spec.wavelength = spectrumData[:, wavelengthColumn]
-    croppedSpectrum = cropFunction(spec)
+    croppedSpectrum = cropFunction(spec,lowerLimitNormalization,upperLimitNormalization)
     return croppedSpectrum
 
 def normalizeSpectrum(spec,darkRef):
@@ -112,7 +116,8 @@ def normalizeSpectrum(spec,darkRef):
     spectrumDataNormalized = Spectrum()
     spectrumDataNormalized.data = (spectrumData.T/STDspectrum[:,None]).T
     spectrumDataNormalized.wavelength = spec.wavelength
-    return spectrumDataNormalized
+    croppedSpectrumOxymetry = cropFunction(spectrumDataNormalized, lowerLimitOximetry, upperLimitOximetry)
+    return croppedSpectrumOxymetry
 
 
 def find_nearest(array, value):
@@ -176,7 +181,7 @@ def componentsToArray(components):
     variables = np.vstack([variables, components["deoxyhemoglobin"]])
     variables = np.vstack([variables, components["melanin"]])
     variables = np.vstack([variables, components["scattering"]])
-    variables = np.vstack([variables, components["reflection"]])
+    #variables = np.vstack([variables, components["reflection"]])
     return variables
 
 def getCoef(absorbance, variables):
@@ -185,65 +190,49 @@ def getCoef(absorbance, variables):
     for i in range(absorbance.data.shape[1]):
         coef = nnls(variables.T,absorbance.data[:,i],maxiter=2000 )
 
+
         allCoef[i,:]=coef[0]
+
+    plt.plot(absorbance.data[:, 1])
+    plt.show()
     print('all coef shape : ',allCoef.shape)
     print('all coefs :' , allCoef)
     return allCoef
 
-def mainAnalysis(darkRefPath, spectrumPath, componentsSpectra=None,
-                whiteRefName=None, refNameNothinInfront=None):
-    """load data, do all the analysis, get coefs as concentration"""
-    whiteRef = loadWhiteRef(refNameNothinInfront, whiteRefName)
-    darkRef = loadDarkRef(darkRefPath)
-    spectrums = loadSpectrum(spectrumPath)
-    normalizedSpectrum = normalizeSpectrum(spectrums, darkRef)
-    absorbance = absorbanceSpectrum(whiteRef, normalizedSpectrum)
-    croppedComponent = cropComponents(absorbance, componentsSpectra)
-    features = componentsToArray(croppedComponent)
-    # print('features shape :', features.shape)
-    # coef = getCoef(absorbance,features)
-    # concentration = 100 * coef[:,1] /(coef[:,1]+coef[:,2])
-    # concentration[np.isnan(concentration)] = 0
+whiteRefName = r"int75_WHITEREFERENCE.csv"
+refNameNothinInfront = r"int75_LEDON_nothingInFront.csv"
+componentsSpectra = r'_components_spectra.csv'
 
-    return features
+# def mainAnalysis(darkRefPath, spectrumPath, componentsSpectra=r'_components_spectra.csv',
+#                 whiteRefName=r"int75_WHITEREFERENCE.csv", refNameNothinInfront=r"int75_LEDON_nothingInFront.csv"):
+#     """load data, do all the analysis, get coefs as concentration"""
+#     whiteRef = loadWhiteRef(refNameNothinInfront, whiteRefName)
+#     darkRef = loadDarkRef(darkRefPath)
+#     spectrums = loadSpectrum(spectrumPath)
+#     normalizedSpectrum = normalizeSpectrum(spectrums, darkRef)
+#     absorbance = absorbanceSpectrum(whiteRef, normalizedSpectrum)
+#     croppedComponent = cropComponents(absorbance, componentsSpectra)
+#     features = componentsToArray(croppedComponent)
+#     # print('features shape :', features.shape)
+#     coef = getCoef(absorbance,features)
+#     concentration = 100 * coef[:,1] /(coef[:,1]+coef[:,2])
+#     concentration[np.isnan(concentration)] = 0
+#
+#     print('mean concentration :', np.mean(concentration))
+#     print(np.std(concentration))
+#     print(concentration)
+#     print(concentration.shape)
+#
+#     return features
 
-
-# darkRefPath = r"./tests/TestSpectrums/bresilODrlp2/background.csv"
-# spectrumPath = r"./tests/TestSpectrums/bresilODrlp2/spectrum.csv"
-
+#
+# darkRefPath = r"./tests/TestSpectrums/bresilODrlp14/background.csv"
+# spectrumPath = r"./tests/TestSpectrums/bresilODrlp14/spectrum.csv"
+#
 # mainAnalysis(darkRefPath, spectrumPath)
 
 
 #### This is for test
-
-# def testAnalysis ():
-#     """load data, do all the analysis, get coefs as concentration"""
-#     whiteRef=loadWhiteRef()
-#     darkRef=loadDarkRef()
-#     spectrums=loadSpectrum()
-#     normalizedSpectrum=normalizeSpectrum(spectrums,darkRef)
-#     absorbance=absorbanceSpectrum(whiteRef,normalizedSpectrum)
-#     croppedComponent=cropComponents(absorbance)
-#
-#     #test spectrum with oxyhemoglobin
-#     testSpec=Spectrum()
-#     testSpec.data=(10+2*croppedComponent['oxyhemoglobin']+3*croppedComponent['deoxyhemoglobin']+
-#                    croppedComponent['melanin']+4*croppedComponent['scattering']+
-#                    croppedComponent['reflection']).reshape(-1,1)
-#     testSpec.wavelength=absorbance.wavelength
-#
-#     features=componentsToArray(croppedComponent)
-#     coef=getCoef(testSpec,features)
-#     concentration = 100 * coef[:,1] /(coef[:,1]+coef[:,2])
-#     concentration[np.isnan(concentration)]=0
-#     print(np.mean(concentration))
-#     print(np.std(concentration))
-#     print(concentration)
-#     print(concentration.shape)
-#     return concentration
-#
-# testAnalysis()
-
 ####### blood sample test
 
 def bloodTest():
@@ -272,6 +261,7 @@ def bloodTest():
     print(np.std(concentration))
     print(concentration)
     print(concentration.shape)
+
     return concentration
 
 bloodTest()
