@@ -467,23 +467,7 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
                                                                     scaleFactor=scaleFactor, accuracy=accuracy,
                                                                     highGamma=highGamma, gammaThresh=gammaThresh)
 
-        if errorsIndexes is None:
-            filesNamesWithErrors = []
-            errorsIndexes = 0
-            unmatched = {"number":errorsIndexes,
-                                    "fileNames":filesNamesWithErrors}
-        else:
-            filesNamesWithErrors = np.array(sortedFileNames)[errorsIndexes]
-            sortedFileNames = np.delete(sortedFileNames, errorsIndexes)
-            unmatched = {"number":len(errorsIndexes),
-                                    "fileNames":filesNamesWithErrors}
-        imageData = dict(zip(sortedFileNames, resultsList))
-        imageData["results"] = {"mean": mean, "std":std}
-        imageData["parameters"] = parameters
-        imageData["unmatched"] = unmatched
-
-        with open(fileName, 'w') as file:
-            json.dump(imageData, file, indent=4)
+        self.saveAccuracyResults(errorsIndexes, sortedFileNames, resultsList, mean, std, parameters, fileName)
         print("mean = ", mean) # 0.9021230440208527
         print("std = ", std) # 0.10323497333112443
         # deb12h08
@@ -511,23 +495,7 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
                                                                     scaleFactor=scaleFactor, accuracy=accuracy,
                                                                     highGamma=highGamma, gammaThresh=gammaThresh)
 
-        if errorsIndexes is None:
-            filesNamesWithErrors = []
-            errorsIndexes = 0
-            unmatched = {"number":errorsIndexes,
-                                    "fileNames":filesNamesWithErrors}
-        else:
-            filesNamesWithErrors = np.array(sortedFileNames)[errorsIndexes]
-            sortedFileNames = np.delete(sortedFileNames, errorsIndexes)
-            unmatched = {"number":len(errorsIndexes),
-                                    "fileNames":filesNamesWithErrors}
-        imageData = dict(zip(sortedFileNames, resultsList))
-        imageData["results"] = {"mean": mean, "std":std}
-        imageData["parameters"] = parameters
-        imageData["unmatched"] = unmatched
-
-        with open(fileName, 'w') as file:
-            json.dump(imageData, file, indent=4)
+        self.saveAccuracyResults(errorsIndexes, sortedFileNames, resultsList, mean, std, parameters, fileName)
         print("mean = ", mean) # 0.9021230440208527
         print("std = ", std) # 0.10323497333112443
         # deb13h42
@@ -555,23 +523,7 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
                                                                     scaleFactor=scaleFactor, accuracy=accuracy,
                                                                     highGamma=highGamma, gammaThresh=gammaThresh)
 
-        if errorsIndexes is None:
-            filesNamesWithErrors = []
-            errorsIndexes = 0
-            unmatched = {"number":errorsIndexes,
-                                    "fileNames":filesNamesWithErrors}
-        else:
-            filesNamesWithErrors = np.array(sortedFileNames)[errorsIndexes]
-            sortedFileNames = np.delete(sortedFileNames, errorsIndexes)
-            unmatched = {"number":len(errorsIndexes),
-                                    "fileNames":filesNamesWithErrors}
-        imageData = dict(zip(sortedFileNames, resultsList))
-        imageData["results"] = {"mean": mean, "std":std}
-        imageData["parameters"] = parameters
-        imageData["unmatched"] = unmatched
-
-        with open(fileName, 'w') as file:
-            json.dump(imageData, file, indent=4)
+        self.saveAccuracyResults(errorsIndexes, sortedFileNames, resultsList, mean, std, parameters, fileName)
         print("mean = ", mean) # 0.9021230440208527
         print("std = ", std) # 0.10323497333112443
         # deb15h10
@@ -635,15 +587,34 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
         print("std = ", std) # 0.01628619385363592
         # only index 6 has no gamma
 
+    def saveAccuracyResults(self, errorsIndexes, sortedFileNames, resultsList, mean, std, parameters, fileName):
+        if errorsIndexes is None:
+            filesNamesWithErrors = []
+            errorsIndexes = 0
+            unmatched = {"number":errorsIndexes,
+                "fileNames":filesNamesWithErrors}
+        else:
+            filesNamesWithErrors = list(np.array(sortedFileNames)[errorsIndexes])
+            sortedFileNames = list(np.delete(sortedFileNames, errorsIndexes))
+            unmatched = {"number":len(errorsIndexes),
+                "fileNames":filesNamesWithErrors}
+        imageData = dict(zip(sortedFileNames, resultsList))
+        imageData["results"] = {"mean": mean, "std":std}
+        imageData["parameters"] = parameters
+        imageData["unmatched"] = unmatched
+
+        with open(fileName, 'w') as file:
+            json.dump(imageData, file, indent=4)
+
     @envtest.skip("skip file creation and computing time")
     def testFindSuccessRateOnAllFilesAndSaveToJson_3_threshMeanMin2Sigma_NoError(self):
         # These parameters need to change in subsequent tests:
         scaleFactor = 10
         accuracy = 50
         highGamma = 2.5
-        gammaThresh = globalMean
-        fileName = 'resultsONHAccuracy_gammaGlobalMean.json'
-        bestEllipsesFileName = "bestEllipseData_gammaGlobalMean.json"
+        gammaThresh = meanMin2Sigma
+        fileName = 'resultsONHAccuracy_gammaMeanMin2Sigma.json'
+        bestEllipsesFileName = "bestEllipseData_gammaMeanMin2Sigma.json"
 
         parameters = {"scaleFactor":scaleFactor,
                         "accuracy":accuracy,
@@ -658,28 +629,42 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
                                                                     scaleFactor=scaleFactor, accuracy=accuracy,
                                                                     highGamma=highGamma, gammaThresh=gammaThresh, filename=bestEllipsesFileName)
 
-        if errorsIndexes is None:
-            filesNamesWithErrors = []
-            errorsIndexes = 0
-            unmatched = {"number":errorsIndexes,
-                                    "fileNames":filesNamesWithErrors}
-        else:
-            filesNamesWithErrors = np.array(sortedFileNames)[errorsIndexes]
-            sortedFileNames = np.delete(sortedFileNames, errorsIndexes)
-            unmatched = {"number":len(errorsIndexes),
-                                    "fileNames":filesNamesWithErrors}
-        imageData = dict(zip(sortedFileNames, resultsList))
-        imageData["results"] = {"mean": mean, "std":std}
-        imageData["parameters"] = parameters
-        imageData["unmatched"] = unmatched
-
-        with open(fileName, 'w') as file:
-            json.dump(imageData, file, indent=4)
-        print("mean = ", mean) # 
-        print("std = ", std) # 
-        # deb
-        # fin
+        self.saveAccuracyResults(errorsIndexes, sortedFileNames, resultsList, mean, std, parameters, fileName)
+        print("mean = ", mean) # 0.9145988638238178
+        print("std = ", std) # 0.09334983598704147
+        # deb 11h43
+        # fin before 12h24
         # ancien plus vite : 1h16min
+
+    #@envtest.skip("skip file creation and computing time")
+    def testFindSuccessRateOnAllFilesAndSaveToJson_3_threshMeanMinSigma_NoError(self):
+        # These parameters need to change in subsequent tests:
+        scaleFactor = 10
+        accuracy = 50
+        highGamma = 2.5
+        gammaThresh = meanMinSigma
+        fileName = 'resultsONHAccuracy_gammaMeanMinSigma.json'
+        bestEllipsesFileName = "bestEllipseData_gammaMeanMinSigma.json"
+
+        parameters = {"scaleFactor":scaleFactor,
+                        "accuracy":accuracy,
+                        "highGamma":highGamma,
+                        "gammaThresh":gammaThresh}
+
+        sortedInputs = getFiles(inputsPath, newImages=False)
+        sortedOutputs = getFiles(outputsPath, newImages=False)
+        sortedFileNames = np.sort(listFileNames(inputsPath))
+        
+        resultsList, mean, std, errorsIndexes = self.findSuccessRateOfONHDetection(sortedInputs, sortedOutputs, sortedFileNames, parameters,
+                                                                   scaleFactor=scaleFactor, accuracy=accuracy,
+                                                                   highGamma=highGamma, gammaThresh=gammaThresh, filename=bestEllipsesFileName)
+
+       self.saveAccuracyResults(errorsIndexes, sortedFileNames, resultsList, mean, std, parameters, fileName)
+       print("mean = ", mean) # 0.9145988638238178
+       print("std = ", std) # 0.09334983598704147
+       # deb 12h5
+       # fin
+       # ancien plus vite : 1h16min
 
 
 
