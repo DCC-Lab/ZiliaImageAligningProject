@@ -189,7 +189,7 @@ class TestPCAStO2(envtest.ZiliaTestCase):
 
 
     def loadAllSpectrumFiles(self, spectraDirectory):
-        spetraPaths = getFiles(spectraDirectory, "csv", newImages=False)
+        spectraPaths = getFiles(spectraDirectory, "csv", newImages=False)
         data = None
         for spectraPath in spectraPaths:
             eyeSpectra = pd.read_csv(spectraPath)
@@ -200,22 +200,18 @@ class TestPCAStO2(envtest.ZiliaTestCase):
                 # for the first iteration
                 data = eyeSpectra
             else:
-                data = np.hstack((data, eyeSpectra))
+                data = np.vstack((data, eyeSpectra))
         return data
 
-
-
-
-
-
-    @envtest.skip("not finished yet")
+    @envtest.skip("skip plots")
     def testPlotLotsOfRosaSpectraExplainedVarianceRatio(self):
         spectraDirectory = r"./TestSpectrums/rawRosaSpectraFromBaseline3"
         data = self.loadAllSpectrumFiles(spectraDirectory)
-        print(data.shape)
+        print(data.shape) # 776 spectra, 512 points each
         plt.plot(data.T)
         plt.show()
-        pca = PCA(n_components=5)
+        pca = PCA()
+        # pca = PCA(n_components=5)
         pca.fit(data)
         plt.plot(pca.components_.T)
         plt.show()
@@ -223,6 +219,24 @@ class TestPCAStO2(envtest.ZiliaTestCase):
         plt.plot(varianceRatio, "b.")
         plt.show()
 
+    @envtest.skip("skip plots")
+    def testPlotLotsOfRosaSpectraExplainedVarianceRatio_croppedRange(self):
+        # cropped to wavelengths from 530 to 585
+        spectraDirectory = r"./TestSpectrums/rawRosaSpectraFromBaseline3"
+        data = self.loadAllSpectrumFiles(spectraDirectory)
+        # index 174 to 230
+        data = data[:,174:230]
+        print(data.shape) # 776 spectra, 512 points each
+        plt.plot(data.T)
+        plt.show()
+        pca = PCA()
+        # pca = PCA(n_components=5)
+        pca.fit(data)
+        plt.plot(pca.components_.T)
+        plt.show()
+        varianceRatio = pca.explained_variance_ratio_
+        plt.plot(varianceRatio, "b.")
+        plt.show()
 
 if __name__ == "__main__":
     envtest.main()
