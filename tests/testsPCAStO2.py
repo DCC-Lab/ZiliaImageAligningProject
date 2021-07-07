@@ -1,9 +1,12 @@
 import envtest
 import unittest
 from spectrumAnalysis import mainAnalysis, bloodTest
+from processImages import getFiles
 from sklearn.decomposition import PCA
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+import os
 
 
 # Run tests in order they are written
@@ -121,7 +124,7 @@ class TestPCAStO2(envtest.ZiliaTestCase):
         varianceRatio = pca.explained_variance_ratio_
         self.assertIsNotNone(varianceRatio)
 
-    # @envtest.skip("skip plots")
+    @envtest.skip("skip plots")
     def testPlotPCAExplainedVarianceRatio_BloodTest(self):
         refNameNothinInfront = r"./TestSpectrums/blood/int75_LEDON_nothingInFront.csv"
         whiteRefName = r"./TestSpectrums/blood/int75_WHITEREFERENCE.csv"
@@ -132,6 +135,83 @@ class TestPCAStO2(envtest.ZiliaTestCase):
                                 whiteRefName=whiteRefName, spectrumPath=spectrumPath,
                                 darkRefPath=darkRefPath, componentsSpectra=componentsSpectra)
         data = absorbance.data.T
+        print(data.shape)
+        plt.plot(data.T)
+        plt.show()
+        pca = PCA(n_components=5)
+        pca.fit(data)
+        plt.plot(pca.components_.T)
+        plt.show()
+        varianceRatio = pca.explained_variance_ratio_
+        plt.plot(varianceRatio, "b.")
+        plt.show()
+
+    def testLoadingASpectraFile(self):
+        spectraDirectory = r"./TestSpectrums/rawRosaSpectraFromBaseline3"
+        spectraPath = getFiles(spectraDirectory, "csv", newImages=False)[0]
+        eyeSpectra = pd.read_csv(spectraPath)
+        eyeSpectra = eyeSpectra.drop([0,1,2]) # to remove first junk lines
+        eyeSpectra = eyeSpectra.drop(columns=["wavelength", "ref", "bg"])
+        self.assertIsNotNone(eyeSpectra)
+        # print(eyeSpectra)
+
+    def testCastingASpectraFileToNumpyArray(self):
+        spectraDirectory = r"./TestSpectrums/rawRosaSpectraFromBaseline3"
+        spectraPath = getFiles(spectraDirectory, "csv", newImages=False)[0]
+        eyeSpectra = pd.read_csv(spectraPath)
+        eyeSpectra = eyeSpectra.drop([0,1,2]) # to remove the first junk lines
+        eyeSpectra = eyeSpectra.drop(columns=["wavelength", "ref", "bg"])
+        eyeSpectra = eyeSpectra.to_numpy()
+        self.assertIsNotNone(eyeSpectra)
+        self.assertTrue(type(eyeSpectra) == np.ndarray)
+        # print(eyeSpectra)
+
+    @envtest.skip("skip plots")
+    def testPCAOn1SpectrumFile(self):
+        spectraDirectory = r"./TestSpectrums/rawRosaSpectraFromBaseline3"
+        spectraPath = getFiles(spectraDirectory, "csv", newImages=False)[0]
+        eyeSpectra = pd.read_csv(spectraPath)
+        eyeSpectra = eyeSpectra.drop([0,1,2]) # to remove the first junk lines
+        eyeSpectra = eyeSpectra.drop(columns=["wavelength", "ref", "bg"])
+        eyeSpectra = eyeSpectra.to_numpy().T
+        data = eyeSpectra
+        print(data.shape)
+        plt.plot(data.T)
+        plt.show()
+        # pca = PCA()
+        pca = PCA(n_components=5)
+        pca.fit(data)
+        plt.plot(pca.components_.T)
+        plt.show()
+        varianceRatio = pca.explained_variance_ratio_
+        plt.plot(varianceRatio, "b.")
+        plt.show()
+
+
+    def loadAllSpectrumFiles(self, spectraDirectory):
+        spetraPaths = getFiles(spectraDirectory, "csv", newImages=False)
+        data = None
+        for spectraPath in spectraPaths:
+            eyeSpectra = pd.read_csv(spectraPath)
+            eyeSpectra = eyeSpectra.drop([0,1,2]) # to remove the first junk lines
+            eyeSpectra = eyeSpectra.drop(columns=["wavelength", "ref", "bg"])
+            eyeSpectra = eyeSpectra.to_numpy().T
+            if data is None:
+                # for the first iteration
+                data = eyeSpectra
+            else:
+                data = np.hstack((data, eyeSpectra))
+        return data
+
+
+
+
+
+
+    @envtest.skip("not finished yet")
+    def testPlotLotsOfRosaSpectraExplainedVarianceRatio(self):
+        spectraDirectory = r"./TestSpectrums/rawRosaSpectraFromBaseline3"
+        data = self.loadAllSpectrumFiles(spectraDirectory)
         print(data.shape)
         plt.plot(data.T)
         plt.show()

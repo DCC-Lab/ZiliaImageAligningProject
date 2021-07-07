@@ -6,15 +6,15 @@ from scipy.optimize import nnls
 import matplotlib.pyplot as plt
 
 # global variables for cropping wavelength
-lowerLimitNormalization = 510
-upperLimitNormalization = 590
-lowerLimitOximetry = 530
-upperLimitOximetry = 585
+# lowerLimitNormalization = 510
+# upperLimitNormalization = 590
+# lowerLimitOximetry = 530
+# upperLimitOximetry = 585
 
-# lowerLimitNormalization = 200
-# upperLimitNormalization = 1000
-# lowerLimitOximetry = 200
-# upperLimitOximetry = 1000
+lowerLimitNormalization = 200
+upperLimitNormalization = 1000
+lowerLimitOximetry = 200
+upperLimitOximetry = 1000
 
 """
 Relative paths of test spectras
