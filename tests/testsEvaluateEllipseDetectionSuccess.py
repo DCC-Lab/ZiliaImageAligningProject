@@ -636,7 +636,7 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
         # fin before 12h24
         # ancien plus vite : 1h16min
 
-    #@envtest.skip("skip file creation and computing time")
+    @envtest.skip("skip file creation and computing time")
     def testFindSuccessRateOnAllFilesAndSaveToJson_3_threshMeanMinSigma_NoError(self):
         # These parameters need to change in subsequent tests:
         scaleFactor = 10
@@ -659,12 +659,12 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
                                                                    scaleFactor=scaleFactor, accuracy=accuracy,
                                                                    highGamma=highGamma, gammaThresh=gammaThresh, filename=bestEllipsesFileName)
 
-       self.saveAccuracyResults(errorsIndexes, sortedFileNames, resultsList, mean, std, parameters, fileName)
-       print("mean = ", mean) # 0.9145988638238178
-       print("std = ", std) # 0.09334983598704147
-       # deb 12h5
-       # fin
-       # ancien plus vite : 1h16min
+        self.saveAccuracyResults(errorsIndexes, sortedFileNames, resultsList, mean, std, parameters, fileName)
+        print("mean = ", mean) #0.9040605843079217
+        print("std = ", std) #0.10120113566800364
+        # deb 12h55
+        # fin ???
+        # ancien plus vite : 1h16min
 
 
 
