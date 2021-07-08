@@ -187,20 +187,41 @@ class TestPCAStO2(envtest.ZiliaTestCase):
         plt.plot(varianceRatio, "b.")
         plt.show()
 
-    def loadAllSpectrumFiles(self, spectraDirectory):
+    def loadAllSpectrumFiles(self, spectraDirectory, normalize=False):
         spectraPaths = getFiles(spectraDirectory, "csv", newImages=False)
         data = None
         for spectraPath in spectraPaths:
             eyeSpectra = pd.read_csv(spectraPath)
             eyeSpectra = eyeSpectra.drop([0,1,2]) # to remove the first junk lines
+            lightSpectra = eyeSpectra["ref"].to_numpy(dtype=np.float64).T
             eyeSpectra = eyeSpectra.drop(columns=["wavelength", "ref", "bg"])
-            eyeSpectra = eyeSpectra.to_numpy().T
+            eyeSpectra = eyeSpectra.to_numpy(dtype=np.float64).T
+            if normalize:
+                eyeSpectra = self.normalizeSpectrum(eyeSpectra, lightSpectra)
             if data is None:
                 # for the first iteration
                 data = eyeSpectra
             else:
                 data = np.vstack((data, eyeSpectra))
+        #data = self.removeSaturatedImages(data)
         return data
+
+    def normalizeSpectrum(self, eyeSpectra, lightSpectra):
+        normalizedSpectra = False
+        # plt.plot(lightSpectra)
+        # plt.show()
+        for i in range(eyeSpectra.shape[0]):
+            spectrumNorm = np.divide(eyeSpectra[i,:], lightSpectra)
+            spectrumNorm[np.isnan(spectrumNorm)] = 0
+            spectrumNorm[np.isinf(spectrumNorm)] = 0
+            if normalizedSpectra is False:
+                normalizedSpectra = spectrumNorm
+            else:
+                normalizedSpectra = np.vstack((normalizedSpectra, spectrumNorm))
+        return normalizedSpectra
+
+    def removeSaturatedImages(self, data):
+        pass
 
     @envtest.skip("skip plots")
     def testPlotLotsOfRosaSpectraExplainedVarianceRatio(self):
@@ -268,7 +289,29 @@ class TestPCAStO2(envtest.ZiliaTestCase):
         plt.plot(varianceRatio, "b.")
         plt.show()
 
-    
+    @envtest.skip("skip plots")
+    def testPlotNormalizedPCA(self):
+        spectraDirectory = r"./TestSpectrums/rawRosaSpectraFromBaseline3"
+        wavelengths = self.getWavelengthAxisValues(spectraDirectory)
+        data = self.loadAllSpectrumFiles(spectraDirectory, normalize=True)
+        # the "ref" column is anything, it's not the light spectrum...
+        print("data.shape:", data.shape) # 776 spectra, 512 points each
+        plt.plot(wavelengths, data.T)
+        plt.show()
+        pca = PCA()
+        # pca = PCA(n_components=5)
+        pca.fit(data)
+        plt.plot(wavelengths, pca.components_.T)
+        plt.show()
+        varianceRatio = pca.explained_variance_ratio_
+        plt.plot(varianceRatio, "b.")
+        plt.show()
+
+    def testPlotWhiteRefFileSpectra(self):
+        pass
+
+
+# whiteRefName = r"../int75_WHITEREFERENCE.csv"
 
 if __name__ == "__main__":
     envtest.main()
