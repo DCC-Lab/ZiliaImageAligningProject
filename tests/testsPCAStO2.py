@@ -187,7 +187,6 @@ class TestPCAStO2(envtest.ZiliaTestCase):
         plt.plot(varianceRatio, "b.")
         plt.show()
 
-
     def loadAllSpectrumFiles(self, spectraDirectory):
         spectraPaths = getFiles(spectraDirectory, "csv", newImages=False)
         data = None
@@ -237,6 +236,39 @@ class TestPCAStO2(envtest.ZiliaTestCase):
         varianceRatio = pca.explained_variance_ratio_
         plt.plot(varianceRatio, "b.")
         plt.show()
+
+    def getWavelengthAxisValues(self, spectraDirectory):
+        spectraPaths = getFiles(spectraDirectory, "csv", newImages=False)
+        eyeSpectra = pd.read_csv(spectraPaths[0])
+        eyeSpectra = eyeSpectra.drop([0,1,2]) # to remove the first junk lines
+        wavelengths = eyeSpectra["wavelength"].to_numpy(dtype=np.float64)
+        wavelengthArray = np.linspace(wavelengths[0], wavelengths[-1], num=len(wavelengths))
+        return wavelengthArray
+
+    @envtest.skip("skip prints")
+    def testGetWavelengthAxisValues(self):
+        spectraDirectory = r"./TestSpectrums/rawRosaSpectraFromBaseline3"
+        wavelengths = self.getWavelengthAxisValues(spectraDirectory)
+        print(wavelengths)
+
+    @envtest.skip("skip plots")
+    def testPlotPCAWithCalibratedWavelengthAxis(self):
+        spectraDirectory = r"./TestSpectrums/rawRosaSpectraFromBaseline3"
+        wavelengths = self.getWavelengthAxisValues(spectraDirectory)
+        data = self.loadAllSpectrumFiles(spectraDirectory)
+        print(data.shape) # 776 spectra, 512 points each
+        plt.plot(wavelengths, data.T)
+        plt.show()
+        pca = PCA()
+        # pca = PCA(n_components=5)
+        pca.fit(data)
+        plt.plot(pca.components_.T)
+        plt.show()
+        varianceRatio = pca.explained_variance_ratio_
+        plt.plot(varianceRatio, "b.")
+        plt.show()
+
+    
 
 if __name__ == "__main__":
     envtest.main()
