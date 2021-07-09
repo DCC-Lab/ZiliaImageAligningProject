@@ -10,6 +10,7 @@ lowerLimitNormalization = 510
 upperLimitNormalization = 590
 lowerLimitOximetry = 530
 upperLimitOximetry = 585
+saturatedValue = 65535
 
 # lowerLimitNormalization = 200
 # upperLimitNormalization = 1000
@@ -112,6 +113,15 @@ def loadSpectrum(spectrumPath=None, skipRows=4, wavelengthColumn=0, firstSpecCol
     spec.wavelength = spectrumData[:, wavelengthColumn]
     croppedSpectrum = cropFunction(spec,lowerLimitNormalization,upperLimitNormalization)
     return croppedSpectrum
+
+def setSaturationFlag(spectrum):
+    """If the spectrum is saturated the flag will be 1, other wise it will be 0"""
+    saturationFlag=np.zeros(spectrum.data.shape[1])
+    for i in range(spectrum.data.shape[1]):
+        if np.max(spectrum.data[:,i]) == saturatedValue :
+            saturationFlag = 1
+    return saturationFlag
+
 
 def normalizeSpectrum(spec,darkRef):
     """returns the normalized spectrum for the data"""
@@ -245,6 +255,7 @@ def bloodTest(refNameNothinInfront='./tests/TestSpectrums/blood/int75_LEDON_noth
         spectrums = loadSpectrum(skipRows=24, wavelengthColumn=1, firstSpecColumn=4)
     else:
         spectrums = loadSpectrum(spectrumPath=spectrumPath, skipRows=24, wavelengthColumn=1, firstSpecColumn=4)
+    saturationFlags=setSaturationFlag(spectrums)
     spectrums.data[np.isnan(spectrums.data)] = 0
     # print(spectrums.data.shape)
     normalizedSpectrum = normalizeSpectrum(spectrums,darkRef)
@@ -263,11 +274,10 @@ def bloodTest(refNameNothinInfront='./tests/TestSpectrums/blood/int75_LEDON_noth
     coef = getCoef(absorbance, features)
     concentration = 100 * coef[:,1] /(coef[:,1]+coef[:,2])
     concentration[np.isnan(concentration)] = 0
-    # print('mean concentration :' , np.mean(concentration))
-    # print(np.std(concentration))
-    # print(concentration)
-    # print(concentration.shape)
+    print('mean concentration :' , np.mean(concentration))
+
+
 
     return concentration, absorbance
 
-# bloodTest()
+bloodTest()
