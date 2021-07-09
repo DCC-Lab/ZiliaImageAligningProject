@@ -201,12 +201,7 @@ class TestPCAStO2(envtest.ZiliaTestCase):
                 data = eyeSpectra
             else:
                 data = np.vstack((data, eyeSpectra))
-        #data = self.removeSaturatedImages(data)
         return data
-
-
-    def removeSaturatedImages(self, data):
-        pass
 
     @envtest.skip("skip plots")
     def testPlotLotsOfRosaSpectraExplainedVarianceRatio(self):
@@ -319,6 +314,10 @@ class TestPCAStO2(envtest.ZiliaTestCase):
         lightSpectra = lightSpectra.drop(columns=["dark", "ref"])# only zeros
         lightSpectra = lightSpectra.to_numpy(dtype=np.float64).T[0,:]
 
+        plt.figure()
+        plt.subplot(1,2,1)
+        plt.plot(wavelengths, lightSpectra)
+        plt.subplot(1,2,2)
         plt.plot(wavelengths[174:230], lightSpectra[174:230])
         plt.show()
 
@@ -374,7 +373,296 @@ class TestPCAStO2(envtest.ZiliaTestCase):
         plt.show()
 
 
-# whiteRefName = r"../int75_WHITEREFERENCE.csv"
+    def removeSaturatedImages(self, data):
+        indexesToRemove = []
+        for i in range(data.shape[0]):
+            if 65535 in [int(j) for j in data[i,:]]:
+                indexesToRemove.append(i)
+        data = np.delete(data, indexesToRemove, axis=0)
+        print("numberOfSaturatedImages:", len(indexesToRemove))
+        return data
+
+    @envtest.skip("skip plots")
+    def testPlotPCAWithoutSaturatedSpectra(self):
+        spectraDirectory = r"./TestSpectrums/rawRosaSpectraFromBaseline3"
+        lightSpectraPath = r"../int75_WHITEREFERENCE.csv"
+        wavelengths = self.getWavelengthAxisValues(spectraDirectory)
+        data = self.loadAllSpectrumFiles(spectraDirectory)
+        data = self.removeSaturatedImages(data)
+        # data = self.normalizeSpectra(data, lightSpectraPath)
+        print("data.shape:", data.shape) # 776 spectra, 512 points each
+
+        plt.figure()
+        plt.subplot(3,2,1)
+        plt.plot(wavelengths, data.T)
+        plt.title("Non saturated data")
+        # plt.show()
+        pca = PCA()
+        pca.fit(data)
+        plt.subplot(3,2,2)
+        plt.plot(wavelengths, pca.components_.T)
+        plt.title("All components")
+        # plt.show()
+        varianceRatio = pca.explained_variance_ratio_
+        plt.subplot(3,2,3)
+        plt.plot(varianceRatio, "b.")
+        plt.title("Explained variance ratio")
+        # plt.show()
+
+        pca5 = PCA(n_components=5)
+        pca5.fit(data)
+        plt.subplot(3,2,4)
+        plt.plot(wavelengths, pca5.components_.T)
+        plt.title("5 components")
+        # plt.show()
+        varianceRatio5 = pca5.explained_variance_ratio_
+        plt.subplot(3,2,5)
+        plt.plot(varianceRatio5, "b.")
+        plt.title("Explained variance ratio 5 components")
+        plt.show()
+
+    @envtest.skip("skip plots")
+    def testPlotNormalizedPCAWithoutSaturatedSpectra(self):
+        spectraDirectory = r"./TestSpectrums/rawRosaSpectraFromBaseline3"
+        lightSpectraPath = r"../int75_WHITEREFERENCE.csv"
+        wavelengths = self.getWavelengthAxisValues(spectraDirectory)
+        data = self.loadAllSpectrumFiles(spectraDirectory)
+        data = self.removeSaturatedImages(data)
+        data = self.normalizeSpectra(data, lightSpectraPath)
+        print("data.shape:", data.shape) # 776 spectra, 512 points each
+
+        plt.figure()
+        plt.subplot(3,2,1)
+        plt.plot(wavelengths, data.T)
+        plt.title("Non saturated data")
+        # plt.show()
+        pca = PCA()
+        pca.fit(data)
+        plt.subplot(3,2,2)
+        plt.plot(wavelengths, pca.components_.T)
+        plt.title("All components")
+        # plt.show()
+        varianceRatio = pca.explained_variance_ratio_
+        plt.subplot(3,2,3)
+        plt.plot(varianceRatio, "b.")
+        plt.title("Explained variance ratio")
+        # plt.show()
+
+        pca5 = PCA(n_components=5)
+        pca5.fit(data)
+        plt.subplot(3,2,4)
+        plt.plot(wavelengths, pca5.components_.T)
+        plt.title("5 components")
+        # plt.show()
+        varianceRatio5 = pca5.explained_variance_ratio_
+        plt.subplot(3,2,5)
+        plt.plot(varianceRatio5, "b.")
+        plt.title("Explained variance ratio 5 components")
+        plt.show()
+
+    def normalizeWithNormalizedSpectra(self, data, lightSpectraPath):
+        normalizedSpectra = False
+        rowsToSkip = [i for i in range(22)]
+        spectraPath = r"../int75_WHITEREFERENCE.csv"
+        lightSpectra = pd.read_csv(spectraPath, skiprows=rowsToSkip)
+        lightSpectra = lightSpectra.drop([0]) # to remove the first junk lines
+
+        wavelengths = lightSpectra["WaveLength"].to_numpy(dtype=np.float64)
+
+        lightSpectra = lightSpectra.drop(columns=["Pixel", "WaveLength"])# useless
+        lightSpectra = lightSpectra.drop(columns=["dark", "ref"])# only zeros
+        lightSpectra = lightSpectra.to_numpy(dtype=np.float64).T[0,:]
+        maxi = np.amax(lightSpectra)
+        lightSpectra = lightSpectra / maxi
+
+        plt.figure()
+        plt.subplot(1,2,1)
+        plt.plot(wavelengths, lightSpectra)
+        plt.subplot(1,2,2)
+        plt.plot(wavelengths[174:230], lightSpectra[174:230])
+        plt.show()
+
+        for i in range(data.shape[0]):
+            spectrumNorm = np.divide(data[i,:], lightSpectra)
+            spectrumNorm[np.isnan(spectrumNorm)] = 0
+            spectrumNorm[np.isinf(spectrumNorm)] = 0
+            if normalizedSpectra is False:
+                normalizedSpectra = spectrumNorm
+            else:
+                normalizedSpectra = np.vstack((normalizedSpectra, spectrumNorm))
+        return normalizedSpectra
+
+    @envtest.skip("skip plots")
+    def testPlotNormalizedWithNormalizedSpectraPCAWithoutSaturatedSpectra(self):
+        spectraDirectory = r"./TestSpectrums/rawRosaSpectraFromBaseline3"
+        lightSpectraPath = r"../int75_WHITEREFERENCE.csv"
+        wavelengths = self.getWavelengthAxisValues(spectraDirectory)
+        data = self.loadAllSpectrumFiles(spectraDirectory)
+        data = self.removeSaturatedImages(data)
+        data = self.normalizeWithNormalizedSpectra(data, lightSpectraPath)
+        print("data.shape:", data.shape) # 776 spectra, 512 points each
+
+        plt.figure()
+        plt.subplot(3,2,1)
+        plt.plot(wavelengths, data.T)
+        plt.title("Non saturated data")
+        # plt.show()
+        pca = PCA()
+        pca.fit(data)
+        plt.subplot(3,2,2)
+        plt.plot(wavelengths, pca.components_.T)
+        plt.title("All components")
+        # plt.show()
+        varianceRatio = pca.explained_variance_ratio_
+        plt.subplot(3,2,3)
+        plt.plot(varianceRatio, "b.")
+        plt.title("Explained variance ratio")
+        # plt.show()
+
+        pca5 = PCA(n_components=5)
+        pca5.fit(data)
+        plt.subplot(3,2,4)
+        plt.plot(wavelengths, pca5.components_.T)
+        plt.title("5 components")
+        # plt.show()
+        varianceRatio5 = pca5.explained_variance_ratio_
+        plt.subplot(3,2,5)
+        plt.plot(varianceRatio5, "b.")
+        plt.title("Explained variance ratio 5 components")
+        plt.show()
+
+    @envtest.skip("skip plots")
+    def testPlotSpectraAndNormalizedSpectraSideBySide(self):
+        spectraDirectory = r"./TestSpectrums/rawRosaSpectraFromBaseline3"
+        lightSpectraPath = r"../int75_WHITEREFERENCE.csv"
+        wavelengths = self.getWavelengthAxisValues(spectraDirectory)
+        data = self.loadAllSpectrumFiles(spectraDirectory)[0:2,:]
+        data2 = self.normalizeWithNormalizedSpectra(data, lightSpectraPath)
+        print("data.shape:", data.shape) # 776 spectra, 512 points each
+        plt.figure()
+        plt.subplot(1,2,1)
+        plt.plot(wavelengths, data.T)
+        plt.title("Normal spectrum")
+        plt.subplot(1,2,2)
+        plt.plot(wavelengths, data2.T)
+        plt.title("Normalized spectrum")
+        plt.show()
+
+    @envtest.skip("skip plots")
+    def testPlotSpectraAndNormalizedSpectraSideBySide(self):
+        spectraDirectory = r"./TestSpectrums/rawRosaSpectraFromBaseline3"
+        lightSpectraPath = r"../int75_WHITEREFERENCE.csv"
+        wavelengths = self.getWavelengthAxisValues(spectraDirectory)
+        data = self.loadAllSpectrumFiles(spectraDirectory)[0:2,:]
+        data2 = self.normalizeWithNormalizedSpectra(data, lightSpectraPath)
+        print("data.shape:", data.shape) # 776 spectra, 512 points each
+        plt.figure()
+        plt.subplot(1,2,1)
+        plt.plot(wavelengths, data.T)
+        plt.title("Normal spectrum")
+        plt.subplot(1,2,2)
+        plt.plot(wavelengths, data2.T)
+        plt.title("Normalized spectrum")
+        plt.show()
+
+    @envtest.skip("skip plots")
+    def testPlotSpectraAndNormalizedSpectraSideBySide_croppedZiliaRange(self):
+        spectraDirectory = r"./TestSpectrums/rawRosaSpectraFromBaseline3"
+        lightSpectraPath = r"../int75_WHITEREFERENCE.csv"
+        wavelengths = self.getWavelengthAxisValues(spectraDirectory)
+        data = self.loadAllSpectrumFiles(spectraDirectory)[0:2,:]
+        data2 = self.normalizeWithNormalizedSpectra(data, lightSpectraPath)
+        loSlice = 200
+        hiSlice = 260
+        print("data.shape:", data.shape) # 776 spectra, 512 points each
+        plt.figure()
+        plt.subplot(1,2,1)
+        plt.plot(wavelengths[loSlice:hiSlice], data.T[loSlice:hiSlice,:])
+        plt.title("Normal spectrum")
+        plt.subplot(1,2,2)
+        plt.plot(wavelengths[loSlice:hiSlice], data2.T[loSlice:hiSlice,:])
+        plt.title("Normalized spectrum")
+        plt.show()
+
+    @envtest.skip("skip plots")
+    def testPCACroppedNonSaturatedNormalized_430To630(self):
+        spectraDirectory = r"./TestSpectrums/rawRosaSpectraFromBaseline3"
+        lightSpectraPath = r"../int75_WHITEREFERENCE.csv"
+        loSlice = 100
+        hiSlice = -200
+        wavelengths = self.getWavelengthAxisValues(spectraDirectory)[loSlice:hiSlice]
+        data = self.loadAllSpectrumFiles(spectraDirectory)
+        data = self.removeSaturatedImages(data)
+        data = self.normalizeWithNormalizedSpectra(data, lightSpectraPath)[:,loSlice:hiSlice]
+        print("data.shape:", data.shape) # 776 spectra, 512 points each
+        plt.figure()
+        plt.subplot(3,2,1)
+        plt.plot(wavelengths, data.T)
+        plt.title("Non saturated data")
+        # plt.show()
+        pca = PCA()
+        pca.fit(data)
+        plt.subplot(3,2,2)
+        plt.plot(wavelengths, pca.components_.T)
+        plt.title("All components")
+        # plt.show()
+        varianceRatio = pca.explained_variance_ratio_
+        plt.subplot(3,2,3)
+        plt.plot(varianceRatio, "b.")
+        plt.title("Explained variance ratio")
+        # plt.show()
+
+        pca5 = PCA(n_components=5)
+        pca5.fit(data)
+        plt.subplot(3,2,4)
+        plt.plot(wavelengths, pca5.components_.T)
+        plt.title("5 components")
+        # plt.show()
+        varianceRatio5 = pca5.explained_variance_ratio_
+        plt.subplot(3,2,5)
+        plt.plot(varianceRatio5, "b.")
+        plt.title("Explained variance ratio 5 components")
+        plt.show()
+
+    @envtest.skip("skip plots")
+    def testPCACroppedNonSaturatedNormalized_530To585(self):
+        spectraDirectory = r"./TestSpectrums/rawRosaSpectraFromBaseline3"
+        lightSpectraPath = r"../int75_WHITEREFERENCE.csv"
+        loSlice = 200
+        hiSlice = 260
+        wavelengths = self.getWavelengthAxisValues(spectraDirectory)[loSlice:hiSlice]
+        data = self.loadAllSpectrumFiles(spectraDirectory)
+        data = self.removeSaturatedImages(data)
+        data = self.normalizeWithNormalizedSpectra(data, lightSpectraPath)[:,loSlice:hiSlice]
+        print("data.shape:", data.shape) # 776 spectra, 512 points each
+        plt.figure()
+        plt.subplot(3,2,1)
+        plt.plot(wavelengths, data.T)
+        plt.title("Non saturated data")
+        # plt.show()
+        pca = PCA()
+        pca.fit(data)
+        plt.subplot(3,2,2)
+        plt.plot(wavelengths, pca.components_.T)
+        plt.title("All components")
+        # plt.show()
+        varianceRatio = pca.explained_variance_ratio_
+        plt.subplot(3,2,3)
+        plt.plot(varianceRatio, "b.")
+        plt.title("Explained variance ratio")
+        # plt.show()
+
+        pca5 = PCA(n_components=5)
+        pca5.fit(data)
+        plt.subplot(3,2,4)
+        plt.plot(wavelengths, pca5.components_.T)
+        plt.title("5 components")
+        # plt.show()
+        varianceRatio5 = pca5.explained_variance_ratio_
+        plt.subplot(3,2,5)
+        plt.plot(varianceRatio5, "b.")
+        plt.title("Explained variance ratio 5 components")
+        plt.show()
 
 if __name__ == "__main__":
     envtest.main()
