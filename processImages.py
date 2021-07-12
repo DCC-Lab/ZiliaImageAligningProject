@@ -337,8 +337,8 @@ def removeImagesFromIndex(dataDictionary, indexes):
 
 def cleanShiftParameters(shiftParameters, indexesToRemove):
     xShift = shiftParameters[0]
-    yShift = shiftParameters[1]
     xShift = np.delete(xShift, indexesToRemove)
+    yShift = shiftParameters[1]
     yShift = np.delete(yShift, indexesToRemove)
     return xShift, yShift
 
@@ -366,7 +366,7 @@ def oldPlotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None
     xRosa = shiftParameters[0]
     yRosa = shiftParameters[1]
 
-    for j in range(Image.shape[0]):
+    for j in range(xRosa.shape[0]):
         centerCoordinates = (int(xRosa[j]), int(yRosa[j]))
         color = (0, 255, 0)
         thickness = 5
@@ -414,7 +414,7 @@ def drawRosaCircles(image, shiftParameters, rosaRadius=30, thickness=5, color=(0
     #print(image3D)
     xRosa = shiftParameters[0]
     yRosa = shiftParameters[1]
-    for j in range(image.shape[0]):
+    for j in range(xRosa.shape[0]):
         centerCoordinates = (int(xRosa[j]), int(yRosa[j]))
         #cv2.circle(image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
         cv2.circle(image3D, centerCoordinates, rosaRadius, color, thickness)
@@ -429,10 +429,8 @@ def prepareResultImage(image3D, gridParameters):
 
     left = np.max([xCenterGrid - (length*5), 0])
     up = np.max([yCenterGrid - (length*5), 0])
-    #right = np.min([(5*length), (image.shape[1] - xCenterGrid)]) + xCenterGrid
-    #down = right = np.min([(5*length), (image.shape[2] - yCenterGrid)]) + yCenterGrid
-    right = np.min([(5*length), (image3D.shape[1] - xCenterGrid)]) + xCenterGrid
-    down = right = np.min([(5*length), (image3D.shape[0] - yCenterGrid)]) + yCenterGrid
+    right = np.min([(5*length), (image3D.shape[0] - xCenterGrid)]) + xCenterGrid
+    down = right = np.min([(5*length), (image3D.shape[1] - yCenterGrid)]) + yCenterGrid
 
     temp = image3D[up:down, left:right,:]
     xNewCenter = xCenterGrid - left
