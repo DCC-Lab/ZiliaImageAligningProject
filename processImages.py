@@ -342,7 +342,6 @@ def cleanShiftParameters(shiftParameters, indexesToRemove):
     yShift = np.delete(yShift, indexesToRemove)
     return xShift, yShift
 
-
 def defineGrid(Image) -> tuple:
     # onh = optic nerve head
     temp = np.zeros(Image.shape)
@@ -357,7 +356,6 @@ def defineGrid(Image) -> tuple:
     length = int((np.min([onhHeight, onhWidth]))/2)
     return onhCenterHorizontalCoords, onhCenterVerticalCoords, length
     # return xCenterGrid, yCenterGrid, length
-
 
 def oldPlotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None:
     xCenterGrid = gridParameters[0]
@@ -407,11 +405,9 @@ def plotResult(image, shiftParameters, gridParameters, rosaRadius=30, thickness=
     resultImageWithGrid = drawGrid(resultImage, gridParameters)
     plt.imsave('Result.jpg', resultImageWithGrid)
 
-
 def drawRosaCircles(image, shiftParameters, rosaRadius=30, thickness=5, color=(0, 1, 0)):
     refImage = image[0,:,:]
-    image3D = np.dstack((refImage, refImage, np.zeros(refImage.shape)))
-    #print(image3D)
+    image3D = makeImageRGB(refImage)
     xRosa = shiftParameters[0]
     yRosa = shiftParameters[1]
     for j in range(xRosa.shape[0]):
@@ -422,17 +418,43 @@ def drawRosaCircles(image, shiftParameters, rosaRadius=30, thickness=5, color=(0
     return image3D
 
 
-def prepareResultImage(image3D, gridParameters):
+def newPlotResult(image, shiftParameters, gridParameters, rosaRadius=30, thickness=5):
+    refImage = image[0,:,:]
+    imageRGB = makeImageRGB(refImage)
+    rescaledImage, LowSliceX, LowSliceY = rescaleImage(imageRGB, gridParameters)
+    rescaledImageWithCircles = newDrawRosaCircles(rescaledImage, shiftParameters,
+                                LowSliceX, LowSliceY, rosaRadius=rosaRadius,
+                                thickness=thickness)
+    resultImageWithGrid = drawGrid(rescaledImageWithCircles, gridParameters)
+    plt.imsave('Result.jpg', resultImageWithGrid)
+
+def makeImageRGB(grayImage):
+    # imageRGB = np.dstack((grayImage, grayImage, np.zeros(grayImage.shape)))
+    imageRGB = np.dstack((grayImage, grayImage, grayImage))
+    return imageRGB
+
+def newDrawRosaCircles(rescaledImage, shiftParameters, LowSliceX, LowSliceY, rosaRadius=30, thickness=5, color=(1, 0, 0)):
+    xRosa = shiftParameters[0]
+    yRosa = shiftParameters[1]
+    for j in range(xRosa.shape[0]):
+        centerCoordinates = (int(xRosa[j]) + LowSliceX, int(yRosa[j]) + LowSliceY)
+        #cv2.circle(image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
+        cv2.circle(rescaledImage, centerCoordinates, rosaRadius, color, thickness)
+    #plt.imsave("preimage3D.jpg", image3D) # same for old and new
+    return rescaledImage
+
+
+def rescaleImage(imageRGB, gridParameters):
     xCenterGrid = gridParameters[0]# int
     yCenterGrid = gridParameters[1]# int
     length = gridParameters[2]# int
 
     left = np.max([xCenterGrid - (length*5), 0])
     up = np.max([yCenterGrid - (length*5), 0])
-    right = np.min([(5*length), (image3D.shape[0] - xCenterGrid)]) + xCenterGrid
-    down = right = np.min([(5*length), (image3D.shape[1] - yCenterGrid)]) + yCenterGrid
+    right = np.min([(5*length), (imageRGB.shape[0] - xCenterGrid)]) + xCenterGrid
+    down = right = np.min([(5*length), (imageRGB.shape[1] - yCenterGrid)]) + yCenterGrid
 
-    temp = image3D[up:down, left:right,:]
+    temp = imageRGB[up:down, left:right,:]
     xNewCenter = xCenterGrid - left
     yNewCenter = yCenterGrid - up
     gridImage = np.zeros([length*10, length*10, 3])
@@ -444,15 +466,15 @@ def prepareResultImage(image3D, gridParameters):
     # Slicing:
     gridImage[LOW_SLICE_Y:HIGH_SLICE_Y, LOW_SLICE_X:HIGH_SLICE_X, :] = temp
 
-    return gridImage
+    return gridImage, LOW_SLICE_X, LOW_SLICE_Y
 
 
-def drawGrid(image3D, gridParameters):
+def drawGrid(imageRGB, gridParameters):
     length = gridParameters[2]
     dx, dy = length, length
     # Custom (rgb) grid color:
     gridColor = 1
     # Modify the image to include the grid
-    image3D[:,::dx,:] = gridColor
-    image3D[::dy,:,:] = gridColor
-    return image3D
+    imageRGB[:,::dx,:] = gridColor
+    imageRGB[::dy,:,:] = gridColor
+    return imageRGB
