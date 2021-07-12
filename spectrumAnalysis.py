@@ -194,7 +194,7 @@ def componentsToArray(components):
     variables = np.vstack([variables, components["deoxyhemoglobin"]])
     variables = np.vstack([variables, components["melanin"]])
     variables = np.vstack([variables, components["scattering"]])
-    #variables = np.vstack([variables, components["reflection"]])
+    variables = np.vstack([variables, components["reflection"]])
     return variables
 
 def getCoef(absorbance, variables):
@@ -209,34 +209,63 @@ def getCoef(absorbance, variables):
     # print('all coefs :' , allCoef)
     return allCoef
 
-def mainAnalysis(darkRefPath, spectrumPath, componentsSpectra=r'_components_spectra.csv',
+def saveData(saturationFlag , oxygenSat , imageNumber , rosaLabel):
+    keptFlag=saturationFlag[imageNumber]
+    keptOxygenSat=oxygenSat[imageNumber]
+
+    dataDic = {
+        "saturationFlag": keptFlag,
+        "oxygenSat": keptOxygenSat,
+        "rosaLabel": rosaLabel}
+    return dataDic
+
+
+def mainAnalysis(darkRefPath = None, spectrumPath = None, componentsSpectra=r'_components_spectra.csv',
                 whiteRefName=r"int75_WHITEREFERENCE.csv", refNameNothinInfront=r"int75_LEDON_nothingInFront.csv"):
     """load data, do all the analysis, get coefs as concentration"""
-    whiteRef = loadWhiteRef(refNameNothinInfront, whiteRefName)
-    darkRef = loadDarkRef(darkRefPath)
-    spectrums = loadSpectrum(spectrumPath)
+    whiteRef = loadWhiteRef(refNameNothinInfront=refNameNothinInfront, whiteRefName=whiteRefName)
+    if darkRefPath is None:
+        darkRef = loadDarkRef()
+    else:
+        darkRef = loadDarkRef()
+    darkRef.data[np.isnan(darkRef.data)] = 0
+    if spectrumPath is None:
+        spectrums = loadSpectrum()
+    else:
+        spectrums = loadSpectrum()
+    saturationFlags = setSaturationFlag(spectrums)
+    print(saturationFlags)
+    spectrums.data[np.isnan(spectrums.data)] = 0
     normalizedSpectrum = normalizeSpectrum(spectrums, darkRef)
+    normalizedSpectrum.data[np.isnan(normalizedSpectrum.data)] = 0
     absorbance = absorbanceSpectrum(whiteRef, normalizedSpectrum)
-    croppedComponent = cropComponents(absorbance, componentsSpectra)
+    absorbance.data[np.isnan(absorbance.data)] = 0
+
+    if componentsSpectra is None:
+        croppedComponent = cropComponents(absorbance, componentsSpectraGlobal)
+    else:
+        croppedComponent = cropComponents(absorbance, componentsSpectra)
     features = componentsToArray(croppedComponent)
+    features[np.isnan(features)] = 0
     # print('features shape :', features.shape)
     coef = getCoef(absorbance,features)
+    print(coef)
     concentration = 100 * coef[:,1] /(coef[:,1]+coef[:,2])
     concentration[np.isnan(concentration)] = 0
 
     # print('mean concentration :', np.mean(concentration))
     # print(np.std(concentration))
-    # print(concentration)
+    print(concentration)
     # print(concentration.shape)
 
-    return features
+    return concentration
 
 #
 # darkRefPath = r"./tests/TestSpectrums/bresilODrlp14/background.csv"
 # spectrumPath = r"./tests/TestSpectrums/bresilODrlp14/spectrum.csv"
 #
 # mainAnalysis(darkRefPath, spectrumPath)
-
+mainAnalysis()
 
 #### This is for test
 ####### blood sample test
@@ -278,4 +307,4 @@ def bloodTest(refNameNothinInfront='./tests/TestSpectrums/blood/int75_LEDON_noth
 
     return concentration, absorbance
 
-bloodTest()
+# bloodTest()
