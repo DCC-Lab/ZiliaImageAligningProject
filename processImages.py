@@ -436,7 +436,7 @@ def makeImageRGB(grayImage):
     imageRGB = np.dstack((grayImage, grayImage, grayImage))
     return imageRGB
 
-def newDrawRosaCircles(rescaledImage, shiftParameters, LowSliceX, LowSliceY, rosaRadius=30, thickness=5, color=(0, 1, 0)):
+def newDrawRosaCircles(rescaledImage, shiftParameters, LowSliceX, LowSliceY, rosaRadius=30, thickness=10, color=(0, 1, 0)):
     xRosa = shiftParameters[0]
     yRosa = shiftParameters[1]
     for j in range(xRosa.shape[0]):
