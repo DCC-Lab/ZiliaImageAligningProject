@@ -364,14 +364,15 @@ def oldPlotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None
     xRosa = shiftParameters[0]
     yRosa = shiftParameters[1]
 
+    color = (0, 255, 0)
+    thickness = 5
+
     for j in range(xRosa.shape[0]):
         centerCoordinates = (int(xRosa[j]), int(yRosa[j]))
-        color = (0, 255, 0)
-        thickness = 5
         image = cv2.circle(Image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
     #plt.imsave("preimage2D.jpg", image) # same for old and new
-    left = np.max([xCenterGrid - (length*5), 0])
 
+    left = np.max([xCenterGrid - (length*5), 0])
     up = np.max([yCenterGrid - (length*5), 0])
     right = np.min([(5*length), (Image.shape[1] - xCenterGrid)]) + xCenterGrid
     down = right = np.min([(5*length), (Image.shape[2] - yCenterGrid)]) + yCenterGrid
@@ -395,7 +396,6 @@ def oldPlotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None
     # Modify the image to include the grid
     img[:,::dy] = gridColor
     img[::dx,:] = gridColor
-
     plt.imsave('Result_old.jpg', img)
 
 
@@ -418,6 +418,10 @@ def drawRosaCircles(image, shiftParameters, rosaRadius=30, thickness=5, color=(0
     return image3D
 
 
+
+
+
+
 def newPlotResult(image, shiftParameters, gridParameters, rosaRadius=30, thickness=5):
     refImage = image[0,:,:]
     imageRGB = makeImageRGB(refImage)
@@ -429,26 +433,21 @@ def newPlotResult(image, shiftParameters, gridParameters, rosaRadius=30, thickne
     plt.imsave('Result.jpg', resultImageWithGrid)
 
 def makeImageRGB(grayImage):
-    # imageRGB = np.dstack((grayImage, grayImage, np.zeros(grayImage.shape)))
     imageRGB = np.dstack((grayImage, grayImage, grayImage))
     return imageRGB
 
-def newDrawRosaCircles(rescaledImage, shiftParameters, LowSliceX, LowSliceY, rosaRadius=30, thickness=5, color=(1, 0, 0)):
+def newDrawRosaCircles(rescaledImage, shiftParameters, LowSliceX, LowSliceY, rosaRadius=30, thickness=5, color=(0, 1, 0)):
     xRosa = shiftParameters[0]
     yRosa = shiftParameters[1]
     for j in range(xRosa.shape[0]):
         centerCoordinates = (int(xRosa[j]) + LowSliceX, int(yRosa[j]) + LowSliceY)
-        #cv2.circle(image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
         cv2.circle(rescaledImage, centerCoordinates, rosaRadius, color, thickness)
-    #plt.imsave("preimage3D.jpg", image3D) # same for old and new
     return rescaledImage
-
 
 def rescaleImage(imageRGB, gridParameters):
     xCenterGrid = gridParameters[0]# int
     yCenterGrid = gridParameters[1]# int
     length = gridParameters[2]# int
-
     left = np.max([xCenterGrid - (length*5), 0])
     up = np.max([yCenterGrid - (length*5), 0])
     right = np.min([(5*length), (imageRGB.shape[0] - xCenterGrid)]) + xCenterGrid
@@ -465,9 +464,7 @@ def rescaleImage(imageRGB, gridParameters):
     HIGH_SLICE_X = ((5*length) + (temp.shape[1] - xNewCenter))
     # Slicing:
     gridImage[LOW_SLICE_Y:HIGH_SLICE_Y, LOW_SLICE_X:HIGH_SLICE_X, :] = temp
-
     return gridImage, LOW_SLICE_X, LOW_SLICE_Y
-
 
 def drawGrid(imageRGB, gridParameters):
     length = gridParameters[2]
