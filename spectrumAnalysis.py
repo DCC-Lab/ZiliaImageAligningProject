@@ -276,8 +276,6 @@ def bloodTest(refNameNothinInfront='./tests/TestSpectrums/blood/int75_LEDON_noth
     concentration[np.isnan(concentration)] = 0
     print('mean concentration :' , np.mean(concentration))
 
-
-
     return concentration, absorbance
 
 bloodTest()
