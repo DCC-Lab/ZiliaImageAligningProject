@@ -113,7 +113,7 @@ class EllipseDetector:
                     orientation += (np.pi/2)
                     majorAxis = normalHalfAx
                     minorAxis = parallelHalfAx
-                bestEllipse = (xCenter, yCenter), minorAxis, majorAxis, orientation
+                bestEllipse = (int(xCenter), int(yCenter)), int(minorAxis), int(majorAxis), orientation
                 return bestEllipse
             else:
                 if gamma == 1:
@@ -155,7 +155,7 @@ class EllipseDetector:
         minorAxis = a
         majorAxis = b
         orientation = np.pi - orientation
-        return (xCenter, yCenter), minorAxis, majorAxis, orientation
+        return (int(xCenter), int(yCenter)), int(minorAxis), int(majorAxis), orientation
 
 
 class ZiliaONHDetector(EllipseDetector):
@@ -171,7 +171,6 @@ class ZiliaONHDetector(EllipseDetector):
         bestEllipse = onhDetector.findOpticNerveHead()
         (xCenter, yCenter), minorAxis, majorAxis, orientation = bestEllipse
     """
-
     def __init__(self, image, scaleFactor=5, gamma=True, relativeMinMajorAxis=1/5,
                     relativeMaxMinorAxis=0.5, relativeMaxMajorAxis=3/4, relativeMinMinorAxis=1/8, accuracy=10):
         super(ZiliaONHDetector, self).__init__(image, relativeMinMajorAxis, relativeMaxMinorAxis, accuracy)
