@@ -1,4 +1,5 @@
 import numpy as np
+from ellipse import LsqEllipse
 from skimage.color import rgb2gray
 from skimage.transform import resize, hough_ellipse
 from skimage.filters import threshold_otsu

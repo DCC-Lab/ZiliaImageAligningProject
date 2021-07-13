@@ -96,4 +96,3 @@ class ZiliaDB(Database):
             spectra[i%nWavelengths, i//nWavelengths] = float(row['intensity'])
 
         return spectra
-

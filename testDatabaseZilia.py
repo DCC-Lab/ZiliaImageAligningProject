@@ -57,6 +57,6 @@ class TestZilia(env.DCCLabTestCase):
         spectra = db.getRawIntensities(monkey='Rwanda', target='onh', type='baseline', column='raw')
         self.assertIsNotNone(spectra)
         print(spectra.shape)
-        
+
 if __name__ == '__main__':
     unittest.main()
