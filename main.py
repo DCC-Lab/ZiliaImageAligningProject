@@ -1,9 +1,7 @@
 from processImages import *
 
-# collectionDir = getCollectionDirectory()
-
 # New data:
-# collectionDir = r"./tests/TestImages/miniTestSampleNewData"
+collectionDir = r"./tests/TestImages/miniTestSampleNewData"
 
 # Test plot directory
 # collectionDir = r"./tests/TestImages/testPlot"
@@ -24,7 +22,7 @@ from processImages import *
 # collectionDir = r"C:\Users\elm77\OneDrive\Documents\ULaval\2021_2_Ete\CERVO\Projet\code\20210316-144549-kenya-os-onh-rlp6"
 
 # Broken test dir:
-collectionDir = r"C:\Users\elm77\OneDrive\Documents\ULaval\2021_2_Ete\CERVO\Projet\code\brokenTest"
+# collectionDir = r"C:\Users\elm77\OneDrive\Documents\ULaval\2021_2_Ete\CERVO\Projet\code\brokenTest"
 
 
 leftEye = False
@@ -52,7 +50,5 @@ Label, dataDictionary, indexesToRemove = placeRosa(gridParameters, shiftParamete
 
 shiftParameters = cleanShiftParameters(shiftParameters, indexesToRemove)
 
-# shiftParameters = shiftParameters[0][:3], shiftParameters[1][:3]
-
-newPlotResult(image, shiftParameters, gridParameters)
-oldPlotResult(image, shiftParameters, gridParameters)
+plotResult(image, shiftParameters, gridParameters)
+# oldPlotResult(image, shiftParameters, gridParameters)
