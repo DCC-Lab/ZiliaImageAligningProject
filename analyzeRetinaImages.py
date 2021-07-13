@@ -9,6 +9,8 @@ from skimage.exposure import adjust_gamma
 
 class EllipseDetector:
     """
+    The relative size of the ellipse is defined as a fraction of the largest
+    side of the input image.
     This is the order in which this should be used:
         detector = EllipseDetector(image)
         detector.preProcessImage()
@@ -21,6 +23,8 @@ class EllipseDetector:
         self.image = image
         self.relativeMinMajorAxis = relativeMinMajorAxis
         self.relativeMaxMinorAxis = relativeMaxMinorAxis
+        self.relativeMaxMajorAxis = relativeMaxMajorAxis
+        self.relativeMinMinorAxis = relativeMinMinorAxis
         self.accuracy = accuracy
         if self.imageIsGrayscale():
             self.grayImage = image
@@ -49,6 +53,10 @@ class EllipseDetector:
             houghResult = self.applyHoughTransform()
             bestHoughEllipse = self.sortBestHoughEllipse(houghResult)
             bestEllipse = self.getBestEllipseParameters(bestHoughEllipse)
+        else:
+            (yCenter, xCenter), normalHalfAx, parallelHalfAx, phi = leastSquaresResult
+            bestEllipse = (xCenter, yCenter), normalHalfAx, parallelHalfAx, phi
+        bestEllipse = self.ellipseHasExpectedSize(bestEllipse)
         return bestEllipse
 
 
@@ -56,10 +64,13 @@ class EllipseDetector:
         return canny(self.grayImage)
 
     def defineEllipseExpectedSize(self):
-        xSize = self.grayImage.shape[0]
-        ySize = self.grayImage.shape[1]
-        minMajorAxis = int(self.relativeMinMajorAxis*ySize)
-        maxMinorAxis = int(self.relativeMaxMinorAxis*xSize)
+        xSize = self.grayImage.shape[1]
+        ySize = self.grayImage.shape[0]
+        maxSide = max([xSize, ySize])
+        minMajorAxis = int(self.relativeMinMajorAxis*maxSide)
+        maxMinorAxis = int(self.relativeMaxMinorAxis*maxSide)
+        maxMajorAxis = int(self.relativeMaxMajorAxis*maxSide)
+        minMinorAxis = int(self.relativeMinMinorAxis*maxSide)
         return minMajorAxis, maxMinorAxis, maxMajorAxis, minMinorAxis
 
 
@@ -68,6 +79,11 @@ class EllipseDetector:
         contoursIndexes = np.array(list(zip(X, Y)))
         lsqFit = LsqEllipse().fit(contoursIndexes)
         center, normalHalfAx, parallelHalfAx, phi = lsqFit.as_parameters()
+
+    def addGammaCorrection(self, gamma):
+        correctedImage = adjust_gamma(self.grayImage, gamma=gamma)
+        return correctedImage
+
 
     def filterLeastSquaresEllipseFit(self):
         # check size (if horiz >> vertic: not good, but horiz = vertic or a bit bigger is ok)
