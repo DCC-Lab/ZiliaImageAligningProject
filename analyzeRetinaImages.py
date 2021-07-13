@@ -166,25 +166,25 @@ class ZiliaONHDetector(EllipseDetector):
 
     This is the order in which this should be used:
         onhDetector = ZiliaONHDetector(image)
-        onhDetector.getParamsCorrections()
+        onhDetector.getParamsCorrections(highGamma=2.5, gammaThresh=0.5)
         onhDetector.preProcessImage()
         bestEllipse = onhDetector.findOpticNerveHead()
         (xCenter, yCenter), minorAxis, majorAxis, orientation = bestEllipse
     """
     def __init__(self, image, scaleFactor=5, gamma=True, relativeMinMajorAxis=1/5,
                     relativeMaxMinorAxis=0.5, relativeMaxMajorAxis=3/4, relativeMinMinorAxis=1/8, accuracy=10):
-        super(ZiliaONHDetector, self).__init__(image, relativeMinMajorAxis, relativeMaxMinorAxis, accuracy)
+        super().__init__(image, relativeMinMajorAxis, relativeMaxMinorAxis, accuracy)
         self.fullSizeGrayImage = np.array(self.grayImage, copy=True)
         self.scaleFactor = scaleFactor
         self.gamma = gamma
         self.grayImage = self.getGrayRescaledImage()
+        self.threshold = self.getThreshold()
 
-    def getParamsCorrections(self, highGamma=3, gammaThresh=0.5):
-        """Find the required gamma correction (min=1, max=?)"""
+    def getParamsCorrections(self, highGamma=2.5, gammaThresh=0.5):
         self.highGamma = highGamma
         if self.gamma is True:
             # Automatically check if gamma correction is needed
-            self.gamma = self.detectGammaNecessity(gammaThresh=gammaThresh)
+            self.gamma = self.detectGammaNecessity(gammaThresh)
         elif self.gamma is False:
             # Don't apply gamma correction whatsoever
             pass
@@ -193,36 +193,30 @@ class ZiliaONHDetector(EllipseDetector):
             self.gamma = False
         else:
             # Apply gamma correction with the input gamma value
-            self.grayImage = self.adjustGamma()
+            self.grayImage = self.doGammaCorrection(self.gamma)
 
     def preProcessImage(self):
-        self.grayImage = self.adjustGamma()
-        self.threshold = self.getThreshold()
-        super(ZiliaONHDetector, self).preProcessImage()
+        if self.gamma:
+            self.grayImage = self.doGammaCorrection(self.gamma)
+        super().preProcessImage()
 
     def findOpticNerveHead(self):
-        smallScaleResult = super(ZiliaONHDetector, self).findBestEllipse()
+        smallScaleResult = super().findBestEllipse()
         if smallScaleResult is None:
             return None
         else:
             result = self.upscaleResult(smallScaleResult)
             return result
 
-    def detectGammaNecessity(self, gammaThresh=0.5):
+    def detectGammaNecessity(self, gammaThresh):
         # Has to be improved with testing!!!
-        tempThresh = self.getThreshold()
-        if tempThresh > gammaThresh:
+        imageThreshold = self.threshold
+        if imageThreshold > gammaThresh:
             gamma = self.highGamma
             print("gamma done!")
         else:
-            gamma = 1
+            gamma = False
         return gamma
-
-    def adjustGamma(self):
-        if self.gamma is False:
-            return self.grayImage
-        else:
-            return adjust_gamma(self.grayImage, gamma=self.gamma)
 
     def getGrayRescaledImage(self):
         ySize = self.fullSizeGrayImage.shape[0]//self.scaleFactor
@@ -231,7 +225,7 @@ class ZiliaONHDetector(EllipseDetector):
         return resize(self.fullSizeGrayImage, outputSize)
 
     def getThreshold(self):
-        # Between 0 and 1
+        # From 0 to 1
         return threshold_otsu(self.grayImage)
 
     def applyCannyFilter(self):
