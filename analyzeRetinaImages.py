@@ -56,6 +56,7 @@ class EllipseDetector:
             bestEllipse = (xCenter, yCenter), normalHalfAx, parallelHalfAx, orientation
             return bestEllipse
         else:
+            # The least squares algorithm has failed.
             houghResult = self.applyHoughTransform()
             bestHoughEllipse = self.sortBestHoughEllipse(houghResult)
             bestEllipse = self.getBestEllipseParameters(bestHoughEllipse)
@@ -66,19 +67,7 @@ class EllipseDetector:
             maxAxis = max([minorAxis, majorAxis])
             if self.ellipseHasTheRightSize(minAxis, maxAxis):
                 return bestEllipse
-        else:
             return None
-
-    def ellipseHasTheRightSize(self, minAxis, maxAxis):
-        minAxis *= 2
-        maxAxis *= 2
-        if minAxis > self.minMinorAxis:
-            if minAxis < self.maxMinorAxis:
-                if maxAxis > self.minMajorAxis:
-                    if maxAxis < self.maxMajorAxis:
-                        return True
-        return False
-
 
     def applyCannyFilter(self):
         return canny(self.grayImage)
@@ -92,6 +81,16 @@ class EllipseDetector:
         maxMajorAxis = int(self.relativeMaxMajorAxis*maxSide)
         minMinorAxis = int(self.relativeMinMinorAxis*maxSide)
         return minMajorAxis, maxMinorAxis, maxMajorAxis, minMinorAxis
+
+    def ellipseHasTheRightSize(self, minAxis, maxAxis):
+        minAxis *= 2
+        maxAxis *= 2
+        if minAxis > self.minMinorAxis:
+            if minAxis < self.maxMinorAxis:
+                if maxAxis > self.minMajorAxis:
+                    if maxAxis < self.maxMajorAxis:
+                        return True
+        return False
 
 
     def doLeastSquaresEllipseFit(self):
