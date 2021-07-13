@@ -11,6 +11,8 @@ class EllipseDetector:
     """
     The relative size of the ellipse is defined as a fraction of the largest
     side of the input image.
+    Ellipse orientation in radians, counterclockwise.
+
     This is the order in which this should be used:
         detector = EllipseDetector(image)
         detector.preProcessImage()
@@ -49,15 +51,33 @@ class EllipseDetector:
         Else, returns a tuple of the best ellipse parameters.
         """
         leastSquaresResult = self.doLeastSquaresEllipseFit()
-        if leastSquaresResult is None:
+        if leastSquaresResult is not None:
+            (yCenter, xCenter), normalHalfAx, parallelHalfAx, orientation = leastSquaresResult
+            bestEllipse = (xCenter, yCenter), normalHalfAx, parallelHalfAx, orientation
+            return bestEllipse
+        else:
             houghResult = self.applyHoughTransform()
             bestHoughEllipse = self.sortBestHoughEllipse(houghResult)
             bestEllipse = self.getBestEllipseParameters(bestHoughEllipse)
+            if bestEllipse is None:
+                return None
+            (xCenter, yCenter), minorAxis, majorAxis, orientation = bestEllipse
+            minAxis = min([minorAxis, majorAxis])
+            maxAxis = max([minorAxis, majorAxis])
+            if self.ellipseHasTheRightSize(minAxis, maxAxis):
+                return bestEllipse
         else:
-            (yCenter, xCenter), normalHalfAx, parallelHalfAx, phi = leastSquaresResult
-            bestEllipse = (xCenter, yCenter), normalHalfAx, parallelHalfAx, phi
-        bestEllipse = self.ellipseHasExpectedSize(bestEllipse)
-        return bestEllipse
+            return None
+
+    def ellipseHasTheRightSize(self, minAxis, maxAxis):
+        minAxis *= 2
+        maxAxis *= 2
+        if minAxis > self.minMinorAxis:
+            if minAxis < self.maxMinorAxis:
+                if maxAxis > self.minMajorAxis:
+                    if maxAxis < self.maxMajorAxis:
+                        return True
+        return False
 
 
     def applyCannyFilter(self):
@@ -77,8 +97,18 @@ class EllipseDetector:
     def doLeastSquaresEllipseFit(self):
         X, Y = np.where(self.contours == True)
         contoursIndexes = np.array(list(zip(X, Y)))
+
         lsqFit = LsqEllipse().fit(contoursIndexes)
         center, normalHalfAx, parallelHalfAx, phi = lsqFit.as_parameters()
+
+
+        minAxis = min([normalHalfAx, parallelHalfAx])
+        maxAxis = max([normalHalfAx, parallelHalfAx])
+        if self.ellipseHasTheRightSize(minAxis, maxAxis):
+            return bestEllipse
+        else:
+            pass
+
 
     def addGammaCorrection(self, gamma):
         correctedImage = adjust_gamma(self.grayImage, gamma=gamma)
@@ -121,12 +151,16 @@ class EllipseDetector:
         xCenter = xc
         minorAxis = a
         majorAxis = b
-        orientation = orientation
+        orientation = np.pi - orientation
         return (xCenter, yCenter), minorAxis, majorAxis, orientation
 
 
 class ZiliaONHDetector(EllipseDetector):
     """
+    The relative size of the ellipse is defined as a fraction of the largest
+    side of the input image.
+    Ellipse orientation in radians, counterclockwise.
+
     This is the order in which this should be used:
         onhDetector = ZiliaONHDetector(image)
         onhDetector.getParamsCorrections()
