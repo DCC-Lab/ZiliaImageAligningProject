@@ -16,11 +16,6 @@ import fnmatch
 import os
 
 
-# def getCollectionDirectory() -> str:
-#     collectionDir = askdirectory(title="Select the folder containing data")
-#     return collectionDir
-
-
 def mirrorImage(image) -> np.ndarray:
     mirroredImage = image[:,::-1,:]
     return mirroredImage
@@ -48,7 +43,12 @@ def removeBadImages(dataDictionary) -> dict:
     Threshold = np.mean(ii)
     index = np.where(ii > Threshold)
 
-    cleanDataDictionary = removeImagesFromIndex(dataDictionary, index)
+    if len(index[0]) == 0:
+        # Some images are too blurry, let's remove them
+        print("Removing images because they are too blurry.")
+        cleanDataDictionary = removeImagesFromIndex(dataDictionary, index)
+    else:
+        cleanDataDictionary = dataDictionary
 
     return cleanDataDictionary
 
@@ -237,6 +237,7 @@ def findImageShift(Image: np.ndarray, Margin=250, N=100) -> np.ndarray:
             totalShift = np.vstack((totalShift, np.sum(indexShift, axis=0)))
     return totalShift
 
+
 def newFindImageShift():
     """
     Find the image shift with the new ellipse finding algorithm parameters.
@@ -305,9 +306,14 @@ def placeRosa(gridParameters, shiftParameters, dataDictionary) -> list:
         outputLabels.append(temporaryLabel)
 
     # Remove images out of boundaries
-    imageDataDictionary = removeImagesFromIndex(dataDictionary, imageIndexesToRemove)
+    if imageIndexesToRemove != []:
+        print("Removing images because the ROSA is out of the grid.")
+        imageDataDictionary = removeImagesFromIndex(dataDictionary, imageIndexesToRemove)
+    else:
+        imageDataDictionary = dataDictionary
 
     return outputLabels, imageDataDictionary, imageIndexesToRemove
+
 
 def removeImagesFromIndex(dataDictionary, indexes):
     image = dataDictionary["image"]
@@ -335,12 +341,14 @@ def removeImagesFromIndex(dataDictionary, indexes):
 
     return imageDataDictionary
 
+
 def cleanShiftParameters(shiftParameters, indexesToRemove):
     xShift = shiftParameters[0]
     xShift = np.delete(xShift, indexesToRemove)
     yShift = shiftParameters[1]
     yShift = np.delete(yShift, indexesToRemove)
     return xShift, yShift
+
 
 def defineGrid(Image) -> tuple:
     # onh = optic nerve head
@@ -356,6 +364,7 @@ def defineGrid(Image) -> tuple:
     length = int((np.min([onhHeight, onhWidth]))/2)
     return onhCenterHorizontalCoords, onhCenterVerticalCoords, length
     # return xCenterGrid, yCenterGrid, length
+
 
 def oldPlotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None:
     xCenterGrid = gridParameters[0]
@@ -399,23 +408,23 @@ def oldPlotResult(Image, shiftParameters, gridParameters, rosaRadius=30) -> None
     plt.imsave('Result_old.jpg', img)
 
 
-def plotResult(image, shiftParameters, gridParameters, rosaRadius=30, thickness=5) -> None:
-    image3D = drawRosaCircles(image, shiftParameters, rosaRadius=rosaRadius, thickness=thickness)
-    resultImage = prepareResultImage(image3D, gridParameters)
-    resultImageWithGrid = drawGrid(resultImage, gridParameters)
-    plt.imsave('Result.jpg', resultImageWithGrid)
+# def plotResult(image, shiftParameters, gridParameters, rosaRadius=30, thickness=5) -> None:
+#     image3D = drawRosaCircles(image, shiftParameters, rosaRadius=rosaRadius, thickness=thickness)
+#     resultImage = prepareResultImage(image3D, gridParameters)
+#     resultImageWithGrid = drawGrid(resultImage, gridParameters)
+#     plt.imsave('Result.jpg', resultImageWithGrid)
 
-def drawRosaCircles(image, shiftParameters, rosaRadius=30, thickness=5, color=(0, 1, 0)):
-    refImage = image[0,:,:]
-    image3D = makeImageRGB(refImage)
-    xRosa = shiftParameters[0]
-    yRosa = shiftParameters[1]
-    for j in range(xRosa.shape[0]):
-        centerCoordinates = (int(xRosa[j]), int(yRosa[j]))
-        #cv2.circle(image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
-        cv2.circle(image3D, centerCoordinates, rosaRadius, color, thickness)
-    #plt.imsave("preimage3D.jpg", image3D) # same for old and new
-    return image3D
+# def drawRosaCircles(image, shiftParameters, rosaRadius=30, thickness=5, color=(0, 1, 0)):
+#     refImage = image[0,:,:]
+#     image3D = makeImageRGB(refImage)
+#     xRosa = shiftParameters[0]
+#     yRosa = shiftParameters[1]
+#     for j in range(xRosa.shape[0]):
+#         centerCoordinates = (int(xRosa[j]), int(yRosa[j]))
+#         #cv2.circle(image[0,:,:], centerCoordinates, rosaRadius, color, thickness)
+#         image3D = cv2.circle(image3D, centerCoordinates, rosaRadius, color, thickness)
+#     #plt.imsave("preimage3D.jpg", image3D) # same for old and new
+#     return image3D
 
 
 
@@ -432,17 +441,21 @@ def newPlotResult(image, shiftParameters, gridParameters, rosaRadius=30, thickne
     resultImageWithGrid = drawGrid(rescaledImageWithCircles, gridParameters)
     plt.imsave('Result.jpg', resultImageWithGrid)
 
+
 def makeImageRGB(grayImage):
     imageRGB = np.dstack((grayImage, grayImage, grayImage))
     return imageRGB
+
 
 def newDrawRosaCircles(rescaledImage, shiftParameters, LowSliceX, LowSliceY, rosaRadius=30, thickness=10, color=(0, 1, 0)):
     xRosa = shiftParameters[0]
     yRosa = shiftParameters[1]
     for j in range(xRosa.shape[0]):
+        print(j)
         centerCoordinates = (int(xRosa[j]) + LowSliceX, int(yRosa[j]) + LowSliceY)
         cv2.circle(rescaledImage, centerCoordinates, rosaRadius, color, thickness)
     return rescaledImage
+
 
 def rescaleImage(imageRGB, gridParameters):
     xCenterGrid = gridParameters[0]# int
@@ -465,6 +478,7 @@ def rescaleImage(imageRGB, gridParameters):
     # Slicing:
     gridImage[LOW_SLICE_Y:HIGH_SLICE_Y, LOW_SLICE_X:HIGH_SLICE_X, :] = temp
     return gridImage, LOW_SLICE_X, LOW_SLICE_Y
+
 
 def drawGrid(imageRGB, gridParameters):
     length = gridParameters[2]

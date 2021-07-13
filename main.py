@@ -5,6 +5,9 @@ from processImages import *
 # New data:
 # collectionDir = r"./tests/TestImages/miniTestSampleNewData"
 
+# Test plot directory
+# collectionDir = r"./tests/TestImages/testPlot"
+
 # Backup USB on Mac OS:
 # collectionDir = r"/Volumes/DATA BACKUP/Baseline3/Bresil 1511184/20210316-100153-bresil-od-onh-rlp6"
 
@@ -49,7 +52,7 @@ Label, dataDictionary, indexesToRemove = placeRosa(gridParameters, shiftParamete
 
 shiftParameters = cleanShiftParameters(shiftParameters, indexesToRemove)
 
-shiftParameters = shiftParameters[0][:3], shiftParameters[1][:3]
+# shiftParameters = shiftParameters[0][:3], shiftParameters[1][:3]
 
 newPlotResult(image, shiftParameters, gridParameters)
 oldPlotResult(image, shiftParameters, gridParameters)
