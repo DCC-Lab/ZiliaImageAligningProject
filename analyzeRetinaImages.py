@@ -16,7 +16,8 @@ class EllipseDetector:
         (xCenter, yCenter), minorAxis, majorAxis, orientation = bestEllipse
     """
 
-    def __init__(self, image, relativeMinMajorAxis=1/6, relativeMaxMinorAxis=0.5, accuracy=10):
+    def __init__(self, image, relativeMinMajorAxis=1/5, relativeMaxMinorAxis=0.5,
+                    relativeMaxMajorAxis=3/4, relativeMinMinorAxis=1/8, accuracy=10):
         self.image = image
         self.relativeMinMajorAxis = relativeMinMajorAxis
         self.relativeMaxMinorAxis = relativeMaxMinorAxis
@@ -34,16 +35,22 @@ class EllipseDetector:
         ellipseExpectedSize = self.defineEllipseExpectedSize()
         self.minMajorAxis = ellipseExpectedSize[0]
         self.maxMinorAxis = ellipseExpectedSize[1]
+        self.maxMajorAxis = ellipseExpectedSize[2]
+        self.minMinorAxis = ellipseExpectedSize[3]
+
 
     def findBestEllipse(self):
         """
         If no ellipse is found, returns None.
         Else, returns a tuple of the best ellipse parameters.
         """
-        houghResult = self.applyHoughTransform()
-        bestHoughEllipse = self.sortBestHoughEllipse(houghResult)
-        bestEllipse = self.getBestEllipseParameters(bestHoughEllipse)
+        leastSquaresResult = self.doLeastSquaresEllipseFit()
+        if leastSquaresResult is None:
+            houghResult = self.applyHoughTransform()
+            bestHoughEllipse = self.sortBestHoughEllipse(houghResult)
+            bestEllipse = self.getBestEllipseParameters(bestHoughEllipse)
         return bestEllipse
+
 
     def applyCannyFilter(self):
         return canny(self.grayImage)
@@ -53,7 +60,25 @@ class EllipseDetector:
         ySize = self.grayImage.shape[1]
         minMajorAxis = int(self.relativeMinMajorAxis*ySize)
         maxMinorAxis = int(self.relativeMaxMinorAxis*xSize)
-        return minMajorAxis, maxMinorAxis
+        return minMajorAxis, maxMinorAxis, maxMajorAxis, minMinorAxis
+
+
+    def doLeastSquaresEllipseFit(self):
+        X, Y = np.where(self.contours == True)
+        contoursIndexes = np.array(list(zip(X, Y)))
+        lsqFit = LsqEllipse().fit(contoursIndexes)
+        center, normalHalfAx, parallelHalfAx, phi = lsqFit.as_parameters()
+
+    def filterLeastSquaresEllipseFit(self):
+        # check size (if horiz >> vertic: not good, but horiz = vertic or a bit bigger is ok)
+        # check angle to know which is bigger?
+        # If size not ok, gamma correction
+        # If size still not ok, gamma correction
+        # Do the same a few times.
+        # If size ok, remove out of range indexes
+        # If size not ok after a few gamma corrections, return None
+        pass
+
 
     def applyHoughTransform(self):
         houghResult = hough_ellipse(self.contours,
@@ -94,7 +119,8 @@ class ZiliaONHDetector(EllipseDetector):
         (xCenter, yCenter), minorAxis, majorAxis, orientation = bestEllipse
     """
 
-    def __init__(self, image, scaleFactor=3, gamma=True, relativeMinMajorAxis=1/6, relativeMaxMinorAxis=0.5, accuracy=10):
+    def __init__(self, image, scaleFactor=5, gamma=True, relativeMinMajorAxis=1/5,
+                    relativeMaxMinorAxis=0.5, relativeMaxMajorAxis=3/4, relativeMinMinorAxis=1/8, accuracy=10):
         super(ZiliaONHDetector, self).__init__(image, relativeMinMajorAxis, relativeMaxMinorAxis, accuracy)
         self.fullSizeGrayImage = np.array(self.grayImage, copy=True)
         self.scaleFactor = scaleFactor
