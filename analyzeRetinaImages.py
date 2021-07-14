@@ -19,8 +19,8 @@ class EllipseDetector:
         bestEllipse = detector.findBestEllipse()
         (xCenter, yCenter), minorAxis, majorAxis, orientation = bestEllipse
     """
-    def __init__(self, image, relativeMinMajorAxis=1/5, relativeMaxMinorAxis=0.5,
-                    relativeMaxMajorAxis=3/4, relativeMinMinorAxis=1/8, accuracy=10):
+    def __init__(self, image, relativeMinMajorAxis=1/5, relativeMaxMinorAxis=1/2,
+                    relativeMaxMajorAxis=3/5, relativeMinMinorAxis=1/8, accuracy=10):
         self.image = image
         self.relativeMinMajorAxis = relativeMinMajorAxis
         self.relativeMaxMinorAxis = relativeMaxMinorAxis
@@ -54,16 +54,19 @@ class EllipseDetector:
             return bestEllipse
         else:
             # The least squares algorithm has failed.
+            print("Doing hough transform")
             houghResult = self.applyHoughTransform()
             bestHoughEllipse = self.sortBestHoughEllipse(houghResult)
             bestEllipse = self.getBestEllipseParameters(bestHoughEllipse)
             if bestEllipse is None:
+                print("No match was found")
                 return None
             (xCenter, yCenter), minorAxis, majorAxis, orientation = bestEllipse
             minAxis = min([minorAxis, majorAxis])
             maxAxis = max([minorAxis, majorAxis])
             if self.ellipseHasTheRightSize(minAxis, maxAxis):
                 return bestEllipse
+            print("No match was found")
             return None
 
     def applyCannyFilter(self, grayImage):
@@ -172,8 +175,9 @@ class ZiliaONHDetector(EllipseDetector):
         (xCenter, yCenter), minorAxis, majorAxis, orientation = bestEllipse
     """
     def __init__(self, image, scaleFactor=5, gamma=True, relativeMinMajorAxis=1/5,
-                    relativeMaxMinorAxis=0.5, relativeMaxMajorAxis=3/4, relativeMinMinorAxis=1/8, accuracy=10):
-        super().__init__(image, relativeMinMajorAxis, relativeMaxMinorAxis, accuracy)
+                    relativeMaxMinorAxis=1/2, relativeMaxMajorAxis=3/5, relativeMinMinorAxis=1/8, accuracy=10):
+        super().__init__(image, relativeMinMajorAxis, relativeMaxMinorAxis,
+                        relativeMaxMajorAxis, relativeMinMinorAxis, accuracy)
         self.fullSizeGrayImage = np.array(self.grayImage, copy=True)
         self.scaleFactor = scaleFactor
         self.gamma = gamma
@@ -213,7 +217,7 @@ class ZiliaONHDetector(EllipseDetector):
         imageThreshold = self.threshold
         if imageThreshold > gammaThresh:
             gamma = self.highGamma
-            print("gamma done!")
+            print("Gamma automatically applied")
         else:
             gamma = False
         return gamma
@@ -228,7 +232,7 @@ class ZiliaONHDetector(EllipseDetector):
         # From 0 to 1
         return threshold_otsu(self.grayImage)
 
-    def applyCannyFilter(self):
+    def applyCannyFilter(self, grayImage):
         binaryImage = self.grayImage > self.threshold
         return canny(binaryImage)
 
