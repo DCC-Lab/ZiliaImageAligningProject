@@ -62,6 +62,17 @@ class TestZiliaONHDetectorClass(envtest.ZiliaTestCase):
         plt.show()
 
     @envtest.skip("skip plot")
+    def testFindONH_ellipse(self):
+        image = imread(self.testStudentDirectory+"/testImage5.png")
+        print(image.shape)
+        detector = ZiliaONHDetector(image, gamma=False, accuracy=5)
+        detector.getParamsCorrections()
+        detector.preProcessImage()
+        result = detector.findOpticNerveHead()
+        self.plotHoughEllipseWithRescale(result, image, canny(rgb2gray(image)))
+        # very good!
+
+    @envtest.skip("skip plot")
     def testFindONH_bresilMedium(self):
         image = imread(self.testCannyDirectory+"/bresilMedium.jpg")
         detector = ZiliaONHDetector(image)

@@ -19,8 +19,8 @@ class EllipseDetector:
         bestEllipse = detector.findBestEllipse()
         (xCenter, yCenter), minorAxis, majorAxis, orientation = bestEllipse
     """
-    def __init__(self, image, relativeMinMajorAxis=1/5, relativeMaxMinorAxis=2/5,
-                    relativeMaxMajorAxis=3/5, relativeMinMinorAxis=1/8, accuracy=10):
+    def __init__(self, image, relativeMinMajorAxis=1/6, relativeMaxMinorAxis=1/3,
+                    relativeMaxMajorAxis=3/4, relativeMinMinorAxis=1/9, accuracy=10):
         self.image = image
         self.relativeMinMajorAxis = relativeMinMajorAxis
         self.relativeMaxMinorAxis = relativeMaxMinorAxis
@@ -185,8 +185,8 @@ class ZiliaONHDetector(EllipseDetector):
         bestEllipse = onhDetector.findOpticNerveHead()
         (xCenter, yCenter), minorAxis, majorAxis, orientation = bestEllipse
     """
-    def __init__(self, image, scaleFactor=5, gamma=True, relativeMinMajorAxis=1/5,
-                    relativeMaxMinorAxis=2/5, relativeMaxMajorAxis=3/5, relativeMinMinorAxis=1/8, accuracy=10):
+    def __init__(self, image, scaleFactor=5, gamma=True, relativeMinMajorAxis=1/6,
+                    relativeMaxMinorAxis=1/3, relativeMaxMajorAxis=3/4, relativeMinMinorAxis=1/9, accuracy=10):
         super().__init__(image, relativeMinMajorAxis, relativeMaxMinorAxis,
                         relativeMaxMajorAxis, relativeMinMinorAxis, accuracy)
         self.fullSizeGrayImage = np.array(self.grayImage, copy=True)

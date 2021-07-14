@@ -414,7 +414,7 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
     def testFindSuccessRateOnAllFilesAndSaveToJson2_threshMeanMinSigma_scale10Accuracy20(self):
         # These parameters need to change in subsequent tests:
         scaleFactor = 10
-        accuracy = 20
+        accuracy = 30
         highGamma = 3
         gammaThresh = meanMinSigma
         fileName = 'resultsONHAccuracy_gammaMeanMinSigma_newAlgo2.json'
