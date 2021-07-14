@@ -19,7 +19,7 @@ class EllipseDetector:
         bestEllipse = detector.findBestEllipse()
         (xCenter, yCenter), minorAxis, majorAxis, orientation = bestEllipse
     """
-    def __init__(self, image, relativeMinMajorAxis=1/5, relativeMaxMinorAxis=1/2,
+    def __init__(self, image, relativeMinMajorAxis=1/5, relativeMaxMinorAxis=2/5,
                     relativeMaxMajorAxis=3/5, relativeMinMinorAxis=1/8, accuracy=10):
         self.image = image
         self.relativeMinMajorAxis = relativeMinMajorAxis
@@ -55,9 +55,7 @@ class EllipseDetector:
         else:
             # The least squares algorithm has failed.
             print("Doing hough transform")
-            houghResult = self.applyHoughTransform()
-            bestHoughEllipse = self.sortBestHoughEllipse(houghResult)
-            bestEllipse = self.getBestEllipseParameters(bestHoughEllipse)
+            bestEllipse = self.getBestHoughEllipseResult(self.contours)
             if bestEllipse is None:
                 print("No match was found")
                 return None
@@ -68,6 +66,12 @@ class EllipseDetector:
                 return bestEllipse
             print("No match was found")
             return None
+
+    def getBestHoughEllipseResult(self, contours):
+        houghResult = self.applyHoughTransform(contours)
+        bestHoughEllipse = self.sortBestHoughEllipse(houghResult)
+        bestEllipse = self.getBestEllipseParameters(bestHoughEllipse)
+        return bestEllipse
 
     def applyCannyFilter(self, grayImage):
         return canny(grayImage)
@@ -121,6 +125,13 @@ class EllipseDetector:
             else:
                 if gamma == 1:
                     # stop at last iteration
+
+                    orientation += (np.pi/2)
+                    majorAxis = normalHalfAx
+                    minorAxis = parallelHalfAx
+                    bestEllipse = (int(xCenter), int(yCenter)), int(minorAxis), int(majorAxis), orientation
+                    return bestEllipse
+                    
                     break
                 # Apply gamma correction and try again
                 correctedImage = self.doGammaCorrection(gamma)
@@ -132,8 +143,8 @@ class EllipseDetector:
         correctedImage = adjust_gamma(self.grayImage, gamma=gamma)
         return correctedImage
 
-    def applyHoughTransform(self):
-        houghResult = hough_ellipse(self.contours,
+    def applyHoughTransform(self, contours):
+        houghResult = hough_ellipse(contours,
                                     min_size=self.minMajorAxis,
                                     max_size=self.maxMinorAxis,
                                     accuracy=self.accuracy)
@@ -175,7 +186,7 @@ class ZiliaONHDetector(EllipseDetector):
         (xCenter, yCenter), minorAxis, majorAxis, orientation = bestEllipse
     """
     def __init__(self, image, scaleFactor=5, gamma=True, relativeMinMajorAxis=1/5,
-                    relativeMaxMinorAxis=1/2, relativeMaxMajorAxis=3/5, relativeMinMinorAxis=1/8, accuracy=10):
+                    relativeMaxMinorAxis=2/5, relativeMaxMajorAxis=3/5, relativeMinMinorAxis=1/8, accuracy=10):
         super().__init__(image, relativeMinMajorAxis, relativeMaxMinorAxis,
                         relativeMaxMajorAxis, relativeMinMinorAxis, accuracy)
         self.fullSizeGrayImage = np.array(self.grayImage, copy=True)
@@ -183,8 +194,9 @@ class ZiliaONHDetector(EllipseDetector):
         self.gamma = gamma
         self.grayImage = self.getGrayRescaledImage()
         self.threshold = self.getThreshold()
+        self.gammaCorrectedImage = None
 
-    def getParamsCorrections(self, highGamma=2.5, gammaThresh=0.5):
+    def getParamsCorrections(self, highGamma=3, gammaThresh=0.5):
         self.highGamma = highGamma
         if self.gamma is True:
             # Automatically check if gamma correction is needed
@@ -201,16 +213,38 @@ class ZiliaONHDetector(EllipseDetector):
 
     def preProcessImage(self):
         if self.gamma:
-            self.grayImage = self.doGammaCorrection(self.gamma)
+            self.gammaCorrectedImage = self.doGammaCorrection(self.gamma)
         super().preProcessImage()
 
     def findOpticNerveHead(self):
-        smallScaleResult = super().findBestEllipse()
-        if smallScaleResult is None:
-            return None
+        """
+        If no ellipse is found, returns None.
+        Else, returns a tuple of the best ellipse parameters.
+        """
+        leastSquaresResult = self.getLeastSquaresEllipseFit(self.contours)
+        if leastSquaresResult is not None:
+            bestEllipse = leastSquaresResult
         else:
-            result = self.upscaleResult(smallScaleResult)
-            return result
+            # The least squares algorithm has failed.
+            print("Doing hough transform")
+            if self.gammaCorrectedImage is not None:
+                # gamma correction is needed
+                self.grayImage = self.gammaCorrectedImage
+                self.contours = self.applyCannyFilter(self.grayImage)
+            bestEllipse = self.getBestHoughEllipseResult(self.contours)
+            if bestEllipse is None:
+                print("No match was found")
+                return None
+            (xCenter, yCenter), minorAxis, majorAxis, orientation = bestEllipse
+            minAxis = min([minorAxis, majorAxis])
+            maxAxis = max([minorAxis, majorAxis])
+            if self.ellipseHasTheRightSize(minAxis, maxAxis):
+                # a match has been found using the Hough transform
+                pass
+            else:
+                return None
+        result = self.upscaleResult(bestEllipse)
+        return result
 
     def detectGammaNecessity(self, gammaThresh):
         # Has to be improved with testing!!!

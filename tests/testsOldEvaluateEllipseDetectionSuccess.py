@@ -28,7 +28,7 @@ meanMinHalfSigma = 0.4891183892357014
 meanMinSigma = 0.4481139843392332
 meanMin2Sigma = 0.36610517454629693
 
-# @envtest.skip("Will fail if path is not changed")
+@envtest.skip("Will fail if path is not changed")
 class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
 
     def testAccessData(self):
@@ -665,12 +665,6 @@ class TestEllipseDetectionSuccess(envtest.ZiliaTestCase):
         # deb 12h55
         # fin ???
         # ancien plus vite : 1h16min
-
-
-
-# Make function to save accuracy results, try execute with 5 files, run whole test.
-
-
 
 # globalMean = 0.5301227941321696
 # meanMinHalfSigma = 0.4891183892357014
