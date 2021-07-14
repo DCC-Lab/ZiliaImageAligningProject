@@ -126,12 +126,12 @@ class EllipseDetector:
                 if gamma == 1:
                     # stop at last iteration
 
-                    orientation += (np.pi/2)
-                    majorAxis = normalHalfAx
-                    minorAxis = parallelHalfAx
-                    bestEllipse = (int(xCenter), int(yCenter)), int(minorAxis), int(majorAxis), orientation
-                    return bestEllipse
-                    
+                    # orientation += (np.pi/2)
+                    # majorAxis = normalHalfAx
+                    # minorAxis = parallelHalfAx
+                    # bestEllipse = (int(xCenter), int(yCenter)), int(minorAxis), int(majorAxis), orientation
+                    # return bestEllipse
+
                     break
                 # Apply gamma correction and try again
                 correctedImage = self.doGammaCorrection(gamma)
@@ -180,7 +180,7 @@ class ZiliaONHDetector(EllipseDetector):
 
     This is the order in which this should be used:
         onhDetector = ZiliaONHDetector(image)
-        onhDetector.getParamsCorrections(highGamma=2.5, gammaThresh=0.5)
+        onhDetector.getParamsCorrections(highGamma=3, gammaThresh=0.5)
         onhDetector.preProcessImage()
         bestEllipse = onhDetector.findOpticNerveHead()
         (xCenter, yCenter), minorAxis, majorAxis, orientation = bestEllipse
